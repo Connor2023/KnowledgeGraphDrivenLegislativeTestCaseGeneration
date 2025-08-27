@@ -15,7 +15,16 @@ class Anonymiser():
 
     REDUNDANT_LINES = {"Machine Translated by Google", "Machine Translated by Google"}
 
-    def check(s: str) -> str:
+    def check(s: str) -> str | dict:
+        # handle figures (multimodal)
+        if s[:len("Figure ")] == "Figure ":
+            return {
+                "mode": "Figure",
+                "id": s.split()[1],
+                "name": " ".join(s.split()[2:]),
+                "link": None
+            }
+
         # handle specified terms
         for old, new in Anonymiser.GENERALISATIONS.items():
             s = s.replace(old, new)
@@ -48,13 +57,17 @@ class Anonymiser():
         with open(source, "r") as file:
             for line in file:
                 if line.strip() != "":
+                    # Deal with if it's a heading first
                     s = line.strip()
-                    if s[:len("Chapter")] == "Chapter":
+                    if len(s) > len("Chapter") and s[:len("Chapter")] == "Chapter":
                         if curr_chapter:
+                            if "description" in curr_feature or "multimodal" in curr_feature:
+                                curr_chapter.append(curr_feature)
+                                curr_feature = {}
                             info["chapters"][curr_chapter_num] = curr_chapter
                         curr_chapter = []
                         curr_chapter_num = int(s[len("Chapter") + 1])
-                    elif s[0].isdigit() and s[1] == "." and s[2].isdigit():
+                    elif len(s) >= 3 and s[0].isdigit() and s[1] == "." and s[2].isdigit():
                         if "description" in curr_feature or "multimodal" in curr_feature:
                             curr_chapter.append(curr_feature)
                         level = len(s.split()[0].split("."))
@@ -67,18 +80,33 @@ class Anonymiser():
                         }
                         level_titles = ["requirement", "feature", "subfeature"]
                         for i in range(2, 5):
-                            if i <= level:
-                                curr_feature[level_titles[i - 2]] = level_names[i]
+                            if "CMSRS" in source:
+                                if i <= level:
+                                    curr_feature[level_titles[i - 2]] = level_names[i]
+                            elif "PRSRS" in source:
+                                j = i - 1
+                                if j <= level:
+                                    curr_feature[level_titles[i - 2]] = level_names[j]
+                    elif len(s) >= 3 and s[0].isdigit() and s[1] == "." and s[2] == " ":
+                        level = 1
+                        level_name = s[3:]
+                        level_names[level] = level_name
 
-                    elif s not in Anonymiser.REDUNDANT_LINES:
+                    # deal with if it is content (requirement description/image)
+                    elif s not in Anonymiser.REDUNDANT_LINES and any([not s[i].isdigit() for i in range(len(s))]):
                         if "description" not in curr_feature:
                             curr_feature["description"] = [Anonymiser.check(s)]
                         else:
-                            if curr_feature["description"][-1][-1] not in ".;:":
+                            if isinstance(curr_feature["description"][-1], str) and isinstance(Anonymiser.check(s), str) and curr_feature["description"][-1][-1] not in ".;:":
                                 curr_feature["description"][-1] = curr_feature["description"][-1] + " " + Anonymiser.check(s)
                             else:
                                 curr_feature["description"].append(Anonymiser.check(s))
-                    
+        
+        if curr_chapter:
+            if "description" in curr_feature or "multimodal" in curr_feature:
+                curr_chapter.append(curr_feature)
+                curr_feature = {}
+            info["chapters"][curr_chapter_num] = curr_chapter
 
         with open(target, "w") as file:
             json.dump(info, file, indent=4)
@@ -86,9 +114,9 @@ class Anonymiser():
         print("Data anonymised!")
 
 
-sources = ["CMSRS.txt"]
-id_nums = [3]
-names = ["Case Management System Project User Requirements"]
+sources = ["CMSRS", "PRSRS"]
+id_nums = [3, 2]
+names = ["Case Management System Project User Requirements", "Patient Registration System Requirements Specification"]
 
 for s, i, n in zip(sources, id_nums, names):
-    Anonymiser.anonymise("./input/" + s, "./output/anonymised_" + s[:-4] + ".json", i, n)
+    Anonymiser.anonymise("./input/" + s + ".txt", "./output/anonymised_" + s + ".json", i, n)
