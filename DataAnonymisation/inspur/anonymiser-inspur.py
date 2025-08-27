@@ -32,10 +32,10 @@ class Anonymiser():
 
         return s
 
-    def anonymise(source: str, target: str) -> None:
+    def anonymise(source: str, target: str, id_num: int, name: str) -> None:
         info = {
-            "id": "3",
-            "name": "Case Management System Project User Requirements",
+            "id": id_num,
+            "name": name,
             "chapters": {}
         }
 
@@ -70,11 +70,14 @@ class Anonymiser():
                             if i <= level:
                                 curr_feature[level_titles[i - 2]] = level_names[i]
 
-                        print(curr_feature)
                     elif s not in Anonymiser.REDUNDANT_LINES:
                         if "description" not in curr_feature:
-                            curr_feature["description"] = []
-                        curr_feature["description"].append(Anonymiser.check(s))
+                            curr_feature["description"] = [Anonymiser.check(s)]
+                        else:
+                            if curr_feature["description"][-1][-1] not in ".;:":
+                                curr_feature["description"][-1] = curr_feature["description"][-1] + " " + Anonymiser.check(s)
+                            else:
+                                curr_feature["description"].append(Anonymiser.check(s))
                     
 
         with open(target, "w") as file:
@@ -84,6 +87,8 @@ class Anonymiser():
 
 
 sources = ["CMSRS.txt"]
+id_nums = [3]
+names = ["Case Management System Project User Requirements"]
 
-for src in sources:
-    Anonymiser.anonymise("./input/" + src, "./output/anonymised_" + src[:-4] + ".json")
+for s, i, n in zip(sources, id_nums, names):
+    Anonymiser.anonymise("./input/" + s, "./output/anonymised_" + s[:-4] + ".json", i, n)
