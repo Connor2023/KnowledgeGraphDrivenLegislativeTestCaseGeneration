@@ -8,6 +8,8 @@ import json
 
 class Anonymiser():
     LINK_PLACEHOLDER = lambda x: "[" + x + " Resource]" # x is External/Internal
+    PRSRS_FIGURE_NUM = 3                                # starting number id for first figure
+    PRSRS_FIGURE_PREFIX = "PRSRS_"
 
     GENERALISATIONS = {
         "Tianyancha": "T Person"
@@ -18,11 +20,12 @@ class Anonymiser():
     def check(s: str) -> str | dict:
         # handle figures (multimodal)
         if s[:len("Figure ")] == "Figure ":
+            Anonymiser.PRSRS_FIGURE_NUM += 1
             return {
                 "mode": "Figure",
                 "id": s.split()[1],
                 "name": " ".join(s.split()[2:]),
-                "link": None
+                "link": Anonymiser.PRSRS_FIGURE_PREFIX + "0" * (3 - len(str(Anonymiser.PRSRS_FIGURE_NUM - 1))) + str(Anonymiser.PRSRS_FIGURE_NUM - 1)
             }
 
         # handle specified terms
@@ -49,6 +52,7 @@ class Anonymiser():
                 "chapters": {}
             }
 
+            total_words = 0
             level_names = [None] * 3
             curr_chapter = []
             curr_chapter_num = 1
@@ -90,10 +94,13 @@ class Anonymiser():
                                     "requirement": level_names[2]
                                 }
 
+                            res = Anonymiser.check(s)
+                            if isinstance(res, str):
+                                total_words += res.count(" ")
                             if "description" not in curr_feature:
-                                curr_feature["description"] = [Anonymiser.check(s)]
+                                curr_feature["description"] = [res]
                             else:
-                                curr_feature["description"].append(Anonymiser.check(s))
+                                curr_feature["description"].append(res)
             
             if curr_chapter:
                 if "description" in curr_feature or "multimodal" in curr_feature:
@@ -107,6 +114,7 @@ class Anonymiser():
                 "chapters": {}
             }
 
+            total_words = 0
             level_names = [None] * 10
             last_id = None
             curr_chapter = []
@@ -146,20 +154,24 @@ class Anonymiser():
                                     j = i - 1
                                     if j <= level:
                                         curr_feature[level_titles[i - 2]] = level_names[j]
-                        elif len(s) >= 3 and s[0].isdigit() and s[1] == "." and s[2] == " ":
+                        elif len(s) >= 3 and s[0].isdigit() and s[1] == "." and s[2] == " " and ("CMSRS" in source or line[0] != " "):
                             level = 1
                             level_name = s[3:]
                             level_names[level] = level_name
 
                         # deal with if it is content (requirement description/image)
                         elif s not in Anonymiser.REDUNDANT_LINES and any([not s[i].isdigit() for i in range(len(s))]):
+                            res = Anonymiser.check(s)
+                            if isinstance(res, str):
+                                total_words += res.count(" ")
                             if "description" not in curr_feature:
-                                curr_feature["description"] = [Anonymiser.check(s)]
+                                curr_feature["description"] = [res]
                             else:
-                                if isinstance(curr_feature["description"][-1], str) and isinstance(Anonymiser.check(s), str) and curr_feature["description"][-1][-1] not in ".;:":
-                                    curr_feature["description"][-1] = curr_feature["description"][-1] + " " + Anonymiser.check(s)
+                                res
+                                if isinstance(curr_feature["description"][-1], str) and isinstance(res, str) and curr_feature["description"][-1][-1] not in ".;:":
+                                    curr_feature["description"][-1] = curr_feature["description"][-1] + " " + res
                                 else:
-                                    curr_feature["description"].append(Anonymiser.check(s))
+                                    curr_feature["description"].append(res)
             
             if curr_chapter:
                 if "description" in curr_feature or "multimodal" in curr_feature:
@@ -167,14 +179,24 @@ class Anonymiser():
                     curr_feature = {}
                 info["chapters"][curr_chapter_num] = curr_chapter
 
-        with open(target, "w") as file:
-            json.dump(info, file, indent=4)
+        if False:
+            with open(target, "w") as file:
+                json.dump(info, file, indent=4)
+        
+        num_features = sum([len(info["chapters"][chapter]) for chapter in info["chapters"]])
+        average_words = total_words / num_features
+        
+        print(source)
+        print("Data anonymised!", num_features, average_words)
+        print()
 
-        print("Data anonymised!")
 
-
-sources = ["CMSRS", "PRSRS", "SMSRS"]
-id_nums = [3, 2, 1]
+sources = ["CMSRS", 
+           "PRSRS",  # .json REQUIRES MANUAL MODIFICATION after automated processing
+        "SMSRS"]
+id_nums = [3, 
+           2,
+         1]
 names = [
     "Case Management System Project User Requirements", 
     "Patient Registration System Requirements Specification", 
