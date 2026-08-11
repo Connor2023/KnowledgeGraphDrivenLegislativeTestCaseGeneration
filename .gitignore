@@ -2,3 +2,12 @@
 **/output
 esolution-main/
 Literature
+
+# Secrets: Aura writes credentials to Neo4j-<instance>-Created-<date>.txt
+Neo4j-*.txt
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/

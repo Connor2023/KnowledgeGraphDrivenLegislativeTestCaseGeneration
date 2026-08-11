@@ -1,0 +1,95 @@
+section,arg1,relation,arg2
+1,Privacy Regulations 2025,is,name of this instrument
+2,Privacy Regulations 2025,commences,1 April 2026
+3,Privacy Regulations 2025,is made under,Privacy Act 1988
+4,Instrument specified in a Schedule,is amended or repealed as set out in,applicable Schedule items
+5,Act,means,Privacy Act 1988
+5,Australian Retirement Trust,means,Trustee for Australian Retirement Trust Pty Ltd or its payroll contractor acting in that capacity
+5,AustralianSuper,means,Trustee for AustralianSuper or its payroll contractor acting in that capacity
+5,AvSuper,means,trustee for AvSuper Fund or its payroll contractor acting in that capacity
+5,Centrelink Confirmation eServices scheme,means,scheme administered by Services Australia
+5,Centrelink program,has the same meaning as,meaning in Human Services (Centrelink) Act 1997
+5,Customer Reference Number,means,number assigned to an individual for a Centrelink program by the relevant Department
+5,DVA File Number,means,file number assigned to an individual by the relevant Department
+5,DVA unique identification number,means,unique identification number assigned to an individual by the relevant Department
+5,HomeStart Finance,means,body established under the SA HomeStart Finance Regulations 1995
+5,Indigenous person,means,member of the Aboriginal race of Australia or descendant of an Indigenous inhabitant of the Torres Strait Islands
+5,NT Home Ownership,means,NT Home Ownership or its agent acting in that capacity
+5,payroll contractor,means,organisation responsible under contract for processing specified payments on behalf of a principal organisation
+5,payroll number,means,"identifier assigned to an individual for salary and employment benefits by an agency, agent or contracted service provider"
+5,residential tenancy database,means,database storing personal information about residential tenancy and accessible beyond its operator
+5,Customer Reference Number,is,government related identifier
+5,DVA File Number,is,government related identifier
+5,DVA unique identification number,is,government related identifier
+5,payroll number,is,government related identifier
+6,payment structure of principal and interest,is prescribed as a term or condition of,consumer credit
+6,whether credit term is fixed or revolving,is prescribed as a term or condition of,consumer credit
+6,length of fixed term,is prescribed as a term or condition of,consumer credit
+6,whether individual is guarantor for another individual,is prescribed as a term or condition of,consumer credit
+6,whether consumer credit is secured or unsecured,is prescribed as a term or condition of,consumer credit
+6,variations to specified terms or conditions,is prescribed as a term or condition of,consumer credit
+7(1),Small business operator operating a residential tenancy database,is prescribed,organisation
+7(2),collecting personal information to establish or maintain a residential tenancy database,is prescribed,act or practice
+7(2),maintaining personal information on a residential tenancy database,is prescribed,act or practice
+7(2),using or disclosing personal information stored on a residential tenancy database,is prescribed,act or practice
+8,Essential Energy,is prescribed,organisation
+8,Keystart,is prescribed,organisation
+8,Office of the National Rail Safety Regulator,is prescribed,organisation
+8,NT Home Ownership,is prescribed,organisation
+8(5),subsection 7B(5),is modified by adding,paragraph (c)
+9(1),HomeStart Finance,is prescribed,organisation
+9(2),Australian Privacy Principle 11.2,did not apply in relation to,HomeStart Finance
+10(1),Indigenous Business Australia,is prescribed,credit provider
+10(1),Export Finance and Insurance Corporation,is prescribed,credit provider
+10(1),Regional Investment Corporation,is prescribed,credit provider
+10(1),NT Home Ownership,is prescribed,credit provider
+10(2),Organisation or small business operator acting as current/prospective landlord,is not,credit provider
+11(1),Business or undertaking in specified class,is not,credit reporting business
+11(2),Class of businesses or undertakings,complies with,paragraph 11(1)(b)
+12,Individual,is taken not to have met,monthly payment obligation
+13,Indigenous Business Australia,is prescribed,credit provider for paragraph 20E(4)(a)
+13,Regional Investment Corporation,is prescribed,credit provider for paragraph 20E(4)(a)
+13,NT Home Ownership,is prescribed,credit provider for paragraph 20E(4)(a)
+14(1),Credit provider,is prescribed if,credit provider for subparagraph 21D(2)(a)(i)
+14(2),Indigenous Business Australia,is prescribed,credit provider for subparagraph 21D(2)(a)(i)
+14(2),NT Home Ownership,is prescribed,credit provider for subparagraph 21D(2)(a)(i)
+14(2),Regional Investment Corporation,is prescribed if,credit provider for subparagraph 21D(2)(a)(i)
+14(3),Indigenous Business Australia,is prescribed,credit provider for subparagraph 21D(3)(c)(i)
+14(3),Regional Investment Corporation,is prescribed,credit provider for subparagraph 21D(3)(c)(i)
+14(3),NT Home Ownership,is prescribed,credit provider for subparagraph 21D(3)(c)(i)
+15,Census and Statistics Act 1905 section 19,is prescribed,designated secrecy provision
+15,Census and Statistics Act 1905 section 19A,is prescribed,designated secrecy provision
+16(a),Payroll number assigned in relation to Airservices Australia,is,government related identifier
+16(b),AvSuper,is,organisation
+16(c),payroll number,is adopted by,AvSuper
+17(a),Payroll number,is,government related identifier
+17(b),Australian Retirement Trust,is,organisation
+17(b),AustralianSuper,is,organisation
+17(b),AvSuper,is,organisation
+17(c),payroll number,is used or disclosed by,prescribed organisation
+18(1)(a),Customer Reference Number,is,government related identifier
+18(1)(a),DVA File Number,is,government related identifier
+18(1)(a),DVA unique identification number,is,government related identifier
+18(1)(b),Organisation,is prescribed if,organisation for APP 9.3
+18(2),healthcare service/product providers,is a class of,prescribed organisation class
+18(2),education providers,is a class of,prescribed organisation class
+18(2),electricity/gas/water/telecommunications/broadband providers,is a class of,prescribed organisation class
+18(2),passenger rail service providers,is a class of,prescribed organisation class
+18(2),motor vehicle roadside assistance providers,is a class of,prescribed organisation class
+18(2),trustee service providers,is a class of,prescribed organisation class
+18(2),welfare service providers,is a class of,prescribed organisation class
+18(2),social housing/facilities management/mortgage/accommodation providers for specified groups,is a class of,prescribed organisation class
+18(2),legal aid service providers,is a class of,prescribed organisation class
+18(2),local government service providers,is a class of,prescribed organisation class
+18(2),financial planning/financial products/insurance/credit union/subsidised loan providers,is a class of,prescribed organisation class
+18(1)(c),number for an individual,is used or disclosed by,prescribed organisation
+18(1)(c),use or disclosure,is with,individual's consent
+19(a),Customer Reference Number,is,government related identifier
+19(b),Organisation,is prescribed if,organisation for APP 9.3
+19(c),Customer Reference Number,is used or disclosed by,prescribed organisation
+19(c),use or disclosure,is with,individual's consent
+20,Section 16,applies in relation to,"government related identifier assigned before, on or after commencement"
+20,Section 17,applies in relation to,"government related identifier assigned before, on or after commencement"
+20,Section 18,applies in relation to,"government related identifier assigned before, on or after commencement"
+20,Section 19,applies in relation to,"government related identifier assigned before, on or after commencement"
+Schedule 1,whole of Privacy Regulation 2013,repeal,instrument
