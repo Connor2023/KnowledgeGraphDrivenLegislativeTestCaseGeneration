@@ -1,0 +1,49 @@
+Two conventions to follow in every answer below.
+
+Subjects: the subject of an obligation or permission is always the regulated party -- 'APP entity', 'organisation', 'agency' or 'individual'. Never make an abstract noun such as 'steps', 'use or disclosure', 'principles' or 'the information' the subject of an obligation. Where a provision limits or excludes itself, the subject is the subclause or the principle.
+
+Purposes: for 'may use for', 'must not use for' and 'must not disclose for', the object is the purpose, not the information acted on. Record the information in its own separate triple.
+
+Example 1:
+Text: Australian Privacy Principle 2 is titled 'anonymity and pseudonymity' and is one of the thirteen Australian Privacy Principles set out in Schedule 1 of the Privacy Act.
+Triplets: [['Australian Privacy Principle 2', 'has title', 'anonymity and pseudonymity'], ['Australian Privacy Principle 2', 'set out in', 'Schedule 1 of the Privacy Act']]
+
+Example 2:
+Text: Under Australian Privacy Principle 11 (security of personal information), subclause 11.1 of Schedule 1 of the Privacy Act provides that if an APP entity holds personal information, the entity must take such steps as are reasonable in the circumstances to protect the information from misuse, interference and loss; and from unauthorised access, modification or disclosure.
+Triplets: [['subclause 11.1', 'belongs to principle', 'Australian Privacy Principle 11'], ['APP entity', 'holds', 'personal information'], ['APP entity', 'must protect', 'personal information'], ['APP entity', 'must protect against', 'misuse, interference and loss'], ['APP entity', 'must protect against', 'unauthorised access, modification or disclosure']]
+
+Example 3:
+Text: Under Australian Privacy Principle 3 (collection of solicited personal information), under the heading 'Sensitive information', subclause 3.3 of Schedule 1 of the Privacy Act provides that an APP entity must not collect sensitive information about an individual unless the individual consents to the collection of the information and the information is reasonably necessary for the entity's functions or activities.
+Triplets: [['subclause 3.3', 'belongs to principle', 'Australian Privacy Principle 3'], ['APP entity', 'must not collect', 'sensitive information'], ['sensitive information', 'relates to', 'individual'], ['collection of sensitive information', 'requires consent of', 'individual'], ['collection of sensitive information', 'must be necessary for', "the entity's functions or activities"]]
+
+Example 4:
+Text: Under Australian Privacy Principle 7 (direct marketing), subclause 7.1 of Schedule 1 of the Privacy Act provides that if an organisation holds personal information about an individual, the organisation must not use or disclose the information for the purpose of direct marketing.
+Triplets: [['subclause 7.1', 'belongs to principle', 'Australian Privacy Principle 7'], ['organisation', 'holds', 'personal information'], ['organisation', 'must not use for', 'direct marketing'], ['organisation', 'must not disclose for', 'direct marketing']]
+
+Example 5:
+Text: Under Australian Privacy Principle 8 (cross-border disclosure of personal information), subclause 8.1 of Schedule 1 of the Privacy Act provides that before an APP entity discloses personal information about an individual to a person who is not in Australia or an external Territory, the entity must take such steps as are reasonable in the circumstances to ensure that the overseas recipient does not breach the Australian Privacy Principles.
+Triplets: [['subclause 8.1', 'belongs to principle', 'Australian Privacy Principle 8'], ['APP entity', 'may disclose to', 'overseas recipient'], ['overseas recipient', 'located outside', 'Australia'], ['APP entity', 'must ensure compliance of', 'overseas recipient'], ['overseas recipient', 'must not breach', 'Australian Privacy Principles']]
+
+Example 6:
+Text: Under Australian Privacy Principle 5 (notification of the collection of personal information), subclause 5.2 of Schedule 1 of the Privacy Act provides that the matters for the purposes of subclause 5.1 are as follows (d) the purposes for which the APP entity collects the personal information.
+Triplets: [['subclause 5.2', 'belongs to principle', 'Australian Privacy Principle 5'], ['APP entity', 'collects', 'personal information'], ['APP entity', 'must notify individual of', 'the purposes for which the APP entity collects the personal information']]
+
+Example 7:
+Text: Under Australian Privacy Principle 12 (access to personal information), under the heading 'Dealing with requests for access', subclause 12.4 of Schedule 1 of the Privacy Act provides that an APP entity that is an agency must respond to a request for access to personal information within 30 days after the request is made.
+Triplets: [['subclause 12.4', 'belongs to principle', 'Australian Privacy Principle 12'], ['individual', 'may request access to', 'personal information'], ['agency', 'must respond to', 'request for access to personal information'], ['agency', 'must respond within', '30 days']]
+
+Example 8:
+Text: Under Australian Privacy Principle 9 (adoption, use or disclosure of government related identifiers), subclause 9.1 of Schedule 1 of the Privacy Act provides that an organisation must not adopt a government related identifier of an individual as its own identifier of the individual unless the adoption is required or authorised by or under an Australian law.
+Triplets: [['subclause 9.1', 'belongs to principle', 'Australian Privacy Principle 9'], ['organisation', 'must not adopt', 'government related identifier'], ['government related identifier', 'relates to', 'individual'], ['adoption of government related identifier', 'has exception', 'required or authorised by or under an Australian law']]
+
+Example 9:
+Text: Under Australian Privacy Principle 11 (security of personal information), subclause 11.2 of Schedule 1 of the Privacy Act provides that if an APP entity holds personal information about an individual; and the entity no longer needs the information for any purpose for which the information may be used or disclosed by the entity; and the information is not contained in a Commonwealth record; the entity must take such steps as are reasonable in the circumstances to destroy the information or to ensure that the information is de-identified.
+Triplets: [['subclause 11.2', 'belongs to principle', 'Australian Privacy Principle 11'], ['APP entity', 'holds', 'personal information'], ['APP entity', 'must destroy or de-identify', 'personal information'], ['APP entity', 'must take reasonable steps to', 'destroy or de-identify the personal information'], ['obligation to destroy personal information', 'has exception', 'the information is contained in a Commonwealth record']]
+
+Example 10:
+Text: Under Australian Privacy Principle 7 (direct marketing), under the heading 'Interaction with other legislation', subclause 7.8 of Schedule 1 of the Privacy Act provides that this principle does not apply to the extent that the Do Not Call Register Act 2006 or the Spam Act 2003 applies.
+Triplets: [['subclause 7.8', 'belongs to principle', 'Australian Privacy Principle 7'], ['Australian Privacy Principle 7', 'does not apply to', 'the Do Not Call Register Act 2006'], ['Australian Privacy Principle 7', 'does not apply to', 'the Spam Act 2003']]
+
+Example 11:
+Text: Under Australian Privacy Principle 4 (dealing with unsolicited personal information), subclause 4.2 of Schedule 1 of the Privacy Act provides that the APP entity may use or disclose the personal information for the purposes of making the determination required by subclause 4.1.
+Triplets: [['subclause 4.2', 'belongs to principle', 'Australian Privacy Principle 4'], ['APP entity', 'may use', 'personal information'], ['APP entity', 'may disclose', 'personal information'], ['APP entity', 'may use for', 'making the determination required by subclause 4.1']]
