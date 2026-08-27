@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-08-28T02:17:51.343781+10:00",
+  "feature_name": "Access to personal information",
+  "feature_path": "runs\\v2_app_12_1\\generated.feature",
+  "counts": {
+    "green_tick": 1,
+    "orange_cross": 0,
+    "red_cross": 1
+  },
+  "classification_meaning": {
+    "green_tick": "Satisfied by the 2016 policy.",
+    "orange_cross": "Not satisfied in 2016 but satisfied in 2026 - a real gap that was later closed, which also corroborates the test case.",
+    "red_cross": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review."
+  },
+  "scenarios_evaluated": 2,
+  "fabricated_evidence_count": 0,
+  "evaluations": [
+    {
+      "scenario": {
+        "name": "Individual requests access to personal information",
+        "tags": [
+          "@s12-1",
+          "@access-to-personal-information"
+        ],
+        "steps": [
+          "Given the entity holds personal information about the individual",
+          "When the individual requests access to their personal information",
+          "Then the privacy policy states that the individual will be given access to their personal information upon request"
+        ],
+        "derives_from": "the entity must, on request by the individual, give the individual access to the information.",
+        "line_number": 4
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "satisfied",
+        "confidence": "high",
+        "evidence_quote": "you can view or edit your personal data online for many Microsoft services.",
+        "reasoning": "The policy explicitly states that individuals can view or edit their personal data, which implies access to their personal information upon request.",
+        "evidence_verified": true,
+        "evidence_status": "verified",
+        "parse_error": null
+      },
+      "verdict_2026": null,
+      "classification": "green_tick",
+      "classification_meaning": "Satisfied by the 2016 policy.",
+      "needs_manual_review": false
+    },
+    {
+      "scenario": {
+        "name": "No charge for access request",
+        "tags": [
+          "@s12-1",
+          "@no-charge-for-access"
+        ],
+        "steps": [
+          "Given the individual requests access to their personal information",
+          "When the individual makes the request",
+          "Then the privacy policy states that the individual will not be charged for making the request"
+        ],
+        "derives_from": "the entity must not charge for making of the request.",
+        "line_number": 11
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state that individuals will not be charged for making a request to access their personal information.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "verdict_2026": {
+        "policy_label": "2026",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not mention anything about charging individuals for making a request to access their personal information.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "classification": "red_cross",
+      "classification_meaning": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review.",
+      "needs_manual_review": true
+    }
+  ]
+}
