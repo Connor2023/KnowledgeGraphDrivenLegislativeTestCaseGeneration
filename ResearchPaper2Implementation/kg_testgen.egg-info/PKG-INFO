@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: kg-testgen
+Version: 0.1.0
+Summary: Generate Gherkin compliance test cases from privacy legislation, using a Neo4j knowledge graph for supplementary context.
+Requires-Python: >=3.10
+Requires-Dist: neo4j>=5.20
+Requires-Dist: numpy>=1.26
+Requires-Dist: openai>=1.30
+Requires-Dist: python-dotenv>=1.0
+Requires-Dist: tiktoken>=0.7
+Requires-Dist: truststore>=0.9

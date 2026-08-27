@@ -1,0 +1,120 @@
+================================================================================
+BLOCK 1 of 3 — TASK
+================================================================================
+You derive compliance test cases from a section of privacy legislation.
+
+The test cases are NOT executable software tests. Each one will be checked, by a person
+reading a company's published privacy policy, to decide whether that policy satisfies
+the legislative requirement. Every scenario you write must therefore be verifiable by
+reading a privacy policy document and nothing else.
+
+Write steps as assertions about what a privacy policy states, discloses, or commits to.
+Never write steps describing user interface actions, API calls, button clicks, database
+state, or any other software behaviour.
+
+================================================================================
+BLOCK 2 of 3 — TARGET SECTION (verbatim)
+This is the legislation the test cases must be derived from. Write scenarios for THIS
+text and only this text.
+================================================================================
+Under Australian Privacy Principle 11, subclause 11.1 provides that if an APP entity holds personal information, the entity must take such steps as are reasonable in the circumstances to protect the information from misuse, interference and loss.
+
+================================================================================
+BLOCK 3 of 3 — SUPPLEMENTARY CONTEXT (NOT part of the target section)
+The statements below were retrieved from a knowledge graph built over the wider
+legislation. They come from OTHER provisions, not from the target section above.
+
+Use them only to understand how the target section's concepts connect to the rest of
+the legislation. Do NOT write scenarios testing these statements. Do NOT treat them as
+text of the target section.
+================================================================================
+The following 57 related statements were retrieved from the knowledge graph, grouped by the entity in the target section that led to them.
+
+Related to "<seed-to-seed>" (3 statements):
+  - APP entity — did not solicit — personal information [asserted by subclause 4.1]
+  - APP entity — manage — personal information [asserted by subclause 1.1]
+  - APP entity — may collect — personal information [asserted by subclause 3.6]
+
+Related to "APP entity" (24 statements):
+  - APP entity — must contain — APP privacy policy [asserted by subclause 1.4; subclause 5.2]
+  - APP entity — is a type of — organisation [asserted by subclause 3.2; subclause 3.4; subclause 6.2; subclause 6.4; subclause 12.3]
+  - APP entity — may disclose — personal information [asserted by subclause 4.2; subclause 5.2; subclause 6.2; subclause 6.5; subclause 8.2]
+  - APP entity — may disclose to — overseas recipient [asserted by subclause 8.1; subclause 8.2; subclause 8.3]
+  - APP entity — collects — personal information [asserted by subclause 1.4; subclause 3.5; subclause 4.1; subclause 5.1; subclause 5.2; subclause 6.6]
+  - APP entity — holds — personal information [asserted by subclause 6.1; subclause 11.1; subclause 11.2; subclause 12.1; subclause 13.1]
+  - APP entity — may disclose to — personal information [asserted by subclause 6.3; subclause 8.2]
+  - APP entity — is required or authorised to refuse — personal information [asserted by subclause 12.5; subclause 12.9; subclause 12.10]
+  - APP entity — refuses to correct — personal information [asserted by subclause 13.3; subclause 13.4]
+  - APP entity — must notify individual of — individual [asserted by subclause 5.1; subclause 8.2]
+  - APP entity — must destroy or de-identify — personal information [asserted by subclause 4.3; subclause 11.2]
+  - APP entity — must not charge for — making of the request [asserted by subclause 12.7; subclause 13.5]
+  - APP entity — must take reasonable steps to — destroy or de-identify the personal information [asserted by subclause 4.3; subclause 11.2]
+  - APP entity — must make available — APP privacy policy [asserted by subclause 1.5]
+  - APP entity — must give access to — individual [asserted by subclause 12.1]
+  - APP entity — must ensure compliance of — overseas recipient [asserted by subclause 8.1]
+  - personal information — collects — APP entity [asserted by subclause 10.1]
+  - overseas recipient — conducted by — APP entity
+  - APP entity — holds — identity and contact details [asserted by subclause 5.2]
+  - personal information — holds — APP entity [asserted by subclause 5.2]
+  - personal information — uses or discloses — APP entity [asserted by subclause 10.2]
+  - APP entity — may use — personal information [asserted by subclause 4.2]
+  - APP entity — must give access to — personal information [asserted by subclause 12.4]
+  - APP entity — must not collect — personal information [asserted by subclause 3.2]
+
+Related to "Australian Privacy Principle 11" (19 statements):
+  - Australian Privacy Principle 11 — set out in — Schedule 1 of the Privacy Act
+  - subclause 11.2 — belongs to principle — Australian Privacy Principle 11 [asserted by subclause 11.2]
+  - subclause 11.3 — belongs to principle — Australian Privacy Principle 11 [asserted by subclause 11.3]
+  - Australian Privacy Principle 11 — has title — security of personal information
+  - Australian Privacy Principle 7 — set out in — Schedule 1 of the Privacy Act
+  - Australian Privacy Principle 1 — set out in — Schedule 1 of the Privacy Act
+  - Australian Privacy Principle 10 — set out in — Schedule 1 of the Privacy Act
+  - Australian Privacy Principle 12 — set out in — Schedule 1 of the Privacy Act
+  - Australian Privacy Principle 13 — set out in — Schedule 1 of the Privacy Act
+  - Australian Privacy Principle 2 — set out in — Schedule 1 of the Privacy Act
+  - Australian Privacy Principle 3 — set out in — Schedule 1 of the Privacy Act
+  - Australian Privacy Principle 4 — set out in — Schedule 1 of the Privacy Act
+  - Australian Privacy Principle 5 — set out in — Schedule 1 of the Privacy Act
+  - Australian Privacy Principle 6 — set out in — Schedule 1 of the Privacy Act
+  - Australian Privacy Principle 8 — set out in — Schedule 1 of the Privacy Act
+  - Australian Privacy Principle 9 — set out in — Schedule 1 of the Privacy Act
+  - part 3 — set out in — Schedule 1 of the Privacy Act
+  - part 4 — set out in — Schedule 1 of the Privacy Act
+  - part 4 — sets out — security of personal information
+
+Related to "personal information" (11 statements):
+  - personal information — relates to — individual [asserted by subclause 1.4; subclause 3.6; subclause 6.1; subclause 6.2; subclause 6.3; subclause 7.2; subclause 7.3; subclause 7.6; subclause 8.2; subclause 13.1; subclause 13.2]
+  - organisation — may disclose — personal information [asserted by subclause 7.2; subclause 7.3]
+  - organisation — may use — personal information [asserted by subclause 7.2; subclause 7.3]
+  - individual — may request access to — personal information [asserted by subclause 5.2; subclause 12.1]
+  - personal information — excludes — sensitive information [asserted by subclause 3.2; subclause 7.3]
+  - organisation — collects — personal information [asserted by subclause 7.3; subclause 7.5]
+  - personal information — may disclose to — overseas recipient [asserted by subclause 5.2]
+  - APP entity — usually discloses — personal information [asserted by subclause 5.2]
+  - APP entity — must correct — personal information [asserted by subclause 13.2]
+  - personal information — collects — primary purpose [asserted by subclause 6.1]
+  - personal information — collects — someone other than the individual [asserted by subclause 5.2]
+
+================================================================================
+OUTPUT FORMAT
+================================================================================
+Produce a single valid Gherkin feature file.
+
+Structure:
+- Exactly one `Feature:` covering the target section.
+- One `Scenario:` for each distinct obligation, prohibition, permission, condition or
+  exception in the TARGET SECTION. Do not create scenarios for the supplementary
+  context; use that context only to inform wording and to catch related requirements
+  that the target section depends on.
+- Every `Scenario:` must be preceded by a tag identifying which part of the target
+  section it derives from, in the form `@s11-1` plus a short obligation
+  slug, for example `@s11-1 @notify-purpose-of-collection`.
+- Immediately under each `Scenario:` line, add a comment line beginning `# Derives from:`
+  quoting or closely paraphrasing the words of the target section it tests.
+
+Step style:
+- `Given` establishes the entity or circumstance the requirement applies to.
+- `When` states the handling activity or the individual's request.
+- `Then` asserts what the privacy policy must state, disclose or commit to.
+
+Output the Gherkin only. No markdown code fences, no commentary before or after.
