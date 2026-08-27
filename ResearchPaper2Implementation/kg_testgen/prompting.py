@@ -20,7 +20,34 @@ reading a privacy policy document and nothing else.
 
 Write steps as assertions about what a privacy policy states, discloses, or commits to.
 Never write steps describing user interface actions, API calls, button clicks, database
-state, or any other software behaviour.\
+state, or any other software behaviour.
+
+Three rules govern every Then step, because a scenario that breaks them cannot be
+checked against a real policy and is worthless:
+
+1. NEVER require the policy to cite, name or number a legislative provision. A company
+   privacy policy will not say "Australian Privacy Principle 6", "subclause 6.2", "the
+   Privacy Act" or "as required by Australian law". Test the SUBSTANCE the provision
+   requires, not the provision's identity.
+
+2. Write in the vocabulary a privacy policy actually uses -- "personal data", "collect",
+   "share", "purposes", "retain", "access", "correct", "consent", "third parties",
+   "transfer" -- rather than the statute's terms of art where the two differ.
+
+3. Make each Then step ONE specific, self-contained claim that a reader can confirm or
+   deny from the policy text alone. Never defer to unstated conditions.
+
+   BAD:  Then the privacy policy states that the entity must not use the information for
+         another purpose unless certain conditions are met
+         (untestable: "certain conditions" names nothing)
+   BAD:  Then the privacy policy explains when subclause 6.2 applies
+         (untestable: no policy references Australian subclauses)
+   GOOD: Then the privacy policy states that personal data collected for one purpose will
+         not be used for an unrelated purpose without the individual's consent
+         (a reader can confirm or deny this from the policy)
+
+Where a provision lists several distinct matters, obligations or exceptions, give each
+one its own scenario rather than combining them into a single vague assertion.\
 """
 
 OUTPUT_CONTRACT = """\
@@ -41,7 +68,11 @@ Structure:
 Step style:
 - `Given` establishes the entity or circumstance the requirement applies to.
 - `When` states the handling activity or the individual's request.
-- `Then` asserts what the privacy policy must state, disclose or commit to.
+- `Then` asserts what the privacy policy must state, disclose or commit to, obeying the
+  three rules above: no legislative citations, policy vocabulary, one checkable claim.
+
+Before writing each scenario, ask yourself: "could a person holding only this company's
+privacy policy decide whether this Then step is true?" If the answer is no, rewrite it.
 
 Output the Gherkin only. No markdown code fences, no commentary before or after.\
 """
