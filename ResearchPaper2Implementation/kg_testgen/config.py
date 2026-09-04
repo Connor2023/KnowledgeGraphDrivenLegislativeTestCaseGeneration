@@ -76,6 +76,29 @@ class Config:
     discards facts asserted by many provisions, which are the strongest cross-section
     context available. 'none' disables the filter."""
 
+    provision_text_scope: str = "cross-referenced"
+    """Whether retrieved provisions contribute their statutory text, and which.
+
+    'cross-referenced' (default) includes text only for provisions the target clause
+        actually points at (REFERS_TO). Highly selective: APP 6.1 pulls 6.2 and 6.3.
+    'retrieved'        includes text for every provision named in a retrieved edge's
+        provenance. Measured at ~9,800 tokens for APP 6.1 -- 86% of the whole corpus,
+        which collapses this arm into full-corpus and stops it being a comparison.
+    'none'             triples only; the behaviour before provision text existed.
+    """
+
+    include_triples: bool = True
+    """Whether the serialised KG triples reach the prompt at all.
+
+    Setting this false, with provision_text_scope='cross-referenced', isolates the
+    graph's own contribution: the run keeps identical seeding, retrieval and provision
+    text, and differs only in whether ~3,000 tokens of triples sit beside ~400 tokens of
+    statutory text. If removing them improves the output, the triples are costing more
+    than they add."""
+
+    provision_text_variant: str = "raw"
+    """'raw' (verbatim, citable) or 'normalised' (the corpus document EDC saw)."""
+
     context_token_budget: int = 3000
 
     # --- LLM ---------------------------------------------------------------------
@@ -84,6 +107,71 @@ class Config:
     max_output_tokens: int = 4000
 
     # --- Behaviour ---------------------------------------------------------------
+    context_mode: str = "kg"
+    """Which supplementary context the prompt carries -- i.e. the experimental arm.
+
+    'kg'          retrieve a subgraph from the APP graph and serialise it as triples
+    'rp1'         select and order the whole RP1 background graph (see rp1_query)
+    'spires'      walk the SPIRES norm graph and render norms (see spires_query)
+    'none'        no supplementary context at all; the section text alone
+    'full-corpus' paste the entire legislation corpus in verbatim
+
+    'none' and 'full-corpus' never touch the database. Distinct from allow_unaugmented,
+    which only degrades to no-context when KG retrieval fails."""
+
+    # --- SPIRES arm --------------------------------------------------------------
+    spires_hop_depth: int = 1
+    """How far to follow SP_REFERS_TO / SP_DISAPPLIES from the target provision.
+
+    1 is the direct dependency set -- what the clause points at and what points at it.
+    2 adds the dependencies of those, which for APP 6.1 pulls in the permitted general
+    and health situations behind 6.2(c) and (d). Beyond 2 the Schedule's reference
+    network reaches most of itself and the arm degenerates into full-corpus."""
+
+    spires_include_inbound: bool = True
+    """Follow reference edges backwards as well as forwards.
+
+    Outbound answers "what does this clause depend on"; inbound answers "what defeats
+    it". Subclause 2.1 read alone states an unqualified anonymity right and is
+    misleading until 2.2 -- which points AT it -- is in view. Outbound-only retrieval
+    can never find 2.2 from 2.1, which is why this defaults on."""
+
+    spires_modality_filter: Optional[str] = None
+    """None keeps every norm; 'deontic' keeps only OBLIGATION/PROHIBITION/PERMISSION
+    (plus APPLICABILITY, which carries the content of exceptions used elsewhere)."""
+
+    spires_include_provision_text: bool = False
+    """Append the verbatim text of the provisions the walk reached.
+
+    The hybrid. `kg-text-only` -- statutory text with the triples withheld -- is the best
+    arm measured so far, and the norm structure is what the flat triples failed to be. So
+    the obvious combination is both: the structure says which rule is which and where the
+    carve-outs are, the text says exactly what each one says.
+
+    Text is read from the :AppNode graph, which is where enrich_graph.py stored it; the
+    SPIRES graph holds structure only. Only reached provisions contribute -- the target's
+    own text is already Block 2, and repeating it would waste budget."""
+
+    spires_exceptions_first: bool = True
+    """Render each norm's exceptions above its conditions.
+
+    The measured gap across every arm is boundary coverage -- six elements no
+    configuration ever reached were all negative or structural. Ordering exceptions
+    first is a direct intervention on that, and cheap to reverse if it does not help."""
+
+    block3_format: str = "default"
+    """Which phrasing of the block 3 header to use: 'default', 'terse' or 'neutral'.
+
+    Only for the format-sensitivity measurement. The non-default variants strip the
+    arm-specific framing, so an arm run under them is not the arm as designed -- it is a
+    probe of how much the framing was contributing."""
+
+    corpus_path: Optional[str] = None
+    """Corpus file for context_mode='full-corpus'. Defaults to the APP corpus."""
+
+    run_label: Optional[str] = None
+    """Free-text label recorded in the run record, for grouping experiment cells."""
+
     allow_unaugmented: bool = False
     """When false (default), zero seed matches or empty retrieval is fatal. The
     requirements forbid silently falling through to an unaugmented LLM call; this flag
@@ -101,8 +189,22 @@ class Config:
             raise ConfigError(
                 "Vector seeding is an unimplemented extension point: node embeddings do "
                 "not exist in the graph. See seeding.seed_by_vector_similarity.")
+        if self.context_mode not in ("kg", "rp1", "spires", "none", "full-corpus"):
+            raise ConfigError(
+                "context_mode must be 'kg', 'rp1', 'spires', 'none' or 'full-corpus'")
+        if self.spires_modality_filter not in (None, "deontic"):
+            raise ConfigError("spires_modality_filter must be None or 'deontic'")
+        if self.block3_format not in ("default", "terse", "neutral"):
+            raise ConfigError("block3_format must be 'default', 'terse' or 'neutral'")
+        if self.spires_hop_depth < 1:
+            raise ConfigError("spires_hop_depth must be at least 1")
         if self.serialisation_format not in ("triples", "json"):
             raise ConfigError("serialisation_format must be 'triples' or 'json'")
+        if self.provision_text_scope not in ("cross-referenced", "retrieved", "none"):
+            raise ConfigError(
+                "provision_text_scope must be 'cross-referenced', 'retrieved' or 'none'")
+        if self.provision_text_variant not in ("raw", "normalised"):
+            raise ConfigError("provision_text_variant must be 'raw' or 'normalised'")
         if self.self_provision_policy not in ("sole", "any", "none"):
             raise ConfigError("self_provision_policy must be 'sole', 'any' or 'none'")
         if self.ranking_key not in ("hop_weight_degree", "hop_degree"):
@@ -186,6 +288,15 @@ def add_cli_arguments(parser: argparse.ArgumentParser) -> None:
     g.add_argument("--ranking-key", choices=["hop_weight_degree", "hop_degree"])
     g.add_argument("--serialisation-format", choices=["triples", "json"])
     g.add_argument("--context-token-budget", type=int)
+    g.add_argument("--provision-text-scope",
+                   choices=["cross-referenced", "retrieved", "none"],
+                   help="Which retrieved provisions contribute their statutory text. "
+                        "Default 'cross-referenced' -- only clauses the target points at.")
+    g.add_argument("--provision-text-variant", choices=["raw", "normalised"])
+    g.add_argument("--no-triples", dest="include_triples", action="store_false",
+                   default=None,
+                   help="Omit the serialised KG triples from the prompt, keeping "
+                        "provision text. Isolates what the triples contribute.")
     g.add_argument("--self-provision-policy", choices=["sole", "any", "none"],
                    help="Which triples asserted by the input subclause to drop from the "
                         "context. 'sole' (default) drops only those the input subclause "
@@ -197,6 +308,12 @@ def add_cli_arguments(parser: argparse.ArgumentParser) -> None:
     g.add_argument("--max-output-tokens", type=int)
 
     g = parser.add_argument_group("behaviour")
+    g.add_argument("--context-mode", choices=["kg", "rp1", "none", "full-corpus"],
+                   help="Experimental arm: 'kg' retrieves a subgraph (default), 'none' "
+                        "supplies no context, 'full-corpus' pastes the whole corpus in. "
+                        "The latter two never touch Neo4j.")
+    g.add_argument("--corpus-path", help="Corpus file for --context-mode full-corpus.")
+    g.add_argument("--run-label", help="Label recorded in the run record, for grouping cells.")
     g.add_argument("--allow-unaugmented", action="store_true", default=None,
                    help="Proceed with an unaugmented LLM call when retrieval yields "
                         "nothing. Off by default: the pipeline fails loudly instead.")

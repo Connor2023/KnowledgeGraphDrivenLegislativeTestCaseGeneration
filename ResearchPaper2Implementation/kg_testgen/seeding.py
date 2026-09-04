@@ -56,6 +56,9 @@ class SeedingResult:
     unmatched_terms: List[str] = field(default_factory=list)
     provision_id: Optional[str] = None
     provision_matched: bool = False
+    provision_key: Optional[str] = None
+    """Graph key of the input's own provision node, when one matched. Used to follow
+    REFERS_TO for the text of the clauses this section depends on."""
 
     def as_dict(self) -> dict:
         return {
@@ -64,6 +67,7 @@ class SeedingResult:
             "unmatched_terms": self.unmatched_terms,
             "provision_id": self.provision_id,
             "provision_matched": self.provision_matched,
+            "provision_key": self.provision_key,
         }
 
 
@@ -176,6 +180,7 @@ def seed(text: str, client: Neo4jClient, config: Config) -> SeedingResult:
                         if s.key == key:
                             s.seed_kind = PROVISION_SEED
                 result.provision_matched = True
+                result.provision_key = key
                 logger.info("  provision anchor %-33s -> %s", provision_id, key)
             else:
                 logger.warning("  provision anchor %s -> NO MATCHING NODE (key %r)",
