@@ -1,0 +1,71 @@
+{
+  "norms": [
+    {
+      "k": "norm:6.1:1",
+      "m": "PROHIBITION",
+      "sc": "",
+      "bearer": "entity",
+      "action": "use or disclose",
+      "obj": "the information",
+      "conditions": [
+        {
+          "st": "the information is for a secondary purpose"
+        }
+      ],
+      "exceptions": [
+        {
+          "st": "the individual has consented to the use or disclosure of the information",
+          "sp": "",
+          "v": false
+        },
+        {
+          "st": "unless the individual has consented to the use or disclosure of the information",
+          "sp": "",
+          "v": true
+        }
+      ]
+    },
+    {
+      "k": "norm:6.1:2",
+      "m": "PROHIBITION",
+      "sc": "",
+      "bearer": "entity",
+      "action": "use or disclose",
+      "obj": "the information",
+      "conditions": [
+        {
+          "st": "for a secondary purpose"
+        }
+      ],
+      "exceptions": [
+        {
+          "st": "subclause 6.2 or 6.3 applies in relation to the use or disclosure of the information",
+          "sp": "",
+          "v": false
+        },
+        {
+          "st": "unless subclause 6.2 or 6.3 applies in relation to the use or disclosure of the information",
+          "sp": "6.2 or 6.3",
+          "v": true
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "t": "SP_REFERS_TO",
+      "other": "6.4",
+      "dir": "in"
+    },
+    {
+      "t": "SP_REFERS_TO",
+      "other": "6.2",
+      "dir": "out"
+    },
+    {
+      "t": "SP_REFERS_TO",
+      "other": "6.3",
+      "dir": "out"
+    }
+  ]
+}
