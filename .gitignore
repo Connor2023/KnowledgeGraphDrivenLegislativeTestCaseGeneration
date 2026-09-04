@@ -11,3 +11,24 @@ Neo4j-*.txt
 __pycache__/
 *.py[cod]
 .venv/
+
+# Experiment run outputs: prompts, features, run records. Regenerable.
+runs/
+
+# Presentations and rendered reports. Build products, not sources -- the generator
+# script and its input data stay tracked so any of these can be rebuilt.
+*.pptx
+*.potx
+**/reports/*.pdf
+**/reports/*.html
+**/reports/slide-*.png
+
+# Node: pptxgenjs, pulled in to build the slide deck. package.json and
+# package-lock.json stay tracked so the install is reproducible.
+node_modules/
+
+# The SPIRES extractions are LLM output: non-deterministic and not free to regenerate,
+# so they are the only record of what the norm graph was built from. The blanket
+# **/output rule above (written for edc-main) would otherwise swallow them.
+!**/spires/output/
+!**/spires/output/**
