@@ -32,3 +32,6 @@ node_modules/
 # **/output rule above (written for edc-main) would otherwise swallow them.
 !**/spires/output/
 !**/spires/output/**
+
+# Loose credential files
+apikey.txt

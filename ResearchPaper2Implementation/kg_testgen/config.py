@@ -308,11 +308,38 @@ def add_cli_arguments(parser: argparse.ArgumentParser) -> None:
     g.add_argument("--max-output-tokens", type=int)
 
     g = parser.add_argument_group("behaviour")
-    g.add_argument("--context-mode", choices=["kg", "rp1", "none", "full-corpus"],
-                   help="Experimental arm: 'kg' retrieves a subgraph (default), 'none' "
+    g.add_argument("--context-mode",
+                   choices=["kg", "rp1", "spires", "none", "full-corpus"],
+                   help="Experimental arm: 'kg' retrieves a subgraph (default), 'spires' "
+                        "walks the norm graph, 'rp1' serialises the concept graph, 'none' "
                         "supplies no context, 'full-corpus' pastes the whole corpus in. "
-                        "The latter two never touch Neo4j.")
+                        "The last two never touch Neo4j.")
     g.add_argument("--corpus-path", help="Corpus file for --context-mode full-corpus.")
+    g.add_argument("--block3-format", choices=["default", "terse", "neutral"],
+                   help="Phrasing of the block 3 header. Non-default variants strip the "
+                        "arm-specific framing and exist only to measure how much of a "
+                        "score is the context and how much is the wording around it.")
+
+    s = parser.add_argument_group("SPIRES arm (--context-mode spires)")
+    s.add_argument("--spires-hop-depth", type=int,
+                   help="Hops to follow along SP_REFERS_TO / SP_DISAPPLIES.")
+    s.add_argument("--no-spires-inbound", dest="spires_include_inbound",
+                   action="store_false", default=None,
+                   help="Follow reference edges forwards only. Off by default: inbound "
+                        "edges are what find the provision that DEFEATS the target, and "
+                        "2.1 is misleading until 2.2 -- which points at it -- is in view.")
+    s.add_argument("--spires-modality-filter", choices=["deontic"],
+                   help="Keep only obligations, prohibitions and permissions (plus "
+                        "APPLICABILITY, which carries the content of exceptions used "
+                        "elsewhere). Default keeps every norm.")
+    s.add_argument("--spires-provision-text", dest="spires_include_provision_text",
+                   action="store_true", default=None,
+                   help="Append the verbatim text of each provision the walk reached. "
+                        "This is the spires-hybrid arm.")
+    s.add_argument("--no-spires-exceptions-first", dest="spires_exceptions_first",
+                   action="store_false", default=None,
+                   help="Render conditions above exceptions. Exceptions come first by "
+                        "default, aimed at the boundary cases every arm was missing.")
     g.add_argument("--run-label", help="Label recorded in the run record, for grouping cells.")
     g.add_argument("--allow-unaugmented", action="store_true", default=None,
                    help="Proceed with an unaugmented LLM call when retrieval yields "
