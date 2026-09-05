@@ -13,6 +13,10 @@ from typing import Optional
 
 from . import llm as llm_module
 from . import output, prompting, ranking, retrieval, serialisation, seeding
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+import corpus_config as _corpus_config  # noqa: E402
+
 from .config import Config, Secrets
 from .neo4j_client import Neo4jClient
 from .retrieval import RetrievalError
@@ -20,9 +24,9 @@ from .seeding import SeedingError
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CORPUS_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "edc-main", "edc-main", "datasets", "app_schedule1.txt")
+# The corpus pasted in by --context-mode full-corpus. From corpus.yaml so the
+# control arm follows the configured instrument rather than a second hard-coded path.
+DEFAULT_CORPUS_PATH = _corpus_config.CORPUS_PATH
 
 
 @dataclass

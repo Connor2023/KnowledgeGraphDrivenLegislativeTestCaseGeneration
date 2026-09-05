@@ -28,7 +28,12 @@ import sys
 
 import yaml
 
-OUT_GLOB = os.path.join("spires_pilot", "output", "app_*.yaml")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import corpus_config  # noqa: E402
+
+# Was hard-coded to spires_pilot/output, a path that has not existed since the
+# directory was renamed -- it only ever worked because --glob was always passed.
+OUT_GLOB = corpus_config.provision_glob(".yaml")
 
 # Words a model reaches for instead of leaving a field blank.
 _NULLISH = {"", "none", "null", "empty", "blank", "n/a", "na", "not applicable",

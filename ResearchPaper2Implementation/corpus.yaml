@@ -1,0 +1,45 @@
+# Which piece of legislation this checkout is configured for.
+#
+# Every path, filename prefix, node-label prefix and provision pattern that used to be
+# hard-coded to the Australian Privacy Principles is read from here instead. Pointing the
+# pipeline at a different instrument is then a matter of copying this file and changing
+# the values -- with the important exception of the structural parser (prep_app.py) and
+# the citation patterns in enrich_graph.parse_references, which are genuinely per-statute
+# code and are NOT configuration. See PIPELINE_RUNBOOK.md section 0.
+#
+# The values below reproduce the previous hard-coded behaviour exactly. Changing them
+# changes where files are read and written and what the graph is labelled, so a change
+# here without a matching rebuild will silently read the wrong corpus.
+
+name: app_schedule1
+description: Schedule 1 of the Privacy Act 1988 (Cth) — the Australian Privacy Principles
+
+# Filename prefix for per-provision artefacts: app_6_1.txt, app_6_1.yaml, and the
+# app_*.yaml globs that collect them.
+file_prefix: app
+
+# Neo4j label and relationship-type prefix for the SPIRES norm graph. Several corpora
+# can share one Aura instance as long as their prefixes differ -- :AppNode, :RP1Entity
+# and :SP_* already coexist in ours.
+node_prefix: SP_
+
+paths:
+  # The statute as downloaded, one line per structural element.
+  raw: APPschedule1.txt
+  # The flattened, self-contained documents prep_app.py produces from it.
+  corpus: edc-main/edc-main/datasets/app_schedule1.txt
+  # Where build_graph.py writes the EDC node/edge CSVs.
+  edc_graph_dir: edc-main/edc-main/output/app_full/graph
+  # Root of the SPIRES extraction pipeline: schema, input/, output/, graph/.
+  spires_dir: spires
+  # The hand-written legal element decomposition used for coverage scoring.
+  elements: elements/legal_elements.yaml
+
+provision:
+  # Finds the provision identifier inside a piece of text. This is the single most
+  # instrument-specific value in the file: 'N.M' suits the APPs, but another statute may
+  # number clauses 's 12(3)(a)' or 'Art. 6(1)(b)' and will need a different pattern.
+  pattern: '\b(?:subclause\s+)?(\d{1,2}\.\d{1,2})\b'
+  # How a provision id becomes a graph key: "6.1" -> "subclause 6.1". Set to an empty
+  # string for a corpus whose identifiers are already self-describing.
+  key_prefix: subclause

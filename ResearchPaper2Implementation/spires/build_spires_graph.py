@@ -51,16 +51,17 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import corpus_config  # noqa: E402
 from enrich_graph import parse_references, raw_clause_text  # noqa: E402
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-GRAPH_DIR = os.path.join(HERE, "graph")
-PREFIX = "SP_"
+GRAPH_DIR = corpus_config.SPIRES_GRAPH_DIR
+PREFIX = corpus_config.NODE_PREFIX
+L = corpus_config.label   # "Norm" -> "SP_Norm"; also used for relationship types
 
 # Reuse the verified extractions when present -- they carry the recovered exceptions --
 # and fall back to the merely cleaned ones for any provision the verifier had to skip.
-VERIFIED = os.path.join(HERE, "output", "app_*.verified.yaml")
-CLEANED = os.path.join(HERE, "output", "app_*.clean.yaml")
+VERIFIED = corpus_config.provision_glob(".verified.yaml")
+CLEANED = corpus_config.provision_glob(".clean.yaml")
 
 _WS = re.compile(r"\s+")
 
@@ -107,19 +108,19 @@ def build(provisions):
 
     for pid, document in sorted(provisions.items()):
         prov_key = "provision:%s" % pid
-        node(prov_key, "SP_Provision", name="subclause %s" % pid, provision=pid)
+        node(prov_key, L("Provision"), name="subclause %s" % pid, provision=pid)
 
         for index, norm in enumerate(document.get("norms") or [], 1):
             modality = (norm.get("deontic_modality") or "UNSPECIFIED").strip()
             norm_key = "norm:%s:%d" % (pid, index)
-            node(norm_key, "SP_Norm", name="%s %s#%d" % (modality, pid, index),
+            node(norm_key, L("Norm"), name="%s %s#%d" % (modality, pid, index),
                  modality=modality, provision=pid,
                  scope_qualifier=norm.get("scope_qualifier") or "")
-            edge(prov_key, "SP_HAS_NORM", norm_key)
+            edge(prov_key, L("HAS_NORM"), norm_key)
 
-            for slot, label, rel in (("bearer", "SP_Actor", "SP_BEARER"),
-                                     ("action", "SP_Action", "SP_ACTION"),
-                                     ("object", "SP_InfoType", "SP_OBJECT")):
+            for slot, label, rel in (("bearer", L("Actor"), L("BEARER")),
+                                     ("action", L("Action"), L("ACTION")),
+                                     ("object", L("InfoType"), L("OBJECT"))):
                 name = decode(norm.get(slot))
                 if not name:
                     continue
@@ -127,8 +128,8 @@ def build(provisions):
                 node(key, label, name=name)
                 edge(norm_key, rel, key)
 
-            for slot, label, rel in (("conditions", "SP_Condition", "SP_CONDITION"),
-                                     ("exceptions", "SP_Exemption", "SP_EXCEPTION")):
+            for slot, label, rel in (("conditions", L("Condition"), L("CONDITION")),
+                                     ("exceptions", L("Exemption"), L("EXCEPTION"))):
                 for item_index, item in enumerate(norm.get(slot) or [], 1):
                     statement = (item.get("statement") or "").strip()
                     if not statement:
@@ -157,9 +158,9 @@ def add_reference_edges(nodes, edges, counts, provisions):
             if target_pid not in known or target_pid == pid:
                 skipped += 1
                 continue
-            edges.append({"from_key": "provision:%s" % pid, "rel": "SP_REFERS_TO",
+            edges.append({"from_key": "provision:%s" % pid, "rel": L("REFERS_TO"),
                           "to_key": "provision:%s" % target_pid})
-            counts["SP_REFERS_TO"] += 1
+            counts[L("REFERS_TO")] += 1
             added += 1
 
     # `disapplies` is the one edge SPIRES produces that the regex cannot: it distinguishes
@@ -170,9 +171,9 @@ def add_reference_edges(nodes, edges, counts, provisions):
             target_pid = str(target).replace("subclause ", "").strip()
             if target_pid in known and target_pid != pid:
                 edges.append({"from_key": "provision:%s" % pid,
-                              "rel": "SP_DISAPPLIES",
+                              "rel": L("DISAPPLIES"),
                               "to_key": "provision:%s" % target_pid})
-                counts["SP_DISAPPLIES"] += 1
+                counts[L("DISAPPLIES")] += 1
     return added, skipped
 
 
@@ -254,15 +255,13 @@ def main():
     write_csvs(nodes, edges)
 
     print("provisions        : %d" % len(provisions))
-    for label in sorted(k for k in counts if k.startswith("SP_") and "_" not in k[3:]):
-        pass
     print("\nnodes")
-    for label in ("SP_Provision", "SP_Norm", "SP_Actor", "SP_Action", "SP_InfoType",
-                  "SP_Condition", "SP_Exemption"):
+    for label in [L(x) for x in ("Provision", "Norm", "Actor", "Action", "InfoType",
+                                 "Condition", "Exemption")]:
         print("  %-14s %4d" % (label, counts.get(label, 0)))
     print("\nedges")
-    for rel in ("SP_HAS_NORM", "SP_BEARER", "SP_ACTION", "SP_OBJECT", "SP_CONDITION",
-                "SP_EXCEPTION", "SP_REFERS_TO", "SP_DISAPPLIES"):
+    for rel in [L(x) for x in ("HAS_NORM", "BEARER", "ACTION", "OBJECT", "CONDITION",
+                               "EXCEPTION", "REFERS_TO", "DISAPPLIES")]:
         print("  %-14s %4d" % (rel, counts.get(rel, 0)))
     print("\ntotals            : %d nodes, %d edges" % (len(nodes), len(edges)))
     print("cross-refs skipped: %d (target not a known provision)" % skipped)

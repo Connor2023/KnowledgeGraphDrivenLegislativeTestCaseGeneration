@@ -33,12 +33,15 @@ import sys
 
 import yaml
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _HERE)                       # sibling modules
+sys.path.insert(0, os.path.dirname(_HERE))      # repo root, for corpus_config
 
+import corpus_config  # noqa: E402
 from clean_extraction import _DESCRIPTION_TELLS, _NULLISH, denull, unwrap  # noqa: E402
 
-DEFAULT_GLOB = os.path.join("spires", "output", "app_*.yaml")
-OUT_PATH = os.path.join("spires", "discard_review.md")
+DEFAULT_GLOB = corpus_config.provision_glob(".yaml")
+OUT_PATH = os.path.join(corpus_config.SPIRES_DIR, "discard_review.md")
 
 RANK = {"compound_dropped": 0, "description_echo": 1, "nullish": 2, "bracket_only": 3}
 

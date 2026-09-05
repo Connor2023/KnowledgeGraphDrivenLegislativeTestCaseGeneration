@@ -27,11 +27,12 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import prep_app  # noqa: E402  - reused for its line classification and normalisation
+import corpus_config  # noqa: E402
 from kg_testgen.edc_bridge import detect_provision_id, provision_key  # noqa: E402
 
-RAW_PATH = "APPschedule1.txt"
-CORPUS_PATH = os.path.join("edc-main", "edc-main", "datasets", "app_schedule1.txt")
-OUT_DIR = os.path.join("edc-main", "edc-main", "output", "app_full", "graph")
+RAW_PATH = corpus_config.RAW_PATH
+CORPUS_PATH = corpus_config.CORPUS_PATH
+OUT_DIR = corpus_config.EDC_GRAPH_DIR
 
 # --- cross-reference parsing -------------------------------------------------------
 # "subclause 6.2 or 6.3 applies" -- the bare 6.3 carries the prefix across the

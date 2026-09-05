@@ -26,17 +26,14 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import corpus_config  # noqa: E402
 from enrich_graph import raw_clause_text  # noqa: E402
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-SCHEMA = os.path.join(HERE, "app_norm.yaml")
-INPUT_DIR = os.path.join(HERE, "input")
-OUTPUT_DIR = os.path.join(HERE, "output")
+SCHEMA = corpus_config.SPIRES_SCHEMA
+INPUT_DIR = corpus_config.SPIRES_INPUT_DIR
+OUTPUT_DIR = corpus_config.SPIRES_OUTPUT_DIR
 PYTHON = os.path.join(".venv-ontogpt", "Scripts", "ontogpt.exe")
 
-
-def slug(provision_id):
-    return provision_id.replace(".", "_")
 
 
 def write_inputs(clauses):
@@ -45,7 +42,7 @@ def write_inputs(clauses):
     written = {}
     for key, text in sorted(clauses.items()):
         pid = key.replace("subclause ", "")
-        path = os.path.join(INPUT_DIR, "app_%s.txt" % slug(pid))
+        path = os.path.join(INPUT_DIR, corpus_config.provision_filename(pid, ".txt"))
         with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
             fh.write("%s %s\n" % (pid, text) if not text.startswith(pid) else text + "\n")
         written[pid] = path
@@ -68,7 +65,7 @@ def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     todo = []
     for pid, path in sorted(inputs.items(), key=lambda kv: [int(x) for x in kv[0].split(".")]):
-        out = os.path.join(OUTPUT_DIR, "app_%s.yaml" % slug(pid))
+        out = os.path.join(OUTPUT_DIR, corpus_config.provision_filename(pid, ".yaml"))
         if os.path.exists(out) and not args.overwrite:
             continue
         todo.append((pid, path, out))

@@ -40,9 +40,11 @@ import yaml
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import corpus_config  # noqa: E402
 from clean_extraction import clean_provision, norm_sentences, unwrap  # noqa: E402
 
-OUT_GLOB = os.path.join("spires_pilot", "output", "app_*.yaml")
+# Same stale spires_pilot default as clean_extraction had.
+OUT_GLOB = corpus_config.provision_glob(".yaml")
 _NORMS_LINE = re.compile(r"^norms:\s*(.+?)(?=^\w+:|\Z)", re.M | re.S)
 
 PROMPT = """\

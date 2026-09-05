@@ -27,12 +27,20 @@ import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+import corpus_config as _corpus  # noqa: E402
+
 from .config import Config
 from .neo4j_client import Neo4jClient
 
 logger = logging.getLogger(__name__)
 
-PROVISION_LABEL = "SP_Provision"
+# Labels and relationship types come from corpus.yaml, so several instruments can share
+# one Aura instance under different prefixes. Cypher cannot parameterise either, so they
+# are interpolated into the query strings below rather than passed as parameters.
+L = _corpus.label
+PROVISION_LABEL = L("Provision")
 
 # How each modality reads in natural deontic language. APPLICABILITY is deliberately not
 # rendered as a permission: APP 6.2 does not allow secondary use, it defines when 6.1's
@@ -107,10 +115,10 @@ class SpiresContext:
 
 
 _NORMS = """
-MATCH (p:`{label}` {{provision: $pid}})-[:SP_HAS_NORM]->(n:SP_Norm)
-OPTIONAL MATCH (n)-[:SP_BEARER]->(b:SP_Actor)
-OPTIONAL MATCH (n)-[:SP_ACTION]->(a:SP_Action)
-OPTIONAL MATCH (n)-[:SP_OBJECT]->(o:SP_InfoType)
+MATCH (p:`{label}` {{provision: $pid}})-[:""" + L("HAS_NORM") + """]->(n:""" + L("Norm") + """)
+OPTIONAL MATCH (n)-[:""" + L("BEARER") + """]->(b:""" + L("Actor") + """)
+OPTIONAL MATCH (n)-[:""" + L("ACTION") + """]->(a:""" + L("Action") + """)
+OPTIONAL MATCH (n)-[:""" + L("OBJECT") + """]->(o:""" + L("InfoType") + """)
 RETURN n.key AS key, n.modality AS modality, n.scope_qualifier AS scope,
        b.name AS bearer, a.name AS action, o.name AS object
 """
@@ -119,7 +127,7 @@ RETURN n.key AS key, n.modality AS modality, n.scope_qualifier AS scope,
 # on the query above: collecting two independent one-to-many relationships in one pass
 # multiplies them together, and the DISTINCT needed to undo that hides genuine duplicates.
 _ATTACHED = """
-MATCH (n:SP_Norm)-[:`{rel}`]->(x)
+MATCH (n:""" + L("Norm") + """)-[:`{rel}`]->(x)
 WHERE n.key IN $keys
 RETURN n.key AS key, x.statement AS statement,
        x.source_provision AS source_provision
@@ -134,10 +142,10 @@ RETURN t.key AS key, t.name AS name, t.text_raw AS text_raw
 """
 
 _NEIGHBOURS = """
-MATCH (p:`{label}` {{provision: $pid}})-[r:SP_REFERS_TO|SP_DISAPPLIES]->(q:`{label}`)
+MATCH (p:`{label}` {{provision: $pid}})-[r:""" + L("REFERS_TO") + """|""" + L("DISAPPLIES") + """]->(q:`{label}`)
 RETURN q.provision AS pid, type(r) AS rel, 'outbound' AS direction
 UNION
-MATCH (p:`{label}` {{provision: $pid}})<-[r:SP_REFERS_TO|SP_DISAPPLIES]-(q:`{label}`)
+MATCH (p:`{label}` {{provision: $pid}})<-[r:""" + L("REFERS_TO") + """|""" + L("DISAPPLIES") + """]-(q:`{label}`)
 RETURN q.provision AS pid, type(r) AS rel, 'inbound' AS direction
 """
 
@@ -154,10 +162,10 @@ def fetch_norms(client: Neo4jClient, pid: str) -> List[Norm]:
         return []
 
     keys = list(norms)
-    for row in client.run(_ATTACHED.format(rel="SP_CONDITION"), keys=keys):
+    for row in client.run(_ATTACHED.format(rel=L("CONDITION")), keys=keys):
         if row.get("statement"):
             norms[row["key"]].conditions.append(row["statement"])
-    for row in client.run(_ATTACHED.format(rel="SP_EXCEPTION"), keys=keys):
+    for row in client.run(_ATTACHED.format(rel=L("EXCEPTION")), keys=keys):
         if row.get("statement"):
             norms[row["key"]].exceptions.append(
                 (row["statement"], row.get("source_provision") or ""))
@@ -272,10 +280,10 @@ def serialise(target: str, target_norms: List[Norm],
             # referred to by this one" call for opposite readings, and a bare list of
             # neighbouring clauses gives the model no way to tell them apart.
             if meta["direction"] == "inbound":
-                why = ("subclause %s DISAPPLIES the target" if meta["rel"] == "SP_DISAPPLIES"
+                why = ("subclause %s DISAPPLIES the target" if meta["rel"] == L("DISAPPLIES")
                        else "subclause %s refers to the target") % pid
             else:
-                why = ("the target DISAPPLIES subclause %s" if meta["rel"] == "SP_DISAPPLIES"
+                why = ("the target DISAPPLIES subclause %s" if meta["rel"] == L("DISAPPLIES")
                        else "the target refers to subclause %s") % pid
             lines.append("subclause %s — %s" % (pid, why))
             for norm in norms:

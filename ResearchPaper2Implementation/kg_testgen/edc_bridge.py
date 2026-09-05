@@ -102,7 +102,17 @@ def extract_entities(text: str, model: str) -> List[str]:
     return [e for e in entities if isinstance(e, str) and e.strip()]
 
 
-_PROVISION_RE = re.compile(r"\b(?:subclause\s+)?(\d{1,2}\.\d{1,2})\b", re.IGNORECASE)
+# The identifier pattern is the most instrument-specific value in the pipeline: 'N.M'
+# suits the APPs, but another statute may number clauses 's 12(3)(a)' or 'Art. 6(1)(b)'.
+# It and the key prefix come from corpus.yaml; the defaults there reproduce the literals
+# this replaced -- r"\b(?:subclause\s+)?(\d{1,2}\.\d{1,2})\b" and "subclause".
+import sys as _sys  # noqa: E402
+import os as _os  # noqa: E402
+
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+import corpus_config as _corpus  # noqa: E402
+
+_PROVISION_RE = _corpus.PROVISION_RE
 
 
 def detect_provision_id(text: str) -> str | None:
@@ -118,6 +128,7 @@ def detect_provision_id(text: str) -> str | None:
 def provision_key(provision_id: str) -> str:
     """Graph key for a subclause, matching how build_graph stored :Provision nodes."""
     ident = provision_id.strip().lower()
-    if not ident.startswith("subclause"):
-        ident = "subclause " + ident
+    prefix = _corpus.PROVISION_KEY_PREFIX
+    if prefix and not ident.startswith(prefix):
+        ident = "%s %s" % (prefix, ident)
     return normalise_mention(ident)[0]
