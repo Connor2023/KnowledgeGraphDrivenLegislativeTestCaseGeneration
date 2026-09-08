@@ -98,6 +98,55 @@ startup.
 
 ## 2. Input text to knowledge graph
 
+### 2.0 Learn the statute's structure (stage 0)
+
+Before anything is parsed, work out how the instrument lays itself out. One LLM call over
+a sample of the document returns a **structural profile** — an ordered list of line
+classifiers, which level is the provision, and how an identifier is composed — and that
+profile is then validated against the whole file before it is allowed anywhere near the
+extraction.
+
+```powershell
+python induce_structure.py APPartIIIC.txt --dry-run    # prompt size and cost, no call
+python induce_structure.py APPartIIIC.txt              # ~$0.013, writes profiles/<name>.yaml
+```
+
+Validation is the point, not the call. A profile is rejected if too many lines belong to
+no provision, if the provision count is implausible, if identifiers collide, if one
+provision holds a quarter of the text, or if a pattern fails to compile, is unanchored,
+can backtrack catastrophically, or claims nothing once the levels above it have taken
+theirs. A rejected profile is re-asked once with the failure report attached; a second
+rejection stops the run and names the pattern, because an empty graph found three stages
+later is the expensive outcome.
+
+Warnings are printed but are not fatal. The one that matters is a recurring
+heading-shaped line no level claims — that text is not lost, but it is being glued onto
+the end of the provision above it.
+
+**Check the profile before going further**, and correct it by hand if a pattern is
+slightly wrong. `profiles/<name>.yaml` is a normal file, editing it is cheaper than
+re-inducing, and the header records what the numbers were when it was accepted.
+
+To check a hand-written profile without spending anything:
+
+```powershell
+python induce_structure.py APPschedule1.txt --profile profiles/app_schedule1.yaml
+```
+
+Measured so far:
+
+| Corpus | Provisions | Interior orphans | Agreement |
+|---|---|---|---|
+| Schedule 1, hand-written profile | 62 | 1.8% | identical ids to `prep_app.py` |
+| Part IIIC, hand-written profile | 106 | 0.0% | — |
+| Part IIIC, induced profile | 106 | 0.4% | identical ids to the hand-written one |
+
+The controls are in `tests/test_induce_structure.py` and cost nothing to run:
+
+```powershell
+python tests/test_induce_structure.py
+```
+
 ### 2.1 Prepare the corpus
 
 Put the raw statute at the repository root as a plain `.txt` file, one line per
