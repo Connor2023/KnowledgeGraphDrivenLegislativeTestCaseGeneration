@@ -17,9 +17,10 @@ Two deliberate properties:
 Segmentation is no longer per-statute code. `profile:` names a structural profile --
 an ordered list of line classifiers, which level is the provision, how an identifier is
 composed -- that induce_structure.py produces from the text and prep_corpus.py applies.
-The citation patterns in enrich_graph.parse_references are the piece that remains
-per-statute: pointing this file at a new corpus without them gets you a graph with no
-cross-reference edges, which is the tier where the graph is the only thing that helps.
+Cross-references are no longer per-statute code either: references.py builds its
+patterns from the profile's citation nouns, identifier pattern and id_template. What
+remains hand-written is the profile itself, and induce_structure.py produces that from
+the text.
 """
 
 from __future__ import annotations
@@ -132,8 +133,8 @@ def provision_key(provision_id: str) -> str:
     format a string.
 
     Equivalence was checked rather than assumed: this reproduces the old function's output
-    for all 62 provisions, which is what the :AppNode keys in the live graph were built
-    with. See tests/test_provision_keys.py.
+    for all 62 provisions, bare and prefixed, which is what the :AppNode keys in the live
+    graph were built with. See tests/test_references.py.
     """
     ident = " ".join(provision_id.strip().lower().split())
     prefix = PROVISION_KEY_PREFIX

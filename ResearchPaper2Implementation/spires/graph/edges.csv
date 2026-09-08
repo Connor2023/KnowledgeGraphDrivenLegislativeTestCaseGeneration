@@ -756,6 +756,9 @@ provision:7.3,SP_REFERS_TO,provision:7.1
 provision:7.4,SP_REFERS_TO,provision:7.1
 provision:7.5,SP_REFERS_TO,provision:7.1
 provision:7.7,SP_REFERS_TO,provision:7.6
+provision:7.8,SP_REFERS_EXTERNAL,external:interactive_gambling_act
+provision:7.8,SP_REFERS_EXTERNAL,external:do_not_call_register_act
+provision:7.8,SP_REFERS_EXTERNAL,external:spam_act
 provision:8.2,SP_REFERS_TO,provision:8.1
 provision:8.2,SP_REFERS_TO,provision:8.3
 provision:9.1,SP_REFERS_TO,provision:9.3

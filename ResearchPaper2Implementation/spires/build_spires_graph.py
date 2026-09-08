@@ -19,11 +19,14 @@ the extraction was bought to avoid.
 Two sources, each doing what it measured best at:
 
     norms, modality, conditions, exceptions   SPIRES
-    cross-reference edges                     enrich_graph.parse_references
+    cross-reference edges                     references.ReferenceParser
 
-That split is not a preference. Over all 62 clauses the regex found cross-references in
-28 provisions against SPIRES' 10, recovering 19 that SPIRES missed entirely -- so taking
-edges from SPIRES would discard two thirds of the graph's connectivity.
+That split is not a preference. Over all 62 clauses the regex finds cross-references in
+26 provisions against SPIRES' 10, with exactly one provision that only SPIRES found -- so
+taking edges from SPIRES would discard most of the graph's connectivity.
+
+Citations that leave the corpus become :SP_ExternalRef stubs. They used to be dropped
+with a count printed, which left the graph understating its own incompleteness.
 
 Actors, actions and information types are shared across provisions; conditions and
 exceptions are not. A condition is a sentence about one norm, so pooling identical
@@ -53,7 +56,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import corpus_config  # noqa: E402
 import prep_corpus  # noqa: E402
-from enrich_graph import parse_references  # noqa: E402  citation patterns: still per-statute
+import references  # noqa: E402
 
 GRAPH_DIR = corpus_config.SPIRES_GRAPH_DIR
 PREFIX = corpus_config.NODE_PREFIX
@@ -167,25 +170,42 @@ def strip_key_prefix(key):
 
 
 def add_reference_edges(nodes, edges, counts, provisions):
-    """Cross-reference edges from the regex, which measured far better than SPIRES."""
+    """Cross-reference edges from the citation parser, which measured far better than
+    SPIRES extraction: over the 62 Schedule 1 clauses the regex finds references in 26
+    provisions against SPIRES' 10, with one provision that only SPIRES found.
+
+    Citations that leave the corpus become :SP_ExternalRef stubs rather than vanishing.
+    Part IIIC makes 25 of them -- 17 into other Acts, 8 into other Parts of the Privacy
+    Act -- and the previous behaviour was to drop all of them and print a count, so the
+    graph understated its own incompleteness. A stub carries the citation string, which
+    is enough for retrieval to say "this provision depends on something not in the graph".
+    """
     raw = prep_corpus.provisions()
     known = {pid for pid in provisions}
-    added = skipped = 0
+    parser = references.ReferenceParser(prep_corpus.load_profile(), sorted(known))
+    added = skipped = external = 0
     for pid, text in raw.items():
         if pid not in known:
             continue
-        # parse_references compares targets against the prefixed key form, so the
-        # self-reference it discards has to be given in that form too.
-        targets, _principles = parse_references(text, corpus_config.provision_key(pid))
-        for target in targets:
-            target_pid = strip_key_prefix(target)
-            if target_pid not in known or target_pid == pid:
+        for citation in parser.parse(text, pid):
+            if citation.kind == "internal" and citation.target != pid:
+                edges.append({"from_key": "provision:%s" % pid, "rel": L("REFERS_TO"),
+                              "to_key": "provision:%s" % citation.target})
+                counts[L("REFERS_TO")] += 1
+                added += 1
+            elif citation.kind in ("external", "unresolved"):
+                label = citation.instrument or citation.raw
+                key = "external:%s" % re.sub(r"[^0-9A-Za-z]+", "_", label.lower()).strip("_")
+                if key not in nodes:
+                    nodes[key] = {"key": key, "label": L("ExternalRef"), "name": label,
+                                  "instrument": citation.instrument or ""}
+                    counts[L("ExternalRef")] += 1
+                edges.append({"from_key": "provision:%s" % pid,
+                              "rel": L("REFERS_EXTERNAL"), "to_key": key})
+                counts[L("REFERS_EXTERNAL")] += 1
+                external += 1
+            else:
                 skipped += 1
-                continue
-            edges.append({"from_key": "provision:%s" % pid, "rel": L("REFERS_TO"),
-                          "to_key": "provision:%s" % target_pid})
-            counts[L("REFERS_TO")] += 1
-            added += 1
 
     # `disapplies` is the one edge SPIRES produces that the regex cannot: it distinguishes
     # "this switches that off" from a bare mention, which is a semantic call, not a
@@ -198,7 +218,7 @@ def add_reference_edges(nodes, edges, counts, provisions):
                               "rel": L("DISAPPLIES"),
                               "to_key": "provision:%s" % target_pid})
                 counts[L("DISAPPLIES")] += 1
-    return added, skipped
+    return added, skipped, external
 
 
 def write_csvs(nodes, edges):
@@ -206,7 +226,7 @@ def write_csvs(nodes, edges):
     # DictWriter is created with extrasaction="ignore", so a property missing from this
     # list is dropped without a word. text_raw was added and silently did not appear.
     node_fields = ["key", "label", "name", "modality", "provision", "scope_qualifier",
-                   "statement", "source_provision", "verified", "text_raw"]
+                   "statement", "source_provision", "verified", "text_raw", "instrument"]
     with io.open(os.path.join(GRAPH_DIR, "nodes.csv"), "w", encoding="utf-8", newline="") as fh:
         writer = csv.DictWriter(fh, node_fields, extrasaction="ignore")
         writer.writeheader()
@@ -278,20 +298,23 @@ def main():
     provisions = load_provisions()
     texts = prep_corpus.provisions()
     nodes, edges, counts = build(provisions, texts)
-    added, skipped = add_reference_edges(nodes, edges, counts, provisions)
+    added, skipped, external = add_reference_edges(nodes, edges, counts, provisions)
     write_csvs(nodes, edges)
 
     print("provisions        : %d" % len(provisions))
     print("\nnodes")
     for label in [L(x) for x in ("Provision", "Norm", "Actor", "Action", "InfoType",
+                                 "ExternalRef",
                                  "Condition", "Exemption")]:
         print("  %-14s %4d" % (label, counts.get(label, 0)))
     print("\nedges")
     for rel in [L(x) for x in ("HAS_NORM", "BEARER", "ACTION", "OBJECT", "CONDITION",
-                               "EXCEPTION", "REFERS_TO", "DISAPPLIES")]:
+                               "EXCEPTION", "REFERS_TO", "DISAPPLIES", "REFERS_EXTERNAL")]:
         print("  %-14s %4d" % (rel, counts.get(rel, 0)))
     print("\ntotals            : %d nodes, %d edges" % (len(nodes), len(edges)))
-    print("cross-refs skipped: %d (target not a known provision)" % skipped)
+    print("cross-refs added   : %d" % added)
+    print("external stubs     : %d edge(s) to provisions outside this corpus" % external)
+    print("self-references    : %d (dropped, as they carry no edge)" % skipped)
     print("csvs              : %s" % GRAPH_DIR)
 
     if args.dry_run:

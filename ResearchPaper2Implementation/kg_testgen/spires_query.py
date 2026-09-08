@@ -133,8 +133,9 @@ RETURN n.key AS key, x.statement AS statement,
        x.source_provision AS source_provision
 """
 
-# Statutory text lives on :AppNode, put there by enrich_graph.py; the SPIRES graph holds
-# structure only. Keys there are "subclause 6.2" where SPIRES uses the bare id.
+# Statutory text lives on :SP_Provision, put there by build_spires_graph.py. It used to
+# be read out of the :AppNode graph, which made the EDC construction path a silent
+# prerequisite for this one. Matched on `provision`, the bare id, rather than on `key`.
 _PROVISION_TEXT = """
 MATCH (t:`{label}`)
 WHERE t.provision IN $pids AND t.text_raw IS NOT NULL AND t.text_raw <> ''
