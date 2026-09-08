@@ -140,18 +140,6 @@ text and only this text.
 ================================================================================\
 """
 
-CONTEXT_HEADER = """\
-================================================================================
-BLOCK 3 of 3 — SUPPLEMENTARY CONTEXT (NOT part of the target section)
-The statements below were retrieved from a knowledge graph built over the wider
-legislation. They come from OTHER provisions, not from the target section above.
-
-Use them only to understand how the target section's concepts connect to the rest of
-the legislation. Do NOT write scenarios testing these statements. Do NOT treat them as
-text of the target section.
-================================================================================\
-"""
-
 SPIRES_HEADER = """\
 ================================================================================
 BLOCK 3 of 3 — STRUCTURED NORMS (NOT part of the target section)
@@ -176,29 +164,6 @@ Lines marked EXCEPT are the carve-outs. Write a separate scenario for each of th
 # elements ARE the content of the cross-referenced provisions, and the element
 # decomposition scores content, not tags. See runs/spires_v2/ for the losing run.
 # If the tags are ever worth fixing, fix ONLY the tag: do not suppress the scenarios.
-
-RP1_HEADER = """\
-================================================================================
-BLOCK 3 of 3 — BACKGROUND CONCEPT GRAPH (NOT part of the target section)
-Below is a concept graph built from a separate analysis of this legislation. It defines
-the terms the target section uses and records how they relate to one another.
-
-It contains NO provision references and NO statutory text, so nothing in it can be
-cited. Use it to understand what the target section's terms mean. Write scenarios for
-the TARGET SECTION in Block 2 only.
-================================================================================\
-"""
-
-FULL_CORPUS_HEADER = """\
-================================================================================
-BLOCK 3 of 3 — FULL LEGISLATION TEXT
-The complete Schedule is reproduced below, one provision per line. It INCLUDES the
-target section shown above, alongside every other provision in the instrument.
-
-Use it to understand how the target section relates to the rest of the legislation.
-Write scenarios for the TARGET SECTION in Block 2 only — not for the other provisions.
-================================================================================\
-"""
 
 NO_CONTEXT_NOTICE = """\
 ================================================================================
@@ -238,34 +203,40 @@ The material below is provided for reference while writing the scenarios.
 
 
 def _block3_header(context_mode: str, block3_format: str = "default") -> str:
-    """Each arm's block 3 holds a different kind of thing, so each states its own terms.
+    """The header for context the pipeline built, which is only ever the spires arm.
 
-    Reusing one header would put a false claim in the prompt: the KG header asserts the
-    statements come from other provisions, which is untrue of the pasted corpus (it
+    The comparison arms carry their own headers -- see evaluation/arms/headers.py -- and
+    pass them to build_prompt, because each arm's block 3 holds a different kind of thing
+    and reusing one header would put a false claim in the prompt. The KG header asserts
+    its statements come from other provisions, which is untrue of the pasted corpus (it
     includes the target) and of the RP1 graph (it has no provisions at all).
 
-    The non-default formats deliberately DO collapse that distinction -- that is what
-    they are measuring. They are not proposals, they are perturbations.
+    TERSE and NEUTRAL stay here rather than moving with the arms, because they apply to
+    the spires arm too: fmt-spires-terse and fmt-spires-neutral vary the framing over
+    context this module's caller built. The non-default formats deliberately DO collapse
+    the distinction between arms -- that is what they are measuring. They are not
+    proposals, they are perturbations.
     """
     if block3_format == "terse":
         return TERSE_HEADER
     if block3_format == "neutral":
         return NEUTRAL_HEADER
-    return {
-        "full-corpus": FULL_CORPUS_HEADER,
-        "rp1": RP1_HEADER,
-        "spires": SPIRES_HEADER,
-    }.get(context_mode, CONTEXT_HEADER)
+    if context_mode == "spires":
+        return SPIRES_HEADER
+    return NO_CONTEXT_NOTICE
 
 
 def build_prompt(section_text: str, context_block: Optional[str],
-                 provision_id: Optional[str], context_mode: str = "kg",
-                 block3_format: str = "default") -> str:
+                 provision_id: Optional[str], context_mode: str = "spires",
+                 block3_format: str = "default",
+                 block3_header: Optional[str] = None) -> str:
     """Assemble the four-block prompt.
 
     The block 3 header differs by arm. The KG header asserts that its statements come
     from other provisions — true of retrieval, but false of the pasted corpus, which
-    contains the target section as well.
+    contains the target section as well. `block3_header` lets an evaluation arm supply
+    its own; without it the pipeline picks the spires header, which is the only context
+    it builds.
     """
     tag = provision_tag(provision_id)
     parts = [
@@ -277,7 +248,8 @@ def build_prompt(section_text: str, context_block: Optional[str],
         TARGET_HEADER,
         section_text.strip(),
         "",
-        _block3_header(context_mode, block3_format) if context_block else NO_CONTEXT_NOTICE,
+        (block3_header or _block3_header(context_mode, block3_format))
+        if context_block else NO_CONTEXT_NOTICE,
     ]
     if context_block:
         parts.append(context_block.strip())

@@ -12,7 +12,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import List
 
-from .config import Config
+from kg_testgen.config import Config
 from .retrieval import RetrievalResult, RetrievedTriple
 
 logger = logging.getLogger(__name__)

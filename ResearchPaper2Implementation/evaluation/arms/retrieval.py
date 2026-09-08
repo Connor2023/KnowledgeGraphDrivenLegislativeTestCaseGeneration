@@ -20,15 +20,12 @@ import logging
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
-from .config import Config
-from .neo4j_client import Neo4jClient
+from kg_testgen.config import Config
+from kg_testgen.neo4j_client import Neo4jClient
+from kg_testgen.errors import RetrievalError  # noqa: F401  raised here, caught by the pipeline
 from .seeding import PROVISION_SEED, Seed, SeedingResult
 
 logger = logging.getLogger(__name__)
-
-
-class RetrievalError(RuntimeError):
-    """Retrieval produced nothing usable. Fatal unless --allow-unaugmented."""
 
 
 @dataclass

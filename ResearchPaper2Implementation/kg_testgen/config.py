@@ -309,12 +309,14 @@ def add_cli_arguments(parser: argparse.ArgumentParser) -> None:
 
     g = parser.add_argument_group("behaviour")
     g.add_argument("--context-mode",
-                   choices=["kg", "rp1", "spires", "none", "full-corpus"],
-                   help="Experimental arm: 'kg' retrieves a subgraph (default), 'spires' "
-                        "walks the norm graph, 'rp1' serialises the concept graph, 'none' "
-                        "supplies no context, 'full-corpus' pastes the whole corpus in. "
-                        "The last two never touch Neo4j.")
-    g.add_argument("--corpus-path", help="Corpus file for --context-mode full-corpus.")
+                   choices=["spires"],
+                   help="How supplementary context is built. The pipeline builds one: "
+                        "'spires' walks the norm graph. The comparison arms -- none, "
+                        "full-corpus, kg and rp1 -- live in evaluation/arms/ and are run "
+                        "with `python -m evaluation.run_experiment`.")
+    g.add_argument("--corpus-path",
+                   help="Corpus file for the evaluation full-corpus arm. Unused by "
+                        "the pipeline, which builds only the spires context.")
     g.add_argument("--block3-format", choices=["default", "terse", "neutral"],
                    help="Phrasing of the block 3 header. Non-default variants strip the "
                         "arm-specific framing and exist only to measure how much of a "

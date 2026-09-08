@@ -9,12 +9,15 @@ description = "Generate Gherkin compliance test cases from privacy legislation, 
 requires-python = ">=3.10"
 dependencies = [
     "neo4j>=5.20",
-    "numpy>=1.26",
     "openai>=1.30",
     "python-dotenv>=1.0",
+    "pyyaml>=6.0",
     "tiktoken>=0.7",
     "truststore>=0.9",
 ]
+# numpy was here for the EDC entity extractor, which reached the pipeline through
+# kg_testgen.edc_bridge. That bridge is now an evaluation arm, and with it go numpy,
+# transformers and the vendored edc-main tree. See tests/test_pipeline_isolation.py.
 
 [project.scripts]
 kg-testgen = "kg_testgen.cli:main"

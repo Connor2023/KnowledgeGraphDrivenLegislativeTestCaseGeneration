@@ -112,6 +112,26 @@ def detect_provision_id(text: str):
     return match.group(1) if match else None
 
 
+def provision_key(provision_id: str) -> str:
+    """`6.1` -> `subclause 6.1`, the key form provisions are stored and looked up under.
+
+    Was `kg_testgen.edc_bridge.provision_key`, which routed through `build_graph.normalise`
+    -- a function whose real job is folding entity mentions onto canonical keys, complete
+    with a synonym table and article stripping. None of that applies to an identifier, and
+    depending on it meant the SPIRES construction path imported the EDC graph builder to
+    format a string.
+
+    Equivalence was checked rather than assumed: this reproduces the old function's output
+    for all 62 provisions, which is what the :AppNode keys in the live graph were built
+    with. See tests/test_provision_keys.py.
+    """
+    ident = " ".join(provision_id.strip().lower().split())
+    prefix = PROVISION_KEY_PREFIX
+    if prefix and not ident.startswith(prefix):
+        ident = "%s %s" % (prefix, ident)
+    return ident
+
+
 def provision_filename(provision_id: str, suffix: str) -> str:
     """`6.1`, `.yaml` -> `app_6_1.yaml`. The dot is not filename-safe on Windows."""
     return "%s_%s%s" % (FILE_PREFIX, provision_id.replace(".", "_"), suffix)

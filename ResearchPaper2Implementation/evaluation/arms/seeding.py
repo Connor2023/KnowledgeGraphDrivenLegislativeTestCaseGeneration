@@ -18,8 +18,8 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from . import edc_bridge
-from .config import Config
-from .neo4j_client import Neo4jClient
+from kg_testgen.config import Config
+from kg_testgen.neo4j_client import Neo4jClient
 
 logger = logging.getLogger(__name__)
 

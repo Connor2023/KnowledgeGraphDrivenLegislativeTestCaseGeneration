@@ -24,7 +24,10 @@ import sys
 import types
 from typing import List
 
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Three levels up, not two: this module used to sit in kg_testgen/ and now sits in
+# evaluation/arms/. Getting this wrong points _EDC_ROOT at evaluation/edc-main, which
+# does not exist, and the import below fails with a bare "No module named 'edc'".
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _EDC_ROOT = os.path.join(_REPO_ROOT, "edc-main", "edc-main")
 
 # numpy is deliberately NOT stubbed: the neo4j driver detects it and calls into it

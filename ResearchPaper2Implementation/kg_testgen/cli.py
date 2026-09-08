@@ -10,8 +10,7 @@ from .config import ConfigError, add_cli_arguments, config_from_args, secrets_fr
 from .neo4j_client import GraphUnavailable
 from .llm import LLMError
 from .pipeline import run as run_pipeline
-from .retrieval import RetrievalError
-from .seeding import SeedingError
+from .errors import ContextError
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -76,7 +75,7 @@ def main(argv=None) -> int:
     except GraphUnavailable as exc:
         print("Database error: %s" % exc, file=sys.stderr)
         return 3
-    except (SeedingError, RetrievalError) as exc:
+    except ContextError as exc:
         print("Retrieval failed: %s" % exc, file=sys.stderr)
         return 4
     except LLMError as exc:

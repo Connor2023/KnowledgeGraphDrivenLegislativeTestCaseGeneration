@@ -14,7 +14,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from .config import Config
+from kg_testgen.config import Config
 from .retrieval import RetrievedTriple
 from .seeding import SeedingResult
 
@@ -52,17 +52,9 @@ def serialise_as_json(*_args, **_kwargs):
         "JSON serialisation is a stubbed extension point; use --serialisation-format triples.")
 
 
-def estimate_tokens(text: str, model: str):
-    """Token count via tiktoken when available, else a chars/4 heuristic."""
-    try:
-        import tiktoken
-        try:
-            encoding = tiktoken.encoding_for_model(model)
-        except KeyError:
-            encoding = tiktoken.get_encoding("cl100k_base")
-        return len(encoding.encode(text)), "tiktoken"
-    except ImportError:
-        return max(1, len(text) // 4), "heuristic(chars/4)"
+# Moved to kg_testgen.tokens when the spires arm needed it and this module became
+# an evaluation arm. Re-exported so the callers here read unchanged.
+from kg_testgen.tokens import estimate_tokens  # noqa: E402,F401
 
 
 def _asserting_provisions(triple: RetrievedTriple) -> set:

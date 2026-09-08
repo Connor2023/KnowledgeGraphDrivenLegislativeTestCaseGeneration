@@ -25,8 +25,10 @@ import sys
 import traceback
 
 from kg_testgen.config import Config, secrets_from_env
+from kg_testgen.neo4j_client import Neo4jClient
 from .gherkin import parse_feature_text
 from kg_testgen.pipeline import run as run_pipeline
+from . import arms
 from . import eval_config
 
 SECTIONS = [
@@ -77,6 +79,21 @@ def cell_dir(section_key: str, arm: str, repeat: int) -> str:
     return os.path.join(EXPERIMENT_DIR, "%s__%s__r%d" % (section_key, arm, repeat))
 
 
+def build_arm_context(text, config, secrets):
+    """Context for a comparison arm, or None to let the pipeline build its own.
+
+    `spires` is the pipeline's mode: it opens its own connection and walks the norm
+    graph, so the experiment hands it nothing and the two paths stay identical to what
+    was measured. Everything else is built here.
+    """
+    if config.context_mode not in arms.ARM_MODES:
+        return None
+    if not arms.contexts.needs_graph(config):
+        return arms.build_context(None, text, config)
+    with Neo4jClient(secrets, config) as client:
+        return arms.build_context(client, text, config)
+
+
 def run_cell(section_key, path, arm, repeat, secrets, overwrite=False):
     out = cell_dir(section_key, arm, repeat)
     if os.path.exists(os.path.join(out, "generated.feature")) and not overwrite:
@@ -90,7 +107,8 @@ def run_cell(section_key, path, arm, repeat, secrets, overwrite=False):
     with io.open(path, encoding="utf-8") as fh:
         text = fh.read()
     try:
-        run_pipeline(text, config, secrets, input_path=path)
+        run_pipeline(text, config, secrets, input_path=path,
+                     external_context=build_arm_context(text, config, secrets))
         return True
     except Exception as exc:  # noqa: BLE001 - one failed cell must not stop the grid
         logger.error("  FAILED %s / %s / r%d: %s", section_key, arm, repeat, exc)

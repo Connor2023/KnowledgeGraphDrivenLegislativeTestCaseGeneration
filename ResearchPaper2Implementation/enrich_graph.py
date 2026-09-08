@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import prep_app  # noqa: E402  - reused for its line classification and normalisation
 import corpus_config  # noqa: E402
-from kg_testgen.edc_bridge import detect_provision_id, provision_key  # noqa: E402
+from corpus_config import detect_provision_id, provision_key  # noqa: E402
 
 RAW_PATH = corpus_config.RAW_PATH
 CORPUS_PATH = corpus_config.CORPUS_PATH

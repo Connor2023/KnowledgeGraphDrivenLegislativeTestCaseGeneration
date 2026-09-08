@@ -21,6 +21,7 @@ from __future__ import annotations
 import ast
 import io
 import os
+import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,11 +31,21 @@ EVALUATION_PKG = "evaluation"
 # Modules that were moved out of kg_testgen when the boundary was drawn. Re-adding one
 # under its old name is the most likely way for this to regress, and an import-based
 # check would not notice because the name would resolve again.
-MOVED_OUT = ("evaluate", "evaluation", "policy_check", "gherkin")
+#
+# The first four are the judges and the harness. The rest are the comparison arms: the
+# EDC triple pipeline (seeding, retrieval, ranking, serialisation, the EDC bridge and the
+# provision-text fetch it uses) and the RP1 concept graph. The pipeline builds one context
+# mode, `spires`, and everything these implement is measured against it.
+MOVED_OUT = ("evaluate", "evaluation", "policy_check", "gherkin",
+             "seeding", "retrieval", "ranking", "serialisation", "edc_bridge",
+             "rp1_query", "provision_text")
 
 # Third-party packages that only make sense on the measurement side. `openai` is not
 # here: the pipeline legitimately calls an LLM to extract norms and to generate Gherkin.
-EVALUATION_ONLY_DEPS = ("docx",)
+# `transformers`, `torch` and `edc` come in through the EDC bridge, which only the `kg`
+# control arm uses -- installing the pipeline should not install a sentence-transformer
+# stack to run an arm the pipeline does not have.
+EVALUATION_ONLY_DEPS = ("docx", "transformers", "torch", "edc", "sentence_transformers")
 
 
 def _module_files(package: str):
@@ -74,8 +85,8 @@ def check():
                     "that measures it" % (PIPELINE_PKG, name, lineno, root))
             if root in EVALUATION_ONLY_DEPS:
                 problems.append(
-                    "%s/%s:%d imports %r, which is only needed to read the manual test "
-                    "cases" % (PIPELINE_PKG, name, lineno, root))
+                    "%s/%s:%d imports %r, which only the measurement side needs"
+                    % (PIPELINE_PKG, name, lineno, root))
 
     present = {name[:-3] for name, _ in _module_files(PIPELINE_PKG)}
     for name in MOVED_OUT:
@@ -85,15 +96,21 @@ def check():
                 % (PIPELINE_PKG, name, EVALUATION_PKG))
 
     # The installable package is the other half of the guarantee: `pip install .` must
-    # not ship the judges. Read the declaration rather than the filesystem, because that
-    # is what setuptools acts on.
+    # not ship the judges or the arms. Read the `packages = [...]` declaration, since that
+    # is what setuptools acts on -- an earlier version scanned the whole file and fired on
+    # a comment explaining why numpy had been removed.
     pyproject = os.path.join(ROOT, "pyproject.toml")
     if os.path.exists(pyproject):
         with io.open(pyproject, encoding="utf-8") as fh:
             text = fh.read()
-        if EVALUATION_PKG in text:
+        match = re.search(r"^packages\s*=\s*\[([^\]]*)\]", text, re.M)
+        if match is None:
             problems.append(
-                "pyproject.toml mentions %r -- the evaluation package must stay "
+                "pyproject.toml has no explicit packages list, so setuptools may "
+                "auto-discover and ship %r" % EVALUATION_PKG)
+        elif EVALUATION_PKG in match.group(1):
+            problems.append(
+                "pyproject.toml declares %r as an installable package -- it must stay "
                 "uninstalled" % EVALUATION_PKG)
 
     return problems
