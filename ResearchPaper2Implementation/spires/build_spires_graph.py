@@ -56,6 +56,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import corpus_config  # noqa: E402
 import prep_corpus  # noqa: E402
+import graph_registry  # noqa: E402
 import references  # noqa: E402
 
 GRAPH_DIR = corpus_config.SPIRES_GRAPH_DIR
@@ -238,7 +239,7 @@ def write_csvs(nodes, edges):
         writer.writerows(edges)
 
 
-def load(nodes, edges, wipe, creds_path=None):
+def load(nodes, edges, wipe, creds_path=None, force_prefix=False):
     from load_neo4j import load_credentials
     from neo4j import GraphDatabase
 
@@ -251,6 +252,21 @@ def load(nodes, edges, wipe, creds_path=None):
                                   auth=(creds["NEO4J_USERNAME"], creds["NEO4J_PASSWORD"]))
     try:
         with driver.session(database=creds.get("NEO4J_DATABASE") or "neo4j") as session:
+            # Claim the prefix before writing a single node. Neo4j has no namespaces, so
+            # a second corpus loading under a claimed prefix would MERGE into the first
+            # on any key collision -- silently, and with no way to tell the two apart
+            # afterwards. Checked against both the registry and the labels actually
+            # present, since a registry of intentions cannot see a graph loaded before it.
+            problems = graph_registry.check(corpus_config.NAME, PREFIX, session)
+            if problems and not force_prefix:
+                raise SystemExit(
+                    "Refusing to load: %s" % NL.join(problems) + NL +
+                    "Run `python graph_registry.py` to see what is claimed, change "
+                    "node_prefix in corpus.yaml, or pass --force-prefix if you are "
+                    "certain.")
+            graph_registry.claim(corpus_config.NAME, PREFIX, corpus_config.DESCRIPTION,
+                                 session, force=True)
+
             if wipe:
                 # Only SP_*; :AppNode and :RP1Entity share this instance and must survive.
                 removed = session.run(
@@ -291,6 +307,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true", help="Write CSVs, do not load.")
     ap.add_argument("--wipe", action="store_true", help="Delete existing SP_* first.")
+    ap.add_argument("--force-prefix", action="store_true",
+                    help="Load even if the node prefix is claimed by another corpus. "
+                         "This merges two graphs; there is no way back short of a wipe.")
     ap.add_argument("--creds", default=None,
                     help="Aura credentials file; the environment wins over it.")
     args = ap.parse_args()
@@ -320,7 +339,7 @@ def main():
     if args.dry_run:
         print("\nDry run -- nothing loaded.")
         return 0
-    load(nodes, edges, args.wipe, args.creds)
+    load(nodes, edges, args.wipe, args.creds, args.force_prefix)
     return 0
 
 
