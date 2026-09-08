@@ -13,10 +13,7 @@ import sys
 from kg_testgen.config import ConfigError, Config, secrets_from_env
 from .policy_eval import evaluate_feature, write_results, GREEN_TICK, ORANGE_CROSS, RED_CROSS
 from kg_testgen.llm import LLMError
-
-DEFAULT_POLICY_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    "MicrosoftPrivacyPolicy")
+from . import eval_config
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -26,8 +23,8 @@ def _build_parser() -> argparse.ArgumentParser:
                     "policy, using the 2026 policy as ground truth for any failures.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("feature", help="Path to a generated .feature file.")
-    parser.add_argument("--policy-2016", default=os.path.join(DEFAULT_POLICY_DIR, "2016.txt"))
-    parser.add_argument("--policy-2026", default=os.path.join(DEFAULT_POLICY_DIR, "2026.txt"))
+    parser.add_argument("--policy-2016", default=eval_config.POLICY_2016)
+    parser.add_argument("--policy-2026", default=eval_config.POLICY_2026)
     parser.add_argument("--out-dir", default=None,
                         help="Where to write evaluation.json and evaluation.md. "
                              "Defaults to the feature file's own directory.")

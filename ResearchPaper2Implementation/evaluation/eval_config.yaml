@@ -1,0 +1,38 @@
+# Paths the measurement code needs and the pipeline does not.
+#
+# These used to be scattered as string constants across four scripts, and one of them --
+# the element decomposition -- was declared in corpus.yaml, where it did not belong: the
+# pipeline never read it, so a pipeline config file was advertising an evaluation
+# artefact. Everything evaluation-only lives here now, and corpus.yaml describes the
+# corpus alone.
+#
+# Paths are relative to the repository root, which is where the evaluation modules are
+# meant to be run from:
+#
+#     python -m evaluation.score_elements --dry-run
+
+name: app_schedule1_experiment
+description: Measurement inputs for the 7-arm comparison on APP 2.2, 4.4 and 6.1
+
+# The hand-written legal element decomposition scored for coverage. Derived from the
+# statute rather than from the manual test cases, so that scoring the manual set is not
+# circular; every element is tiered `core` or `cross-referenced`.
+elements: elements/legal_elements.yaml
+
+# Verbatim statute, quoted to the soundness judge so it can check entailment.
+statute: APPschedule1.txt
+
+# The human-written test cases the generated ones are compared against.
+manual_cases: testcasecomparison/Test cases FYP.docx
+
+# Ground truth for the policy check. 2016 is the document under test; 2026 acts as
+# ground truth for whether a 2016 failure was a real gap that was later closed.
+policies:
+  "2016": ../MicrosoftPrivacyPolicy/2016.txt
+  "2026": ../MicrosoftPrivacyPolicy/2026.txt
+
+# Where judgements, worksheets and reports are written. Under runs/, which is gitignored.
+output:
+  elements: runs/elements
+  soundness: runs/soundness
+  experiment: runs/experiment

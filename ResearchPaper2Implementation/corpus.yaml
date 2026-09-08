@@ -10,6 +10,10 @@
 # The values below reproduce the previous hard-coded behaviour exactly. Changing them
 # changes where files are read and written and what the graph is labelled, so a change
 # here without a matching rebuild will silently read the wrong corpus.
+#
+# This file describes the CORPUS ONLY. Paths that exist to measure the pipeline's output
+# -- the element decomposition, the manual test cases, the policies judged against --
+# live in evaluation/eval_config.yaml and are never read from here.
 
 name: app_schedule1
 description: Schedule 1 of the Privacy Act 1988 (Cth) — the Australian Privacy Principles
@@ -32,8 +36,6 @@ paths:
   edc_graph_dir: edc-main/edc-main/output/app_full/graph
   # Root of the SPIRES extraction pipeline: schema, input/, output/, graph/.
   spires_dir: spires
-  # The hand-written legal element decomposition used for coverage scoring.
-  elements: elements/legal_elements.yaml
 
 provision:
   # Finds the provision identifier inside a piece of text. This is the single most

@@ -48,10 +48,11 @@ from kg_testgen.config import (ENV_LLM_KEY_FALLBACK, ENV_LLM_KEY_PRIMARY, Config
 from .gherkin import parse_feature_text
 from .run_experiment import ARMS, SECTIONS, cell_dir
 from .score_elements import cohens_kappa, llm_key_from_env, normalise_ws
+from . import eval_config
 
-OUT_DIR = "runs/soundness"
-SCHEDULE = "APPschedule1.txt"
-ELEMENTS_PATH = os.path.join("elements", "legal_elements.yaml")
+OUT_DIR = eval_config.SOUNDNESS_OUT_DIR
+SCHEDULE = eval_config.STATUTE_PATH
+ELEMENTS_PATH = eval_config.ELEMENTS_PATH
 
 PRICES = {"gpt-4o-mini": (0.150, 0.600), "gpt-4o": (2.50, 10.00)}
 

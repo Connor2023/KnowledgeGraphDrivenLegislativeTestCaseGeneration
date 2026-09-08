@@ -27,6 +27,7 @@ import traceback
 from kg_testgen.config import Config, secrets_from_env
 from .gherkin import parse_feature_text
 from kg_testgen.pipeline import run as run_pipeline
+from . import eval_config
 
 SECTIONS = [
     ("line34", "sections/line34_app_2_2.txt", "APP 2.2 — exception to anonymity", "2.2"),
@@ -34,7 +35,7 @@ SECTIONS = [
     ("line60", "sections/line60_app_6_1.txt", "APP 6.1 — secondary use prohibition", "6.1"),
 ]
 
-MANUAL_DOCX = os.path.join("testcasecomparison", "Test cases FYP.docx")
+MANUAL_DOCX = eval_config.MANUAL_CASES_PATH
 _MANUAL_ID = None  # compiled lazily; see load_manual_cases
 # (key, label, config overrides). Carrying overrides rather than a bare mode string lets
 # an arm vary any tunable, not just which graph it reads.

@@ -53,9 +53,10 @@ import yaml
 
 from kg_testgen.config import (ENV_LLM_KEY_FALLBACK, ENV_LLM_KEY_PRIMARY, ConfigError)
 from .run_experiment import ARMS, SECTIONS, cell_dir
+from . import eval_config
 
-ELEMENTS_PATH = os.path.join("elements", "legal_elements.yaml")
-OUT_DIR = "runs/elements"
+ELEMENTS_PATH = eval_config.ELEMENTS_PATH
+OUT_DIR = eval_config.ELEMENTS_OUT_DIR
 
 # gpt-4o-mini list price, USD per 1M tokens; overridden per judge model below.
 PRICES = {

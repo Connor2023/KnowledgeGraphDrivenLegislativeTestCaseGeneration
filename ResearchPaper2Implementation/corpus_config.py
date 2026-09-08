@@ -40,7 +40,6 @@ _DEFAULTS = {
         "corpus": os.path.join("edc-main", "edc-main", "datasets", "app_schedule1.txt"),
         "edc_graph_dir": os.path.join("edc-main", "edc-main", "output", "app_full", "graph"),
         "spires_dir": "spires",
-        "elements": os.path.join("elements", "legal_elements.yaml"),
     },
     "provision": {
         "pattern": r"\b(?:subclause\s+)?(\d{1,2}\.\d{1,2})\b",
@@ -91,7 +90,6 @@ RAW_PATH = path("raw")
 CORPUS_PATH = path("corpus")
 EDC_GRAPH_DIR = path("edc_graph_dir")
 SPIRES_DIR = path("spires_dir")
-ELEMENTS_PATH = path("elements")
 
 SPIRES_INPUT_DIR = os.path.join(SPIRES_DIR, "input")
 SPIRES_OUTPUT_DIR = os.path.join(SPIRES_DIR, "output")
