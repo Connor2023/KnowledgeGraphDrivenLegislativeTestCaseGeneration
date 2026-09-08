@@ -25,6 +25,7 @@ import io
 import os
 import re
 import sys
+import urllib.parse
 
 import yaml
 
@@ -107,6 +108,36 @@ _APPLICABILITY = applicability_pattern()
 MANUAL_OVERRIDES = corpus_config.MODALITY_OVERRIDES
 
 
+def bearer_names_provisions(norm, profile=None):
+    """Is the party this norm binds actually a set of provisions?
+
+    "Australian Privacy Principles 5 to 13 apply in relation to the information" has a
+    bearer of the PROVISIONS, not of a party -- which is the whole difference between NONE
+    and APPLICABILITY. An APPLICABILITY provision states when ITSELF is met, for another
+    provision's exception to use; a provision saying that OTHER provisions apply commands
+    nothing and turns other rules on.
+
+    The test is a structural word plus a number, both taken from the profile: "principle"
+    is one of Schedule 1's level names and "subclause" one of its citation nouns, while a
+    bearer like "the entity described in paragraph (a)" has the word but no number and is
+    correctly left alone. Checked against all 21 APPLICABILITY norms in Schedule 1 -- it
+    fires on none of them.
+    """
+    bearer = (decode_bearer(norm.get("bearer")) or "").lower()
+    if not bearer or not re.search(r"\d", bearer):
+        return False
+    return any(unit in bearer for unit in _structural_units(profile))
+
+
+def decode_bearer(value):
+    """SPIRES writes NamedEntity slots as `AUTO:Australian%20Privacy%20Principles`."""
+    value = unwrap(value)
+    if not isinstance(value, str):
+        return None
+    text = value.split(":", 1)[-1] if value.startswith("AUTO:") else value
+    return " ".join(urllib.parse.unquote(text).split())
+
+
 def relabel_modality(norm, sentence, provision_id=None, index=None):
     """Return the modality this norm should carry, given the sentence it came from."""
     override = MANUAL_OVERRIDES.get(str(provision_id), {}).get(index)
@@ -115,6 +146,15 @@ def relabel_modality(norm, sentence, provision_id=None, index=None):
     current = unwrap(norm.get("deontic_modality"))
     if current == "NONE" and sentence and _APPLICABILITY.match(sentence):
         return "APPLICABILITY"
+    if current == "APPLICABILITY" and bearer_names_provisions(norm):
+        # The promotion above has an inverse, and without it the rule only ever moves in
+        # one direction. Neutralising the schema's worked examples made the extractor
+        # label APP 4.4 APPLICABILITY -- three times, including after the abstract
+        # description was sharpened and after it was given a synthetic contrast case
+        # closely matching 4.4's own wording. The extraction is not wrong about the
+        # structure, only about the label: it reports the bearer as "Australian Privacy
+        # Principles 5 to 13", which is the answer.
+        return "NONE"
     return current
 
 

@@ -109,6 +109,63 @@ def test_longer_units_are_tried_first():
     assert units.index("subclause") < units.index("clause"), units
 
 
+def test_a_bearer_that_names_provisions_demotes_applicability():
+    """The rule that replaced a per-clause override.
+
+    Neutralising the schema's worked examples made the extractor label APP 4.4
+    APPLICABILITY -- three times, including after the abstract description was sharpened
+    and after it was given a synthetic contrast case closely matching 4.4's own wording.
+    The extraction is not wrong about the structure, only about the label: it reports the
+    bearer as "Australian Privacy Principles 5 to 13", which is the answer. A provision
+    whose "applies" binds OTHER provisions turns rules on; it does not state when its own
+    exception is met.
+    """
+    cleaner = _cleaner()
+    cleaner.MANUAL_OVERRIDES = {}
+    norm = {"deontic_modality": "APPLICABILITY",
+            "bearer": "AUTO:Australian%20Privacy%20Principles%205%20to%2013",
+            "action": "AUTO:apply"}
+    assert cleaner.bearer_names_provisions(norm)
+    assert cleaner.relabel_modality(norm, None, "4.4", 2) == "NONE"
+
+
+def test_the_demotion_leaves_a_real_applicability_alone():
+    """6.2 binds an APP entity, not a set of provisions, and must stay APPLICABILITY."""
+    cleaner = _cleaner()
+    cleaner.MANUAL_OVERRIDES = {}
+    norm = {"deontic_modality": "APPLICABILITY", "bearer": "AUTO:APP%20entity"}
+    assert not cleaner.bearer_names_provisions(norm)
+    assert cleaner.relabel_modality(norm, None, "6.2", 1) == "APPLICABILITY"
+
+
+def test_the_demotion_needs_a_number_as_well_as_a_structural_word():
+    """"the entity described in paragraph (a)" has the word and is not a set of
+    provisions. Requiring a digit is what keeps the rule off it."""
+    cleaner = _cleaner()
+    norm = {"deontic_modality": "APPLICABILITY",
+            "bearer": "AUTO:the%20entity%20described%20in%20paragraph%20(a)"}
+    assert not cleaner.bearer_names_provisions(norm)
+
+
+def test_the_demotion_fires_on_no_existing_applicability_norm():
+    """Checked against the whole corpus, not just the case it was written for.
+
+    All 21 APPLICABILITY norms in Schedule 1 must be untouched, or the rule would be
+    rewriting results that were already measured.
+    """
+    import glob
+    import yaml
+    cleaner = _cleaner()
+    fired = []
+    for path in glob.glob(os.path.join(ROOT, "spires", "output", "app_*.clean.yaml")):
+        document = yaml.safe_load(io.open(path, encoding="utf-8")) or {}
+        for norm in (document.get("norms") or []):
+            if (norm or {}).get("deontic_modality") == "APPLICABILITY":
+                if cleaner.bearer_names_provisions(norm):
+                    fired.append(document.get("provision_id"))
+    assert not fired, "the demotion would rewrite existing norms in: %s" % fired
+
+
 def test_falls_back_when_no_profile_is_available():
     """A cleaning run must not die because a profile is missing or malformed."""
     cleaner = _cleaner()

@@ -185,26 +185,42 @@ enums:
       APPLICABILITY:
         description: >-
           THIS provision is the thing another provision's exception points AT. It commands
-          nothing itself; it states when that exception is satisfied. Signalled by "This
-          <provision> applies in relation to X if", sitting underneath a prohibition
-          worded "must not do X unless <this provision> applies".
+          nothing itself; it states when that exception is satisfied.
 
-          Two tests, both of which must hold. The subject of "applies" is THIS provision,
-          not some other one. And some other provision must rely on it as an exception.
+          The type case, in full:
 
-          Do not label these PERMISSION -- a party can satisfy the applicability provision
-          and still breach the prohibition that refers to it. And do not label a provision
-          APPLICABILITY merely because the word "applies" is in it: a provision saying
-          that OTHER provisions apply is NONE.
+            "12.2 This section applies in relation to a disclosure of information if the
+             entity reasonably believes the recipient is an enforcement body."
+
+          and somewhere else, the provision that relies on it:
+
+            "12.1 An entity must not disclose information unless section 12.2 applies."
+
+          12.2 is APPLICABILITY. Read the subject of "applies": it is 12.2 ITSELF, and
+          12.1 leans on it. Do not label it PERMISSION -- a party can satisfy 12.2 and
+          still breach 12.1, because 12.1 may have other conditions.
+
+          Contrast the shape that is NOT this:
+
+            "12.3 Sections 14 to 20 apply in relation to the information as if the entity
+             had collected it under section 9."
+
+          The subject of "apply" there is OTHER provisions, so 12.3 is NONE, not
+          APPLICABILITY. The word "applies" appearing in a provision decides nothing.
       NONE:
         description: >-
           The provision states no duty, liberty or disapplication of its own -- it is
-          definitional, or it only says that OTHER provisions apply. The type case reads
-          "<other provisions> apply in relation to X as if ...": it switches other rules
-          on without itself commanding anything.
+          definitional, or it only says that OTHER provisions apply.
 
-          This is the one most easily confused with APPLICABILITY, and the difference is
-          which provision is the subject of "applies". "This provision applies if X" is
-          APPLICABILITY -- it is defining when itself is met, for another provision's
-          exception to use. "Provisions A to B apply if X" is NONE -- it is turning other
-          rules on, and nothing points at it as an exception.
+          The type case, in full:
+
+            "12.3 If the entity does not destroy the information, sections 14 to 20 apply
+             in relation to the information as if the entity had collected it under
+             section 9."
+
+          12.3 is NONE. It switches other rules on and commands nothing itself. Note that
+          it contains a condition ("If the entity does not destroy") and the word "apply",
+          and is STILL NONE -- neither of those makes a provision APPLICABILITY.
+
+          This is the label most easily confused with APPLICABILITY. The test is the
+          subject of "applies": itself (APPLICABILITY) or other provisions (NONE).

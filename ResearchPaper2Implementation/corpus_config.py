@@ -56,7 +56,7 @@ _DEFAULTS = {
         "profile": os.path.join("profiles", "app_schedule1.yaml"),
         "schema": os.path.join("spires", "norm.yaml"),
     },
-    "modality_overrides": {"6.6": {1: "NONE"}, "4.4": {2: "NONE"}},
+    "modality_overrides": {"6.6": {1: "NONE"}},
     "prompt": {
         # The newline and indent are load-bearing: this is substituted into a
         # hand-wrapped paragraph, and a single-line value re-flows the line it lands in.
