@@ -44,8 +44,9 @@ _DEFAULTS = {
         "edc_graph_dir": os.path.join("edc-main", "edc-main", "output", "app_full", "graph"),
         "spires_dir": "spires",
         "profile": os.path.join("profiles", "app_schedule1.yaml"),
+        "schema": os.path.join("spires", "norm.yaml"),
     },
-    "modality_overrides": {"6.6": {1: "NONE"}},
+    "modality_overrides": {"6.6": {1: "NONE"}, "4.4": {2: "NONE"}},
     "provision": {
         "pattern": r"\b(?:subclause\s+)?(\d{1,2}\.\d{1,2})\b",
         "key_prefix": "subclause",
@@ -105,7 +106,10 @@ PROFILE_PATH = path("profile")
 SPIRES_INPUT_DIR = os.path.join(SPIRES_DIR, "input")
 SPIRES_OUTPUT_DIR = os.path.join(SPIRES_DIR, "output")
 SPIRES_GRAPH_DIR = os.path.join(SPIRES_DIR, "graph")
-SPIRES_SCHEMA = os.path.join(SPIRES_DIR, "app_norm.yaml")
+# The LinkML schema SPIRES extracts against. Instrument-neutral since Stage 4a: its
+# worked examples describe shapes rather than citing APP 2.2, 6.2 and 4.4, so a second
+# corpus does not need its own copy.
+SPIRES_SCHEMA = path("schema")
 
 
 def detect_provision_id(text: str):

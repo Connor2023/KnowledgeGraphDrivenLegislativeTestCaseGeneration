@@ -41,6 +41,8 @@ paths:
   # composed. Produced and validated by induce_structure.py, consumed by prep_corpus.py.
   # Hand-editable -- correcting one pattern is cheaper than re-inducing.
   profile: profiles/app_schedule1.yaml
+  # The LinkML schema SPIRES extracts against. Instrument-neutral, so corpora share it.
+  schema: spires/norm.yaml
 
 # Readings the modality grammar gets wrong, as provision id -> {norm index: modality}.
 # The cleaner labels "This <unit> applies ..." provisions APPLICABILITY, which matched 23
@@ -50,6 +52,14 @@ paths:
 modality_overrides:
   "6.6":
     1: NONE
+  # Measured cost of neutralising the schema's worked examples. The old schema named APP
+  # 4.4 as the NONE type case; without that name, three re-extractions in a row labelled
+  # its second norm APPLICABILITY. The distinction is real -- 4.4 turns APPs 5 to 13 ON
+  # rather than defining when another provision's exception is met -- but stating it
+  # abstractly was not enough, and naming the clause in the schema is exactly the coupling
+  # Stage 4a removed. Recording it here keeps the cost visible instead of hidden.
+  "4.4":
+    2: NONE
 
 provision:
   # Finds the provision identifier inside a piece of text. This is the single most

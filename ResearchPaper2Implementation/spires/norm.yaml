@@ -1,11 +1,11 @@
-id: https://w3id.org/ontogpt/app_norm
-name: app_norm
-title: Australian Privacy Principles Norm Extraction
+id: https://w3id.org/ontogpt/legislative_norm
+name: norm
+title: Legislative Norm Extraction
 description: >-
-  Extracts deontic norms from provisions of Schedule 1 of the Privacy Act 1988 (Cth).
+  Extracts deontic norms from the provisions of a legislative instrument.
 
   The target is everything a flat (subject, predicate, object) triple destroys. An
-  extraction that yields "APP entity - holds - personal information" has thrown away the
+  extraction that yields "entity - holds - personal information" has thrown away the
   modality, the condition and the exception, which is the entire testable content of a
   legislative provision. Each Norm below therefore keeps modality, bearer, action,
   object, conditions, exceptions and scope as separate fields.
@@ -23,9 +23,9 @@ license: https://creativecommons.org/publicdomain/zero/1.0/
 
 prefixes:
   linkml: https://w3id.org/linkml/
-  app_norm: https://w3id.org/ontogpt/app_norm/
+  norm: https://w3id.org/ontogpt/legislative_norm/
 
-default_prefix: app_norm
+default_prefix: norm
 default_range: string
 
 imports:
@@ -37,12 +37,12 @@ classes:
   ProvisionExtraction:
     tree_root: true
     description: >-
-      All the normative content of a single subclause of Schedule 1.
+      All the normative content of a single provision of the instrument.
     attributes:
       provision_id:
         description: >-
-          The subclause identifier this text is, e.g. "2.2" or "6.1". Take it from the
-          text itself; do not infer one that is not present.
+          The provision identifier this text is. It appears at the start of the text --
+          take it from there; do not infer one that is not present.
       norms:
         description: >-
           Every distinct rule stated by this provision, as a semicolon-separated list.
@@ -51,28 +51,27 @@ classes:
 
           CRITICAL: each entry is read later ON ITS OWN, with the rest of this provision
           removed, so every entry must be a self-contained sentence. Where the provision's
-          opening words set up framing that governs all the limbs -- "Subclause 2.1 does
-          not apply if", "the entity must not use or disclose the information unless",
-          "This subclause applies in relation to the use or disclosure if" -- REPEAT that
-          framing inside every entry. An entry reading only "it is impracticable for the
-          APP entity to deal with individuals" is useless, because nothing in it reveals
-          that it is an exception disapplying another subclause. Write instead
-          "Subclause 2.1 does not apply if it is impracticable for the APP entity to deal
-          with individuals who have not identified themselves".
+          opening words set up framing that governs all the limbs -- "<provision> does not
+          apply if", "the entity must not do X unless", "This provision applies in relation
+          to X if" -- REPEAT that framing inside every entry. An entry reading only "it is
+          impracticable to do X" is useless, because nothing in it reveals that it is an
+          exception disapplying another provision. Write instead "<provision> does not
+          apply if it is impracticable to do X".
         range: Norm
         multivalued: true
       disapplies:
         description: >-
-          Any provision this one switches OFF, as a semicolon-separated list of subclause
-          identifiers. For example a provision beginning "Subclause 2.1 does not apply
-          if" disapplies 2.1. Leave blank if it disapplies nothing.
+          Any provision this one switches OFF, as a semicolon-separated list of provision
+          identifiers, written exactly as the text writes them. A provision beginning
+          "<provision> does not apply if" disapplies that provision. Leave blank if it
+          disapplies nothing.
         multivalued: true
       cross_references:
         description: >-
           Every other provision this one refers to, as a semicolon-separated list of
-          identifiers, e.g. "6.2; 6.3" or "Australian Privacy Principle 3". Include only
-          provision identifiers, not sources of law such as "Australian law". Leave blank
-          if there are none.
+          identifiers, written exactly as the text writes them. Include only provision
+          identifiers, not sources of law such as "Australian law". Leave blank if there
+          are none.
         multivalued: true
 
   Norm:
@@ -85,14 +84,15 @@ classes:
         description: >-
           The normative force. "must" is an OBLIGATION; "must not" is a PROHIBITION;
           "may" or "is authorised to" is a PERMISSION. If the provision's own work is to
-          switch another provision OFF -- it says some other subclause "does not apply"
+          switch another provision OFF -- it says some other provision "does not apply"
           -- then it is a DISAPPLICATION, whatever verbs appear in its limbs. If it
           merely states that other provisions apply, or is purely definitional, it is
           NONE.
         range: DeonticModality
       bearer:
         description: >-
-          The party on whom the norm falls, e.g. "APP entity", "organisation", "agency".
+          The party on whom the norm falls -- the actor the provision names, such as
+          "entity", "organisation" or "agency". Use the words the text uses.
         range: Actor
       action:
         description: >-
@@ -147,15 +147,15 @@ classes:
         description: The exception in a single clause, as stated in the text.
       source_provision:
         description: >-
-          The identifier of the provision that supplies this exception, e.g. "6.2" or
-          "6.2(b)". Blank when the exception is stated here in full.
+          The identifier of the provision that supplies this exception, written as the
+          text writes it. Blank when the exception is stated here in full.
       is_exhaustive:
         description: >-
           "true" if the text signals these are the only exceptions, otherwise blank.
 
   Actor:
     is_a: NamedEntity
-    description: A party a norm can bind, such as an APP entity, an agency or an individual.
+    description: A party a norm can bind, such as an entity, an agency or an individual.
 
   Action:
     is_a: NamedEntity
@@ -179,17 +179,32 @@ enums:
       DISAPPLICATION:
         description: >-
           The provision's function is to switch another provision off -- it states that
-          some other subclause "does not apply" in stated circumstances. APP 2.2 is the
-          type case: it imposes no duty of its own, it defeats the duty in 2.1.
+          some other provision "does not apply" in stated circumstances. The type case
+          reads "<provision> does not apply if <circumstances>": it imposes no duty of its
+          own, it defeats the duty stated elsewhere.
       APPLICABILITY:
         description: >-
-          The provision commands nothing itself; it supplies the conditions under which
-          an exception referenced by ANOTHER provision is satisfied. Signalled by "This
-          subclause applies in relation to X if". APP 6.2 is the type case: it does not
-          permit secondary use, it defines when 6.1's "unless" is met. Do not label these
-          PERMISSION -- an entity can satisfy 6.2 and still breach 6.1.
+          THIS provision is the thing another provision's exception points AT. It commands
+          nothing itself; it states when that exception is satisfied. Signalled by "This
+          <provision> applies in relation to X if", sitting underneath a prohibition
+          worded "must not do X unless <this provision> applies".
+
+          Two tests, both of which must hold. The subject of "applies" is THIS provision,
+          not some other one. And some other provision must rely on it as an exception.
+
+          Do not label these PERMISSION -- a party can satisfy the applicability provision
+          and still breach the prohibition that refers to it. And do not label a provision
+          APPLICABILITY merely because the word "applies" is in it: a provision saying
+          that OTHER provisions apply is NONE.
       NONE:
         description: >-
           The provision states no duty, liberty or disapplication of its own -- it is
-          definitional, or it only says that other provisions apply. APP 4.4 is the type
-          case: it switches APPs 5 to 13 on without itself commanding anything.
+          definitional, or it only says that OTHER provisions apply. The type case reads
+          "<other provisions> apply in relation to X as if ...": it switches other rules
+          on without itself commanding anything.
+
+          This is the one most easily confused with APPLICABILITY, and the difference is
+          which provision is the subject of "applies". "This provision applies if X" is
+          APPLICABILITY -- it is defining when itself is met, for another provision's
+          exception to use. "Provisions A to B apply if X" is NONE -- it is turning other
+          rules on, and nothing points at it as an exception.
