@@ -20,26 +20,49 @@ are set.
 
 ---
 
-## 0. Read this first: what is corpus-specific
+## 0. A new statute is a .txt file
 
-The pipeline was built against Schedule 1 of the Privacy Act 1988 (Cth) and is coupled
-to that corpus in seven specific places. A new statute will not work end to end until
-these are adapted. They are listed here rather than buried because discovering them one
-crash at a time is the slow way.
+```powershell
+python build_corpus.py MyStatute.txt --dry-run    # every free stage and gate, no spending
+python build_corpus.py MyStatute.txt              # induce, segment, extract, clean, build
+python -m kg_testgen --list-provisions
+python -m kg_testgen --provision "26WE(1)" --context-mode spires
+```
 
-| File | What is APP-specific | What a new statute needs |
-|---|---|---|
-| `prep_app.py` | `RE_APP` matches `N Australian Privacy Principle N—title`; `RE_CLAUSE` assumes `N.M` numbering | A new prep script, or new regexes for that instrument's heading and clause forms |
-| `enrich_graph.py` | `RAW_PATH = "APPschedule1.txt"`; `parse_references` matches "subclause N.M" and "Australian Privacy Principles N to M" | Point `RAW_PATH` at the new file and rewrite the three cross-reference patterns for that statute's citation style |
-| `kg_testgen/edc_bridge.py` | `_PROVISION_RE` detects `N.M` subclause identifiers | A pattern for the new numbering scheme |
-| `kg_testgen/pipeline.py` | `DEFAULT_CORPUS_PATH` points at `app_schedule1.txt` | Pass `--corpus-path`, or change the constant |
-| `spires/extract_corpus.py` | Writes and reads `app_*.txt` / `app_*.yaml` | Change the filename prefix, or accept `app_` as a meaningless prefix |
-| `spires/build_spires_graph.py` | Globs `app_*.clean.yaml` and `app_*.verified.yaml` | Same prefix decision as above |
-| `spires/app_norm.yaml` | Descriptions cite APP 2.2, 4.4 and 6.2 as worked examples | Substitute clauses from the new instrument — the examples are load-bearing, not decoration |
+That is the whole of it. The pipeline used to be coupled to Schedule 1 in seven places,
+each needing hand-written code for a new instrument. Six of them are now driven by a
+**structural profile** that `induce_structure.py` derives from the text and validates
+against the whole file before anything is spent:
 
-**The clause numbering scheme is the thing that matters most.** Everything downstream
-keys on a stable per-provision identifier. If the new instrument numbers clauses
-differently (`s 12(3)(a)`, `Art. 6(1)(b)`), that is the first thing to change.
+| Was | Now |
+|---|---|
+| `prep_app.py`'s regexes for APP headings and `N.M` clauses | `profiles/<name>.yaml` line classifiers, applied by `prep_corpus.py` |
+| `enrich_graph.parse_references`' three citation patterns | `references.py`, built from the profile's citation nouns, identifier pattern and `id_template` |
+| `edc_bridge._PROVISION_RE` | `corpus_config.PROVISION_RE`, from the profile |
+| `pipeline.DEFAULT_CORPUS_PATH` | the full-corpus arm's concern, in `evaluation/arms/` |
+| `app_*.txt` / `app_*.yaml` filename prefixes | `file_prefix` in `corpus.yaml`, generated |
+| `spires/app_norm.yaml`'s APP worked examples | `spires/norm.yaml`, instrument-neutral |
+
+**What still needs a human.** The profile is induced but should be read: correcting one
+pattern by hand is cheaper than re-inducing, and `profiles/<name>.yaml` is a normal file.
+`node_prefix` in the generated `corpus.yaml` is worth checking against
+`python graph_registry.py`, since several corpora share one Aura instance. And a statute
+with genuinely new normative shapes — deadlines, offences — may need the modality enum
+extended; no induction fixes that.
+
+**The gates are the safety net.** Each build stage reports a number that is checked before
+the next runs, because every one of these has happened here and none of them raises:
+
+| Gate | Catches |
+|---|---|
+| provision count | a profile that segments the file into almost nothing |
+| interior orphan rate | a structural form unrecognised mid-instrument, its text dropped |
+| reference resolution | an identifier pattern that recovers nothing |
+| provisions citing anything | the same, disguised as a 100% rate over an empty denominator |
+| modality spread | every norm labelled NONE — the schema's distinctions did not land |
+| node prefix | a second corpus about to merge into the first |
+
+A failed gate stops the run before extraction, which is the first stage that costs money.
 
 ---
 
