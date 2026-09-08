@@ -9,6 +9,11 @@ check — is a separate concern and lives in `EVALUATION.md`. The code is separa
 same way: `kg_testgen` is the installable pipeline, `evaluation/` is not installed, and
 `tests/test_pipeline_isolation.py` fails if the pipeline ever imports it.
 
+**The pipeline builds one context mode: `spires`.** The six comparison arms — `none`,
+`full-corpus`, `kg`, `kg-text-only`, `rp1` and the format probes — are kept and runnable
+in `evaluation/arms/`, and reach the pipeline through an `ExternalContext` it is handed
+rather than one it builds. That is why `--context-mode` offers only `spires` here.
+
 Everything below was run on Windows with Git Bash and PowerShell side by side. Commands
 are given for PowerShell; the Bash equivalents differ only in how environment variables
 are set.

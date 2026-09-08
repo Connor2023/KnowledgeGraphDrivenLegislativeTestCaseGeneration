@@ -8,10 +8,34 @@ the diversity statistics, and the policy check. The code lives in `evaluation/`,
 is deliberately not an installed package — `pyproject.toml` lists `kg_testgen` alone, so
 `pip install .` gives you a pipeline that cannot spend credits on judging itself.
 
+## 0. What lives here
+
+The pipeline builds one kind of context: `--context-mode spires`, which walks the SPIRES
+norm graph. Every other arm is in `evaluation/arms/`:
+
+| Arm | What block 3 holds |
+|---|---|
+| `none` | nothing — the control |
+| `full-corpus` | the whole flattened corpus, target included |
+| `kg` | the EDC triple graph: seed, expand, rank, prune, serialise, plus provision text |
+| `kg-text-only` | the same retrieval with the triples withheld from the prompt |
+| `rp1` | the RP1 concept graph, serialised whole |
+| six `fmt-*` probes | the same context under a rephrased header |
+
+They reach the pipeline through one seam: each builds its own context block and passes it
+to `pipeline.run()` as an `ExternalContext`. The pipeline has no registry and never
+imports this package, so the dependency cannot creep back — asking it for a moved mode
+fails with a message naming where the arm went.
+
+**Their behaviour is frozen.** They are what the spires results are quoted against, so
+improving a control silently changes the comparison. `tests/test_arm_prompts_unchanged.py`
+replays all 117 recorded prompts and requires byte-identical output.
+
 The boundary is one-directional and enforced:
 
 ```bash
 python tests/test_pipeline_isolation.py
+python tests/test_arm_prompts_unchanged.py
 ```
 
 `evaluation` may import `kg_testgen` — it has to, since it runs the pipeline it
