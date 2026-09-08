@@ -135,7 +135,8 @@ Deliberately left as documented stubs, each raising `NotImplementedError`:
   filtering (`retrieval.*`)
 - Iterative/multi-turn retrieval (`llm.request_additional_context`)
 - Automated checking against the Microsoft privacy policies, verdict classification,
-  scoring, and batch processing (`evaluation.py`)
+  scoring, and batch processing (`evaluation/policy_eval.py` — measurement, not pipeline;
+  see `EVALUATION.md`)
 
 Vector index support **is** available on this instance (probed at startup and recorded in
 the run metadata), so vector seeding needs only embedding generation plus an index build.

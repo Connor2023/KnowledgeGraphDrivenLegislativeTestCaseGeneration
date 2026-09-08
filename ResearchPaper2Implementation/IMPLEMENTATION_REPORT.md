@@ -5,7 +5,7 @@ generation pipeline**, a **two-stage evaluation harness** that checks generated 
 cases against real privacy policies, and a **controlled four-arm experiment** measuring
 whether the knowledge graph actually helps.
 
-19 modules in `kg_testgen/`, plus `run_experiment.py` and `setup_env.ps1`.
+17 modules in `kg_testgen/`, plus `evaluation/` and `setup_env.ps1`. The evaluation code was moved out of the package after this was written; see `EVALUATION.md`.
 
 **Headline finding:** across two separate controlled comparisons, the knowledge graph
 shows no measurable benefit over prompting with the section text alone. The context that
@@ -136,7 +136,7 @@ Optimisations for a legal/privacy reading:
 - **Deliberately not ranked by degree.** `personal information` holds 18 of 62 edge
   endpoints; degree ranking would let the hub's most generic edges dominate.
 
-## 4. Evaluation harness (`python -m kg_testgen.evaluate`)
+## 4. Evaluation harness (`python -m evaluation.evaluate`)
 
 **In:** a generated `.feature` plus the two Microsoft policies in
 `../MicrosoftPrivacyPolicy/` (2016: 23k tokens, 2026: 37k).
@@ -216,7 +216,7 @@ an explicit statement, so even that difference is soft.
 
 ### B2. Four-arm comparison — 3 subclauses, 4 arms, 3 repeats
 
-36 cells, driven by `run_experiment.py`. Subclauses chosen because each depends on
+36 cells, driven by `evaluation/run_experiment.py`. Subclauses chosen because each depends on
 clauses **outside** its own text — where a KG should earn its place:
 
 - **APP 2.2** — an exception disapplying 2.1, which is not in the input
@@ -345,11 +345,11 @@ record).
 ```bash
 . .\setup_env.ps1
 .\.venv-testgen\Scripts\python.exe -m kg_testgen sections\app_6_1.txt --context-mode kg
-.\.venv-testgen\Scripts\python.exe -m kg_testgen.evaluate runs\<run>\generated.feature
-.\.venv-testgen\Scripts\python.exe run_experiment.py --repeats 3
+.\.venv-testgen\Scripts\python.exe -m evaluation.evaluate runs\<run>\generated.feature
+.\.venv-testgen\Scripts\python.exe -m evaluation.run_experiment --repeats 3
 ```
 
-`run_experiment.py` runs the full 4-arm grid and writes `runs/experiment/comparison.md`.
+`evaluation/run_experiment.py` runs the full 4-arm grid and writes `runs/experiment/comparison.md`.
 It skips completed cells, so it is resumable and adding an arm re-runs only that arm.
 `--report-only` rebuilds the document without regenerating.
 

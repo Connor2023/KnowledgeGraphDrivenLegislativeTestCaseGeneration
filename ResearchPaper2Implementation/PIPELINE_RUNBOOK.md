@@ -3,6 +3,12 @@
 How to take a new piece of legislation from a plain-text file to a knowledge graph, and
 how to generate compliance test cases from any clause using any of the arms.
 
+This document covers the pipeline and stops where a `.feature` file exists. Measuring
+that output — the multi-arm comparison, the coverage and soundness judges, the policy
+check — is a separate concern and lives in `EVALUATION.md`. The code is separated the
+same way: `kg_testgen` is the installable pipeline, `evaluation/` is not installed, and
+`tests/test_pipeline_isolation.py` fails if the pipeline ever imports it.
+
 Everything below was run on Windows with Git Bash and PowerShell side by side. Commands
 are given for PowerShell; the Bash equivalents differ only in how environment variables
 are set.
@@ -77,7 +83,7 @@ Three, deliberately separate, because their dependencies conflict:
 
 | venv | Used by | Install |
 |---|---|---|
-| `.venv-testgen` | The query pipeline, experiment harness, all scoring | `pip install neo4j openai python-dotenv truststore tiktoken pyyaml python-docx` |
+| `.venv-testgen` | The query pipeline | `pip install neo4j openai python-dotenv truststore tiktoken pyyaml` |
 | `.venv-edc` | EDC knowledge-graph construction | `pip install -r edc-main/edc-main/requirements.txt` |
 | `.venv-ontogpt` | SPIRES extraction | `pip install ontogpt truststore` |
 
@@ -249,61 +255,8 @@ contributed statutory text), `gherkin_structure_problems` (malformed output).
 
 ---
 
-## 5. Running the full comparison
+## 5. What happens next
 
-To reproduce the experiment rather than a single run:
-
-```powershell
-python run_experiment.py                  # every arm x every section x 3 repeats
-python run_experiment.py --repeats 1      # quick pass
-python run_experiment.py --report-only    # rebuild the comparison document only
-```
-
-Completed cells are skipped, so the grid is resumable across the hours it takes. Output
-lands in `runs/experiment/`, with `comparison.md` putting every arm's scenarios beside
-the hand-written reference cases.
-
-Then the scoring, in increasing order of cost:
-
-```powershell
-python analyse_runs.py                                  # free: diversity, stability, cost
-python score_elements.py --dry-run                      # count calls and cost first
-python score_elements.py --judge-model gpt-4o           # element coverage
-python score_soundness.py --self-test                   # 7 known-answer controls, ~$0.20
-python score_soundness.py --per-arm 14 --judge-model gpt-4o
-```
-
-**Run `--self-test` before spending on a full soundness pass.** An earlier version of
-that judge reasoned that the statute never requires a policy to contain any particular
-sentence, and therefore marked a third of all scenarios unsound — a test no scenario in
-this project could pass. The controls catch that class of failure for 20 cents.
-
-Both scorers are resumable and cache per judgement, so re-running only fills gaps.
-
-### Validating a judge before believing it
-
-```powershell
-python score_elements.py --sample-for-human 60          # blinded worksheet + answer key
-# ... annotate human_sample_answers.csv by hand ...
-python score_elements.py --kappa runs\elements\human_sample_answers.csv
-```
-
-The worksheet never names the arm and the judge's verdicts sit in a separate key file.
-Measured against one human annotator the element judge scored **κ = 0.451** — moderate
-agreement, with precision 0.56 against recall 0.90, meaning it is systematically lenient
-rather than randomly noisy. **Every coverage figure it produces is an upper bound.**
-
----
-
-## 6. Cost, for planning
-
-Measured on 62 clauses and three subclauses at three repeats:
-
-| Stage | Cost |
-|---|---|
-| SPIRES graph construction | ~$2.50 |
-| Running all seven arms | ~$0.09 |
-| Evaluating them | ~$13 |
-
-**Evaluation costs roughly five times construction.** Budget accordingly — the usual
-assumption is the other way round.
+The pipeline ends here: a `.feature` file and a run record. Everything about judging,
+scoring, comparing arms and reproducing the experiment is in **`EVALUATION.md`**, and
+none of it is needed to run the pipeline or to point it at a new statute.
