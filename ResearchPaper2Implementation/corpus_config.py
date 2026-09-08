@@ -97,6 +97,21 @@ SPIRES_GRAPH_DIR = os.path.join(SPIRES_DIR, "graph")
 SPIRES_SCHEMA = os.path.join(SPIRES_DIR, "app_norm.yaml")
 
 
+def detect_provision_id(text: str):
+    """The provision identifier a piece of text is about, or None.
+
+    Lives here rather than in kg_testgen.edc_bridge, where it used to sit next to the
+    EDC entity extractor. It needs nothing but PROVISION_RE, and putting it beside the
+    pattern it applies means the query pipeline no longer imports the EDC bridge -- and
+    so no longer drags in transformers and numpy -- to answer a question about a regex.
+
+    Prefers the first match, which in the corpus format is the clause being stated
+    rather than a cross-reference to another clause.
+    """
+    match = PROVISION_RE.search(text)
+    return match.group(1) if match else None
+
+
 def provision_filename(provision_id: str, suffix: str) -> str:
     """`6.1`, `.yaml` -> `app_6_1.yaml`. The dot is not filename-safe on Windows."""
     return "%s_%s%s" % (FILE_PREFIX, provision_id.replace(".", "_"), suffix)

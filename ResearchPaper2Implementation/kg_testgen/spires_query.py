@@ -137,8 +137,8 @@ RETURN n.key AS key, x.statement AS statement,
 # structure only. Keys there are "subclause 6.2" where SPIRES uses the bare id.
 _PROVISION_TEXT = """
 MATCH (t:`{label}`)
-WHERE t.key IN $keys AND t.text_raw IS NOT NULL
-RETURN t.key AS key, t.name AS name, t.text_raw AS text_raw
+WHERE t.provision IN $pids AND t.text_raw IS NOT NULL AND t.text_raw <> ''
+RETURN t.provision AS pid, t.name AS name, t.text_raw AS text_raw
 """
 
 _NEIGHBOURS = """
@@ -245,19 +245,23 @@ def render_norm(norm: Norm, exceptions_first: bool = True) -> List[str]:
     return lines
 
 
-def fetch_provision_text(client: Neo4jClient, pids: List[str], node_label: str):
-    """Verbatim text for the reached provisions, from the :AppNode graph."""
-    from . import edc_bridge
+def fetch_provision_text(client: Neo4jClient, pids: List[str]):
+    """Verbatim text for the reached provisions, from the norm graph's own nodes.
 
+    Previously read from the :AppNode graph via edc_bridge.provision_key, which made the
+    EDC construction path a silent prerequisite for this arm: on a corpus where only the
+    SPIRES graph had been built, every lookup returned nothing and the hybrid arm
+    degraded to the plain one without saying so. build_spires_graph now writes text_raw
+    onto the :SP_Provision nodes, so the arm reads the graph it is named after.
+    """
     if not pids:
         return {}
-    by_key = {edc_bridge.provision_key(p): p for p in pids}
-    rows = client.run(_PROVISION_TEXT.format(label=node_label), keys=list(by_key))
+    rows = client.run(_PROVISION_TEXT.format(label=PROVISION_LABEL), pids=list(pids))
     out = {}
     for row in rows:
         text = (row.get("text_raw") or "").strip()
         if text:
-            out[by_key[row["key"]]] = text
+            out[row["pid"]] = text
     return out
 
 
@@ -302,11 +306,10 @@ def serialise(target: str, target_norms: List[Norm],
 
 def build_context(client: Neo4jClient, section_text: str, config: Config) -> SpiresContext:
     """Entry point: anchor on the target provision, walk its reference neighbourhood."""
-    from . import edc_bridge
-    from .retrieval import RetrievalError
-    from .serialisation import estimate_tokens
+    from .errors import RetrievalError
+    from .tokens import estimate_tokens
 
-    pid = config.provision_id or edc_bridge.detect_provision_id(section_text)
+    pid = config.provision_id or _corpus.detect_provision_id(section_text)
     if not pid:
         raise RetrievalError(
             "context_mode='spires' needs the target subclause id and none was found in "
@@ -334,8 +337,7 @@ def build_context(client: Neo4jClient, section_text: str, config: Config) -> Spi
 
     texts = {}
     if config.spires_include_provision_text:
-        texts = fetch_provision_text(client, [p for p, _m, _n in related],
-                                     config.node_label)
+        texts = fetch_provision_text(client, [p for p, _m, _n in related])
 
     text = serialise(pid, target_norms, related, config.spires_exceptions_first, texts)
     tokens, _method = estimate_tokens(text, config.llm_model)

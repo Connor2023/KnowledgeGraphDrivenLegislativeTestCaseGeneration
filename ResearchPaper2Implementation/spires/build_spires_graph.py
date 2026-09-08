@@ -92,9 +92,17 @@ def load_provisions():
     return out
 
 
-def build(provisions):
+def build(provisions, texts=None):
+    """Nodes and edges for the norm graph.
+
+    `texts` puts the verbatim provision text on the :SP_Provision nodes. Without it the
+    spires arm has to read text out of the :AppNode graph instead, which quietly makes
+    the EDC construction path a prerequisite for the SPIRES one -- so a new corpus would
+    need both graphs built to run the arm that only uses one of them.
+    """
     nodes, edges = {}, []
     counts = collections.Counter()
+    texts = texts or {}
 
     def node(key, label, **props):
         if key not in nodes:
@@ -108,7 +116,8 @@ def build(provisions):
 
     for pid, document in sorted(provisions.items()):
         prov_key = "provision:%s" % pid
-        node(prov_key, L("Provision"), name="subclause %s" % pid, provision=pid)
+        node(prov_key, L("Provision"), name="subclause %s" % pid, provision=pid,
+             text_raw=texts.get(pid, ""))
 
         for index, norm in enumerate(document.get("norms") or [], 1):
             modality = (norm.get("deontic_modality") or "UNSPECIFIED").strip()
@@ -179,8 +188,10 @@ def add_reference_edges(nodes, edges, counts, provisions):
 
 def write_csvs(nodes, edges):
     os.makedirs(GRAPH_DIR, exist_ok=True)
+    # DictWriter is created with extrasaction="ignore", so a property missing from this
+    # list is dropped without a word. text_raw was added and silently did not appear.
     node_fields = ["key", "label", "name", "modality", "provision", "scope_qualifier",
-                   "statement", "source_provision", "verified"]
+                   "statement", "source_provision", "verified", "text_raw"]
     with io.open(os.path.join(GRAPH_DIR, "nodes.csv"), "w", encoding="utf-8", newline="") as fh:
         writer = csv.DictWriter(fh, node_fields, extrasaction="ignore")
         writer.writeheader()
@@ -250,7 +261,9 @@ def main():
     args = ap.parse_args()
 
     provisions = load_provisions()
-    nodes, edges, counts = build(provisions)
+    texts = {key.replace("subclause ", ""): text
+             for key, text in raw_clause_text().items()}
+    nodes, edges, counts = build(provisions, texts)
     added, skipped = add_reference_edges(nodes, edges, counts, provisions)
     write_csvs(nodes, edges)
 
