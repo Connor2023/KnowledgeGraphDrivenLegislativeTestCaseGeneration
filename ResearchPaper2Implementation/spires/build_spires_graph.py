@@ -52,7 +52,8 @@ import yaml
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import corpus_config  # noqa: E402
-from enrich_graph import parse_references, raw_clause_text  # noqa: E402
+import prep_corpus  # noqa: E402
+from enrich_graph import parse_references  # noqa: E402  citation patterns: still per-statute
 
 GRAPH_DIR = corpus_config.SPIRES_GRAPH_DIR
 PREFIX = corpus_config.NODE_PREFIX
@@ -154,14 +155,15 @@ def build(provisions, texts=None):
 
 def add_reference_edges(nodes, edges, counts, provisions):
     """Cross-reference edges from the regex, which measured far better than SPIRES."""
-    raw = raw_clause_text()
+    raw = prep_corpus.provisions()
     known = {pid for pid in provisions}
     added = skipped = 0
-    for key, text in sorted(raw.items()):
-        pid = key.replace("subclause ", "")
+    for pid, text in raw.items():
         if pid not in known:
             continue
-        targets, _principles = parse_references(text, key)
+        # parse_references compares targets against the prefixed key form, so the
+        # self-reference it discards has to be given in that form too.
+        targets, _principles = parse_references(text, corpus_config.provision_key(pid))
         for target in targets:
             target_pid = target.replace("subclause ", "")
             if target_pid not in known or target_pid == pid:
@@ -261,8 +263,7 @@ def main():
     args = ap.parse_args()
 
     provisions = load_provisions()
-    texts = {key.replace("subclause ", ""): text
-             for key, text in raw_clause_text().items()}
+    texts = prep_corpus.provisions()
     nodes, edges, counts = build(provisions, texts)
     added, skipped = add_reference_edges(nodes, edges, counts, provisions)
     write_csvs(nodes, edges)

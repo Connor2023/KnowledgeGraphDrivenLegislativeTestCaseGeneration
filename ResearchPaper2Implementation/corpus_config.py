@@ -14,10 +14,12 @@ Two deliberate properties:
   several places (repo root, spires/, a venv's Scripts/) and os.path.join on a relative
   constant silently produced different files depending on where you stood.
 
-This is configuration, not generalisation. The structural parser in prep_app.py and the
-citation patterns in enrich_graph.parse_references remain per-statute CODE: they encode
-how one instrument numbers and cites itself, which is not expressible as a few strings.
-Pointing this file at a new corpus without writing those is how you get an empty graph.
+Segmentation is no longer per-statute code. `profile:` names a structural profile --
+an ordered list of line classifiers, which level is the provision, how an identifier is
+composed -- that induce_structure.py produces from the text and prep_corpus.py applies.
+The citation patterns in enrich_graph.parse_references are the piece that remains
+per-statute: pointing this file at a new corpus without them gets you a graph with no
+cross-reference edges, which is the tier where the graph is the only thing that helps.
 """
 
 from __future__ import annotations
@@ -40,6 +42,7 @@ _DEFAULTS = {
         "corpus": os.path.join("edc-main", "edc-main", "datasets", "app_schedule1.txt"),
         "edc_graph_dir": os.path.join("edc-main", "edc-main", "output", "app_full", "graph"),
         "spires_dir": "spires",
+        "profile": os.path.join("profiles", "app_schedule1.yaml"),
     },
     "provision": {
         "pattern": r"\b(?:subclause\s+)?(\d{1,2}\.\d{1,2})\b",
@@ -90,6 +93,7 @@ RAW_PATH = path("raw")
 CORPUS_PATH = path("corpus")
 EDC_GRAPH_DIR = path("edc_graph_dir")
 SPIRES_DIR = path("spires_dir")
+PROFILE_PATH = path("profile")
 
 SPIRES_INPUT_DIR = os.path.join(SPIRES_DIR, "input")
 SPIRES_OUTPUT_DIR = os.path.join(SPIRES_DIR, "output")
@@ -149,9 +153,10 @@ def label(name: str) -> str:
 
 def summary() -> str:
     return ("corpus %r (%s)\n  file prefix : %s_*\n  node prefix : %s\n"
-            "  raw         : %s\n  corpus      : %s\n  provision   : %s"
+            "  raw         : %s\n  corpus      : %s\n  profile     : %s\n"
+            "  provision   : %s"
             % (NAME, DESCRIPTION, FILE_PREFIX, NODE_PREFIX,
-               RAW_PATH, CORPUS_PATH, PROVISION_PATTERN))
+               RAW_PATH, CORPUS_PATH, PROFILE_PATH, PROVISION_PATTERN))
 
 
 if __name__ == "__main__":

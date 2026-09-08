@@ -36,6 +36,11 @@ paths:
   edc_graph_dir: edc-main/edc-main/output/app_full/graph
   # Root of the SPIRES extraction pipeline: schema, input/, output/, graph/.
   spires_dir: spires
+  # The structural profile: an ordered list of line classifiers saying how this
+  # instrument lays itself out, which level is the provision, and how an identifier is
+  # composed. Produced and validated by induce_structure.py, consumed by prep_corpus.py.
+  # Hand-editable -- correcting one pattern is cheaper than re-inducing.
+  profile: profiles/app_schedule1.yaml
 
 provision:
   # Finds the provision identifier inside a piece of text. This is the single most

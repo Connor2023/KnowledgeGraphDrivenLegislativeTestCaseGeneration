@@ -740,18 +740,6 @@ norm:9.3:3,SP_ACTION,"SP_Action:adoption, use or disclosure"
 norm:9.3:3,SP_OBJECT,SP_InfoType:government related identifier of an individual
 norm:9.3:3,SP_CONDITION,sp_condition:9.3:3:1
 provision:1.4,SP_REFERS_TO,provision:1.3
-provision:11.3,SP_REFERS_TO,provision:11.1
-provision:11.3,SP_REFERS_TO,provision:11.2
-provision:12.10,SP_REFERS_TO,provision:12.3
-provision:12.2,SP_REFERS_TO,provision:12.1
-provision:12.3,SP_REFERS_TO,provision:12.1
-provision:12.5,SP_REFERS_TO,provision:12.2
-provision:12.5,SP_REFERS_TO,provision:12.3
-provision:12.6,SP_REFERS_TO,provision:12.5
-provision:12.9,SP_REFERS_TO,provision:12.2
-provision:12.9,SP_REFERS_TO,provision:12.3
-provision:13.5,SP_REFERS_TO,provision:13.1
-provision:13.5,SP_REFERS_TO,provision:13.4
 provision:2.2,SP_REFERS_TO,provision:2.1
 provision:3.3,SP_REFERS_TO,provision:3.4
 provision:4.2,SP_REFERS_TO,provision:4.1
@@ -772,6 +760,18 @@ provision:8.2,SP_REFERS_TO,provision:8.1
 provision:8.2,SP_REFERS_TO,provision:8.3
 provision:9.1,SP_REFERS_TO,provision:9.3
 provision:9.2,SP_REFERS_TO,provision:9.3
+provision:11.3,SP_REFERS_TO,provision:11.1
+provision:11.3,SP_REFERS_TO,provision:11.2
+provision:12.2,SP_REFERS_TO,provision:12.1
+provision:12.3,SP_REFERS_TO,provision:12.1
+provision:12.5,SP_REFERS_TO,provision:12.2
+provision:12.5,SP_REFERS_TO,provision:12.3
+provision:12.6,SP_REFERS_TO,provision:12.5
+provision:12.9,SP_REFERS_TO,provision:12.2
+provision:12.9,SP_REFERS_TO,provision:12.3
+provision:12.10,SP_REFERS_TO,provision:12.3
+provision:13.5,SP_REFERS_TO,provision:13.1
+provision:13.5,SP_REFERS_TO,provision:13.4
 provision:12.2,SP_DISAPPLIES,provision:12.1
 provision:12.3,SP_DISAPPLIES,provision:12.1
 provision:2.2,SP_DISAPPLIES,provision:2.1

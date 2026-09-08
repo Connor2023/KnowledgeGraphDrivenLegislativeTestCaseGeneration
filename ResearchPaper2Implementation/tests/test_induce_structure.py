@@ -71,6 +71,37 @@ def test_schedule1_ids_match_the_handwritten_parser():
     assert got == reference, "differs: %s" % sorted(got ^ reference)
 
 
+def test_prep_corpus_matches_the_parser_it_replaces():
+    """The claim Stage 1 rests on: byte-identical text, not merely the same count.
+
+    `spires/extract_corpus.py` feeds this text to the extractor one provision at a time.
+    If a single character differs, the SPIRES inputs differ, and the graph built from a
+    profile is not the graph the recorded results came from.
+    """
+    import enrich_graph
+    import prep_corpus
+
+    reference = {k.replace("subclause ", ""): v
+                 for k, v in enrich_graph.raw_clause_text().items()}
+    produced = prep_corpus.provisions()
+    assert set(produced) == set(reference),         "identifiers differ: %s" % sorted(set(produced) ^ set(reference))
+    differing = [k for k in reference if reference[k] != produced[k]]
+    assert not differing, "%d provision text(s) differ, e.g. %s" % (
+        len(differing), differing[:3])
+
+
+def test_prep_corpus_order_is_document_order():
+    """The sort key. Deriving one from the identifier grammar is what crashed on 26WE(1)."""
+    import prep_corpus
+    order = prep_corpus.order()
+    assert order[:3] == ["1.1", "1.2", "1.3"], order[:3]
+    assert order[-1] == "13.5", order[-1]
+    # Schedule 1 has exactly one identifier where the two orders disagree, and it is
+    # enough: sorted() puts 12.10 before 12.2, the Schedule puts it after 12.9.
+    assert order != sorted(order), "the order is lexicographic, not document order"
+    assert order.index("12.10") > order.index("12.9"),         "12.10 sorted before 12.9 -- lexicographic ordering has crept back in"
+
+
 def test_part_iiic_profile_is_accepted():
     """A composed identifier scheme, which Schedule 1 never exercises."""
     val = I.validate(_lines(PART_IIIC), _profile(PROFILE_PART_IIIC))

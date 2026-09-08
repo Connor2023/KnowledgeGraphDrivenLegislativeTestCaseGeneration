@@ -27,7 +27,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import corpus_config  # noqa: E402
-from enrich_graph import raw_clause_text  # noqa: E402
+import prep_corpus  # noqa: E402
 
 SCHEMA = corpus_config.SPIRES_SCHEMA
 INPUT_DIR = corpus_config.SPIRES_INPUT_DIR
@@ -40,8 +40,7 @@ def write_inputs(clauses):
     """One file per clause, so ontogpt's -i has something to point at."""
     os.makedirs(INPUT_DIR, exist_ok=True)
     written = {}
-    for key, text in sorted(clauses.items()):
-        pid = key.replace("subclause ", "")
+    for pid, text in clauses.items():
         path = os.path.join(INPUT_DIR, corpus_config.provision_filename(pid, ".txt"))
         with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
             fh.write("%s %s\n" % (pid, text) if not text.startswith(pid) else text + "\n")
@@ -57,14 +56,20 @@ def main():
     ap.add_argument("--only", nargs="*", default=None, help="Specific provision ids.")
     args = ap.parse_args()
 
-    clauses = raw_clause_text()
+    # Segmented from the structural profile, not from a parser written for this one
+    # statute. Keys are bare identifiers -- '6.1', '26WE(1)' -- and the order is the
+    # order the instrument states them in.
+    clauses = prep_corpus.provisions()
     inputs = write_inputs(clauses)
     if args.only:
         inputs = {k: v for k, v in inputs.items() if k in set(args.only)}
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     todo = []
-    for pid, path in sorted(inputs.items(), key=lambda kv: [int(x) for x in kv[0].split(".")]):
+    # Document order from the segmentation. The previous key, [int(x) for x in
+    # pid.split(".")], assumed every statute numbers clauses N.M and raises on "26WE(1)".
+    for pid in [p for p in prep_corpus.order() if p in inputs]:
+        path = inputs[pid]
         out = os.path.join(OUTPUT_DIR, corpus_config.provision_filename(pid, ".yaml"))
         if os.path.exists(out) and not args.overwrite:
             continue

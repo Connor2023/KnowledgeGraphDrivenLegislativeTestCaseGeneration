@@ -47,6 +47,15 @@ import unicodedata
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# The profile model and the interpreter live with the code that runs on every build,
+# not with this one-off tool. Importing them the other way round would make a routine
+# corpus rebuild depend on a module that pulls in an OpenAI client.
+from prep_corpus import (  # noqa: E402
+    MIN_PROVISION_WORDS, ROLES, Level, Profile, Segmentation, compile_profile,
+    normalise, segment, unclaimed_heading_shapes)
+
 try:
     import truststore  # noqa: F401  - routes TLS through the Windows cert store
     truststore.inject_into_ssl()
@@ -63,8 +72,6 @@ PRICE_IN, PRICE_OUT = 2.50, 10.00
 # to none; `container` opens an identifier namespace and may become a provision itself if
 # nothing below it does; `provision` is the unit the graph is keyed on; `body` continues
 # the open provision.
-ROLES = ("heading", "container", "provision", "body")
-
 # Legislative drafting has a closed vocabulary for citations. This is not per-statute and
 # is not asked of the model -- it is only offered, so an instrument using a subset says so.
 CITATION_NOUNS = ("section", "subsection", "paragraph", "subparagraph", "clause",
@@ -79,24 +86,6 @@ MAX_ORPHAN_RATE = 0.10
 MIN_PROVISIONS = 5
 MAX_LARGEST_SHARE = 0.25
 MAX_PATTERN_HIT_RATE = 0.60      # a line class matching most of the file classifies nothing
-MIN_PROVISION_WORDS = 8          # below this a "provision" is a sub-heading, not a rule
-
-
-def normalise(text: str) -> str:
-    """Fold the typographic characters legislation is published with into plain ASCII.
-
-    Shared with prep_app.normalise deliberately: a pattern induced against text that has
-    been through this must be applied to text that has been through this, or an em dash
-    in the pattern will not meet the em dash in the file.
-    """
-    text = text.replace("‑", "-")                              # non-breaking hyphen
-    text = text.replace("—", " - ").replace("–", "-")     # em / en dash
-    text = text.replace("’", "'").replace("‘", "'")
-    text = text.replace("“", '"').replace("”", '"')
-    text = unicodedata.normalize("NFKC", text)
-    return re.sub(r"\s+", " ", text).strip()
-
-
 # --- pre-flight --------------------------------------------------------------------
 
 @dataclass
@@ -145,272 +134,6 @@ def hygiene(raw_lines: List[str]) -> Hygiene:
             "Strip them before inducing, or they will be classified as structure."
             % (len(repeated), repeated[0][:60]))
     return h
-
-
-# --- the profile -------------------------------------------------------------------
-
-@dataclass
-class Level:
-    name: str
-    role: str
-    pattern: str
-    regex: Optional[re.Pattern] = None
-
-
-@dataclass
-class Profile:
-    """The structural description of one instrument. This is the contract.
-
-    Everything downstream -- segmentation here, and the generic prep_corpus that replaces
-    prep_app -- reads this and nothing else. It is written to profiles/<name>.yaml so that
-    an induction that got something slightly wrong can be corrected by hand without
-    touching code, and so that what was induced is auditable rather than implicit.
-
-    Not yet wired into corpus.yaml: this is stage 0, and the generic prep_corpus that
-    consumes a profile is the next step. `segment()` below is that consumer in embryo --
-    it is the whole of what prep_app.py's line classification does, driven by data.
-    """
-    name: str
-    description: str
-    levels: List[Level]
-    id_template: str                     # "{section}({subsection})" or "{clause}"
-    citation_nouns: List[str] = field(default_factory=list)
-    note_pattern: Optional[str] = None
-    min_provision_words: int = MIN_PROVISION_WORDS
-
-    @property
-    def provision_level(self) -> Optional[Level]:
-        for lv in self.levels:
-            if lv.role == "provision":
-                return lv
-        return None
-
-    @classmethod
-    def from_dict(cls, d: dict) -> "Profile":
-        levels = [Level(name=str(l["name"]), role=str(l["role"]), pattern=str(l["pattern"]))
-                  for l in d.get("levels", [])]
-        return cls(
-            name=str(d.get("name", "corpus")),
-            description=str(d.get("description", "")),
-            levels=levels,
-            id_template=str(d.get("id_template", "")),
-            citation_nouns=[str(x) for x in d.get("citation_nouns", [])],
-            note_pattern=d.get("note_pattern") or None,
-            min_provision_words=int(d.get("min_provision_words", MIN_PROVISION_WORDS)),
-        )
-
-    def to_dict(self) -> dict:
-        return {
-            "name": self.name,
-            "description": self.description,
-            "levels": [{"name": l.name, "role": l.role, "pattern": l.pattern}
-                       for l in self.levels],
-            "id_template": self.id_template,
-            "citation_nouns": list(self.citation_nouns),
-            "note_pattern": self.note_pattern,
-            "min_provision_words": self.min_provision_words,
-        }
-
-
-# Constructs that make a regex take exponential time on a non-matching line. A statute is
-# a few hundred lines, so a pathological pattern hangs the run rather than failing it, and
-# `re` has no timeout to fall back on.
-_CATASTROPHIC = re.compile(r"\([^)]*[+*]\)[+*]|\[[^\]]*\][+*][+*]")
-
-
-def compile_profile(profile: Profile) -> List[str]:
-    """Compile every pattern. Returns the problems found; the regexes land on the Levels."""
-    problems = []
-    for lv in profile.levels:
-        if lv.role not in ROLES:
-            problems.append("level %r has role %r, expected one of %s"
-                            % (lv.name, lv.role, ", ".join(ROLES)))
-        if _CATASTROPHIC.search(lv.pattern):
-            problems.append("level %r pattern has a nested quantifier and can hang on a "
-                            "non-matching line: %s" % (lv.name, lv.pattern))
-            continue
-        if not lv.pattern.startswith("^"):
-            problems.append("level %r pattern is not anchored at ^; a line classifier "
-                            "must match from the start of the line: %s"
-                            % (lv.name, lv.pattern))
-        try:
-            lv.regex = re.compile(lv.pattern)
-        except re.error as exc:
-            problems.append("level %r pattern does not compile (%s): %s"
-                            % (lv.name, exc, lv.pattern))
-    if not profile.provision_level:
-        problems.append("no level has role 'provision' -- nothing says what the graph is "
-                        "keyed on")
-    return problems
-
-
-# --- segmentation ------------------------------------------------------------------
-
-def unclaimed_heading_shapes(raw_lines: List[str], profile: Profile, limit: int = 5):
-    """Short, title-cased, recurring lines that no level claims.
-
-    Not a failure -- unclaimed text is still attached to the open provision, so nothing
-    is lost. But it is where a missed heading form shows up, and a heading swallowed into
-    the previous provision quietly corrupts that provision's text.
-
-    Found exactly this on the first induced Part IIIC profile: the division pattern
-    matched "Division 1 - Introduction" and missed "Subdivision A - Suspected eligible
-    data breaches", so three Subdivision titles were glued onto the end of the provision
-    above them. The identifiers were still right, which is why a count-based check would
-    not have noticed.
-    """
-    counts: Dict[str, int] = {}
-    examples: Dict[str, str] = {}
-    for raw in raw_lines:
-        line = normalise(raw)
-        if not line:
-            continue
-        if any(lv.regex is not None and lv.regex.match(line) for lv in profile.levels):
-            continue
-        words = line.split()
-        if not (2 <= len(words) <= 12) or not words[0][:1].isupper():
-            continue
-        key = words[0]
-        counts[key] = counts.get(key, 0) + 1
-        examples.setdefault(key, line)
-    common = [(k, v) for k, v in counts.items() if v >= 3]
-    common.sort(key=lambda kv: -kv[1])
-    return [(k, v, examples[k]) for k, v in common[:limit]]
-
-
-@dataclass
-class Segmentation:
-    provisions: Dict[str, str]
-    order: List[str]
-    leading_orphans: int
-    interior_orphans: int
-    unmatched_lines: int
-    non_blank: int
-    hits: Dict[str, int]
-    discarded: int
-
-    @property
-    def orphan_lines(self) -> int:
-        return self.leading_orphans + self.interior_orphans
-
-
-def segment(raw_lines: List[str], profile: Profile) -> Segmentation:
-    """Apply a profile to a file. This is the interpreter the per-statute parser becomes.
-
-    A container (a section) opens a provisional block under its own identifier. If a
-    provision level opens underneath it before that block has accumulated real text, the
-    block is discarded -- that is the case of `26WH  Assessment...` followed by the
-    sub-heading `Scope` and then `(1)`. If nothing opens underneath it, the block stands
-    on its own, which is the case of `26WB  Entity` followed by a single sentence. Both
-    shapes occur in Part IIIC and neither occurs in Schedule 1, which is precisely why
-    this cannot be a constant.
-
-    Orphans are counted in two places, because they mean different things. Text before
-    the first provision is front matter -- Schedule 1 opens with a page of overview, Part
-    IIIC with a Guide -- and is expected. Text after a provision has been seen that
-    belongs to none is the real signal: some structural form went unrecognised in the
-    middle of the instrument. Only the second kind is a failure.
-    """
-    provisions: Dict[str, str] = {}
-    order: List[str] = []
-    captures: Dict[str, str] = {}
-    hits = {lv.name: 0 for lv in profile.levels}
-    leading = interior = unmatched = discarded = 0
-    non_blank = 0
-    seen_provision = False
-
-    open_id: Optional[str] = None
-    open_head: str = ""                             # the line that opened the block
-    open_buf: List[str] = []                        # everything under it
-    open_is_container = False
-
-    def flush():
-        nonlocal open_id, open_head, open_buf, open_is_container, discarded
-        if open_id is not None and (open_head or open_buf):
-            body = " ".join(open_buf).strip()
-            text = (open_head + " " + body).strip()
-            # Substance is judged on the body alone. A section heading is often long
-            # enough on its own to clear the threshold -- "26WH Assessment of suspected
-            # eligible data breach" is seven words before a single word of rule -- so
-            # counting it would keep exactly the blocks this is meant to drop.
-            if open_is_container and len(body.split()) < profile.min_provision_words:
-                discarded += 1                     # a bare sub-heading, not a rule
-            elif open_id in provisions:
-                provisions[open_id] += " " + text  # duplicate id: keep both, flag later
-            else:
-                provisions[open_id] = text
-                order.append(open_id)
-        open_id, open_head, open_buf, open_is_container = None, "", [], False
-
-    for raw in raw_lines:
-        line = normalise(raw)
-        if not line:
-            continue
-        non_blank += 1
-
-        matched = None
-        for idx, lv in enumerate(profile.levels):
-            if lv.regex is None:
-                continue
-            m = lv.regex.match(line)
-            if m:
-                matched, hits[lv.name] = (lv, m, idx), hits[lv.name] + 1
-                break
-
-        if matched is None:
-            unmatched += 1
-            if open_id is None:
-                if seen_provision:
-                    interior += 1
-                else:
-                    leading += 1
-            else:
-                open_buf.append(line)
-            continue
-
-        lv, m, idx = matched
-        # Opening any level invalidates the captures of every level below it. Without
-        # this, a section with no subsections inherits the previous section's subsection
-        # number and 26WB silently becomes 26WB(2).
-        for deeper in profile.levels[idx + 1:]:
-            captures.pop(deeper.name, None)
-        # An optional group ("^Note( \d+)?:") captures None rather than "". Only
-        # container and provision levels use the capture at all.
-        capture = ((m.group(1) or "") if m.groups() else "").strip()
-
-        if lv.role == "heading":
-            flush()
-            captures.pop(lv.name, None)
-        elif lv.role == "container":
-            flush()
-            captures[lv.name] = capture
-            try:
-                open_id = profile.id_template.format(**captures)
-            except (KeyError, IndexError):
-                open_id = capture
-            open_head, open_buf, open_is_container = line, [], True
-            seen_provision = True
-        elif lv.role == "provision":
-            flush()
-            captures[lv.name] = capture
-            try:
-                open_id = profile.id_template.format(**captures)
-            except (KeyError, IndexError):
-                open_id = capture
-            open_head, open_buf, open_is_container = line, [], False
-            seen_provision = True
-        else:                                       # body
-            if open_id is None:
-                if seen_provision:
-                    interior += 1
-                else:
-                    leading += 1
-            else:
-                open_buf.append(line)
-
-    flush()
-    return Segmentation(provisions, order, leading, interior, unmatched, non_blank,
-                        hits, discarded)
 
 
 # --- validation --------------------------------------------------------------------
