@@ -29,7 +29,17 @@ import os
 import re
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(ROOT, "corpus.yaml")
+
+# One checkout is normally one corpus, and corpus.yaml says which. CORPUS_CONFIG points
+# at a different one for a single command, so a second instrument can be built and
+# inspected without editing a tracked file and remembering to change it back:
+#
+#     CORPUS_CONFIG=corpus.part_iiic.yaml python build_corpus.py APPartIIIC.txt --dry-run
+#
+# Read at import, like everything else here, so it must be set before Python starts.
+CONFIG_PATH = os.environ.get("CORPUS_CONFIG") or os.path.join(ROOT, "corpus.yaml")
+if not os.path.isabs(CONFIG_PATH):
+    CONFIG_PATH = os.path.join(ROOT, CONFIG_PATH)
 
 # Mirrors corpus.yaml. Kept in sync by hand, and used verbatim when the file or PyYAML
 # is unavailable -- see the module docstring.
