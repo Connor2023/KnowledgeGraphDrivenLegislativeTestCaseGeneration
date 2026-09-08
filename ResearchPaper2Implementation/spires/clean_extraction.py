@@ -13,8 +13,8 @@ Three passes, all conservative -- when a value is ambiguous it is kept, not gues
     denull      turn description echoes and null-ish words into a real absence
     merge       collapse norms that differ only in which exception they carry
 
-    python spires_pilot/clean_extraction.py                    # writes *.clean.yaml
-    python spires_pilot/clean_extraction.py --report           # summary table only
+    python spires/clean_extraction.py                    # writes *.clean.yaml
+    python spires/clean_extraction.py --report           # summary table only
 """
 
 from __future__ import annotations
@@ -265,13 +265,28 @@ def _sentences(document):
     return norm_sentences(document.get("raw_completion_output"))
 
 
+def is_raw_extraction(path):
+    """True only for a first-generation extraction, e.g. `app_6_1.yaml`.
+
+    The glob is `app_*.yaml`, which also catches `app_6_1.clean.yaml` and
+    `app_6_1.verified.yaml`. Excluding only `.clean.yaml` -- which is what this used to
+    do -- left the verified files in, so a second run produced a third generation,
+    `app_6_1.verified.clean.yaml`, 61 of which have now been committed by accident twice.
+
+    A raw extraction has exactly one dot in its basename: the extension. Provision ids
+    have their dots replaced with underscores by provision_filename, so `app_12_10.yaml`
+    is safe and every compound suffix is excluded by construction rather than by name.
+    """
+    return os.path.basename(path).count(".") == 1
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--glob", default=OUT_GLOB)
     ap.add_argument("--report", action="store_true", help="Print the table only.")
     args = ap.parse_args()
 
-    paths = sorted(p for p in glob.glob(args.glob) if not p.endswith(".clean.yaml"))
+    paths = sorted(p for p in glob.glob(args.glob) if is_raw_extraction(p))
     if not paths:
         print("No extraction output matched %s" % args.glob)
         return 1
