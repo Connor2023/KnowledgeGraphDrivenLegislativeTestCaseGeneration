@@ -231,8 +231,15 @@ python spires\build_spires_graph.py --dry-run  # writes CSVs, reports node/edge 
 python spires\build_spires_graph.py            # claims the node prefix, then loads
 ```
 
-Cost scales with the corpus, not with Schedule 1: Part IIIC's 106 provisions are
-estimated at **$4.45** on gpt-4o. Always run `--dry-run` first; it prints the number.
+**Cost scales with the number of provisions, not with the size of the corpus.** The
+schema is resent with every call and is 2,107 tokens against a mean provision of about
+100, so it dominates. Part IIIC has 1.44x Schedule 1's words but 1.71x its provisions,
+and costs about 1.7x: ~$1.51 on gpt-4o against Schedule 1's measured ~$0.90. On
+gpt-4o-mini the same run is ~$0.09.
+
+Always run `--dry-run` first. It prices the actual prompt rather than applying a flat
+per-provision rate -- the previous estimate did the latter, calibrated on an early
+24-provision pilot, and over-stated Schedule 1 by 2.9x.
 
 `--wipe` on the last command deletes existing nodes under this corpus's prefix first. It
 is scoped to that prefix, so other graphs in the same instance survive.

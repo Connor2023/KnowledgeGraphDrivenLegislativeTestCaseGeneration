@@ -1,14 +1,14 @@
-"""Run SPIRES extraction over every clause of Schedule 1, resumably.
+"""Run SPIRES extraction over every provision of the configured corpus, resumably.
 
-Sixty-two extractions at roughly half a minute each is long enough that a bash loop is
+A hundred extractions at roughly half a minute each is long enough that a bash loop is
 the wrong tool: a network blip a third of the way through should not cost the whole run.
 Each clause is written as it completes and skipped if already present, so re-running
 after a failure resumes rather than restarts.
 
-Clause blocks, not the 134 corpus documents: a clause maps 1:1 onto the :Provision nodes
-the query method already uses, whereas prep_app.py's documents split some clauses across
-several self-contained sentences and would produce several disconnected extractions for
-one provision.
+Provisions, not the flattened corpus documents: a provision maps 1:1 onto the :Provision
+nodes the query method uses, whereas the flattening in evaluation/arms/prep_app.py splits
+some clauses across several self-contained sentences and would produce several
+disconnected extractions for one provision.
 
     python spires/extract_corpus.py --dry-run
     python spires/extract_corpus.py
@@ -48,6 +48,55 @@ def write_inputs(clauses):
     return written
 
 
+# gpt-4o and gpt-4o-mini list prices, USD per 1M tokens.
+PRICES = {"gpt-4o": (2.50, 10.00), "gpt-4o-mini": (0.150, 0.600)}
+
+# SPIRES is recursive: a root call, then one more for each CompoundExpression slot it has
+# to fill. Measured on Schedule 1 the whole run came to ~$0.90 against a single-call floor
+# of $0.59, so it makes about half as many calls again as there are provisions.
+RECURSION_MULTIPLIER = 1.5
+
+# Completion length, measured across the 62 Schedule 1 extractions.
+COMPLETION_TOKENS = 400
+
+
+def estimate_cost(texts, model):
+    """What this run will cost, priced from the prompt rather than from a flat rate.
+
+    The previous estimate was `count x $0.042`, calibrated on an early 24-provision pilot.
+    It over-stated Schedule 1 by 2.9x -- $2.60 against a measured $0.90 -- and projected
+    $4.45 for Part IIIC, which reads as though the second corpus were five times as
+    expensive. It is not: 1.71x the provisions, at ~$1.53.
+
+    The shape that matters is that the schema is resent with every call and is 2,107
+    tokens against a mean provision of ~100, so cost tracks the number of PROVISIONS, not
+    the size of the corpus. Part IIIC has 1.44x Schedule 1's words but 1.71x its
+    provisions, and costs 1.7x.
+    """
+    try:
+        import tiktoken
+        encoder = tiktoken.get_encoding("cl100k_base")
+        count = lambda t: len(encoder.encode(t))      # noqa: E731
+        how = "tiktoken"
+    except ImportError:
+        count = lambda t: max(1, len(t) // 4)         # noqa: E731
+        how = "chars/4"
+
+    if not texts:
+        return 0.0, "nothing to do"
+    with io.open(SCHEMA, encoding="utf-8") as fh:
+        schema_tokens = count(fh.read())
+    price_in, price_out = PRICES.get(model, PRICES["gpt-4o"])
+    prompt_tokens = sum(schema_tokens + count(t) for t in texts)
+    completion_tokens = len(texts) * COMPLETION_TOKENS
+    floor = (prompt_tokens * price_in + completion_tokens * price_out) / 1e6
+    return floor * RECURSION_MULTIPLIER, (
+        "%d provisions x (%d schema + ~%d text) tokens, x%.1f for recursion, via %s"
+        % (len(texts), schema_tokens,
+           (prompt_tokens / max(1, len(texts))) - schema_tokens,
+           RECURSION_MULTIPLIER, how))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="gpt-4o")
@@ -78,8 +127,8 @@ def main():
     print("%d clause(s) total, %d already extracted, %d to do"
           % (len(inputs), len(inputs) - len(todo), len(todo)))
     if args.dry_run:
-        # The pilot cost $1 for ~24 extractions of comparable clauses.
-        print("estimated cost: $%.2f on %s" % (len(todo) * 0.042, args.model))
+        estimate, detail = estimate_cost([clauses[pid] for pid, _p, _o in todo], args.model)
+        print("estimated cost: $%.2f on %s   (%s)" % (estimate, args.model, detail))
         return 0
 
     env = dict(os.environ)
