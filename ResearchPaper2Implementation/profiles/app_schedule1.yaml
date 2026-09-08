@@ -55,6 +55,11 @@ levels:
 # A clause identifier is already fully qualified, so nothing is composed.
 id_template: '{clause}'
 
+# Finds an identifier inside running text -- "see subclause 6.2", "paragraph 6.2(e)".
+# Different job from the level patterns above, which classify whole lines. Reproduces
+# what corpus.yaml's provision.pattern held before it was generated from here.
+identifier_pattern: '\b(?:subclause\s+)?(\d{1,2}\.\d{1,2})\b'
+
 citation_nouns:
   - subclause
   - clause

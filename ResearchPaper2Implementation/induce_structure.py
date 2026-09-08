@@ -233,6 +233,34 @@ def validate(raw_lines: List[str], profile: Profile) -> Validation:
         problems.append("provision identifiers are not unique -- the id template %r does "
                         "not capture enough of the numbering scheme" % profile.id_template)
 
+    # The identifier pattern is a different job from the level patterns: those classify
+    # whole lines, this one has to find a citation mid-sentence. It is checked against the
+    # identifiers segmentation actually produced, which is the only ground truth available
+    # -- a pattern that cannot recognise its own corpus's ids will silently fail to detect
+    # which provision an input section is about.
+    if profile.identifier_pattern:
+        try:
+            identifier_re = re.compile(profile.identifier_pattern, re.IGNORECASE)
+        except re.error as exc:
+            problems.append("identifier_pattern does not compile (%s): %s"
+                            % (exc, profile.identifier_pattern))
+        else:
+            missed = []
+            for pid in seg.order:
+                match = identifier_re.search(pid)
+                if match is None or match.group(1) != pid:
+                    missed.append(pid)
+            if missed:
+                problems.append(
+                    "identifier_pattern %r does not recover %d of %d identifiers, e.g. %s"
+                    % (profile.identifier_pattern, len(missed), len(seg.order),
+                       ", ".join(missed[:5])))
+            metrics["identifier_pattern_ok"] = not missed
+    else:
+        problems.append(
+            "no identifier_pattern -- without one, nothing can find a provision id inside "
+            "running text, and corpus.yaml cannot be generated from this profile")
+
     warnings = []
     for word, count, example in unclaimed_heading_shapes(raw_lines, profile):
         warnings.append(
@@ -270,6 +298,7 @@ Return JSON only, with this exact shape:
     {{"name": "section", "role": "container", "pattern": "^(\\\\d{{2}}[A-Z]{{1,3}})\\\\s\\\\s+(.+)$"}}
   ],
   "id_template": "{{section}}({{subsection}})",
+  "identifier_pattern": "\\\\b(\\\\d{{2}}[A-Z]{{1,3}}(?:\\\\(\\\\d+[A-Z]?\\\\))?)",
   "citation_nouns": ["section", "subsection"],
   "note_pattern": "^Note(\\\\s+\\\\d+)?:",
   "min_provision_words": 8
@@ -292,8 +321,15 @@ Rules, all of which matter:
   sections carry numbered subsections, the subsection is the provision, not the section.
 * `id_template` composes the identifier from the captures of the enclosing levels, using
   their level names, e.g. "{{section}}({{subsection}})" or "{{clause}}".
+* `identifier_pattern` is a DIFFERENT job from the level patterns. Those classify whole
+  lines; this one finds an identifier inside running text, as it appears in a citation
+  like "see subsection 26WR(2)". It is NOT anchored, and capture group 1 must be exactly
+  the identifier that `id_template` would compose -- it is checked against every
+  identifier the file actually yields, so a pattern that cannot recover its own corpus's
+  ids is rejected. Make optional any part that a bare citation omits.
 * `citation_nouns` are the words this instrument uses to cite itself, drawn from:
-  {nouns}.
+  {nouns}. Order them so the one used most often for a provision of this instrument comes
+  FIRST -- it becomes the prefix identifiers are stored under.
 
 Do not describe the meaning of the text. Describe only how lines are laid out.
 
@@ -322,6 +358,87 @@ def build_prompt(raw_lines: List[str], problems=None, metrics=None) -> str:
             problems="\n".join("  - " + p for p in problems),
             metrics=json.dumps(metrics, indent=2, default=str))
     return prompt
+
+
+# --- generating corpus.yaml ---------------------------------------------------------
+
+def derive_key_prefix(raw_lines: List[str], profile: Profile) -> str:
+    """Which citation noun this instrument uses when naming one of its own provisions.
+
+    `subclause 6.1` for Schedule 1, `section 26WE` for Part IIIC. It becomes the prefix
+    provision keys are stored under, so guessing it wrong means every lookup misses.
+
+    The model is asked to order `citation_nouns` by frequency, but that is a claim about
+    the corpus and claims about the corpus can be counted. This counts: for each noun, how
+    often it appears immediately before something the identifier pattern recognises. The
+    model's ordering is the tie-break, not the answer.
+    """
+    if not profile.identifier_pattern or not profile.citation_nouns:
+        return (profile.citation_nouns or [""])[0]
+    text = " ".join(normalise(l) for l in raw_lines if l.strip())
+    counts = {}
+    for noun in profile.citation_nouns:
+        pattern = re.compile(r"\b%s\s+(?=%s)" % (re.escape(noun), profile.identifier_pattern),
+                             re.IGNORECASE)
+        counts[noun] = len(pattern.findall(text))
+    best = max(profile.citation_nouns, key=lambda n: (counts[n], -profile.citation_nouns.index(n)))
+    return best if counts[best] else profile.citation_nouns[0]
+
+
+def corpus_config_dict(profile: Profile, raw_lines: List[str], raw_path: str,
+                       profile_path: str) -> dict:
+    """The corpus.yaml a profile implies.
+
+    Everything here used to be hand-written, and every value in it is derivable from the
+    profile plus the corpus name -- which is the point: a new statute should be a .txt
+    file and a generated config, not a config someone had to reason their way to.
+
+    node_prefix is the one value that cannot be checked here. Several corpora share one
+    Aura instance, so two of them claiming the same prefix would silently merge their
+    graphs; that check needs the registry, and lives with the loader.
+    """
+    name = profile.name
+    slug = re.sub(r"[^0-9a-z]+", "_", name.lower()).strip("_")
+    short = "".join(part[0] for part in slug.split("_") if part)[:4] or "c"
+    return {
+        "name": name,
+        "description": profile.description,
+        "file_prefix": slug.split("_")[0][:12] or "corpus",
+        "node_prefix": "%s_" % short.upper(),
+        "paths": {
+            "raw": raw_path.replace(os.sep, "/"),
+            "corpus": "edc-main/edc-main/datasets/%s.txt" % slug,
+            "edc_graph_dir": "edc-main/edc-main/output/%s/graph" % slug,
+            "spires_dir": "spires",
+            "profile": profile_path.replace(os.sep, "/"),
+        },
+        "modality_overrides": {},
+        "provision": {
+            "pattern": profile.identifier_pattern,
+            "key_prefix": derive_key_prefix(raw_lines, profile),
+        },
+    }
+
+
+def write_corpus_config(path: str, config: dict, source: str) -> None:
+    """Write a generated corpus.yaml, refusing to clobber a hand-edited one."""
+    import yaml
+    header = [
+        "# Generated by induce_structure.py from the structural profile -- see `profile:`.",
+        "#",
+        "# Source: %s" % source,
+        "#",
+        "# Hand-editable. Two values are worth checking before a build:",
+        "#   node_prefix   several corpora share one Aura instance, and two claiming the",
+        "#                 same prefix would merge their graphs without complaint.",
+        "#   key_prefix    counted from the corpus (how often each citation noun precedes",
+        "#                 an identifier), not taken on the model's word.",
+        "",
+    ]
+    with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write("\n".join(header))
+        yaml.safe_dump(config, fh, sort_keys=False, allow_unicode=True,
+                       default_flow_style=False)
 
 
 def llm_key_from_env() -> str:
@@ -435,6 +552,14 @@ def main() -> int:
                     help="Re-ask once with the failure report appended.")
     ap.add_argument("--dry-run", action="store_true",
                     help="Print the prompt size and cost estimate, make no call.")
+    ap.add_argument("--write-config", nargs="?", const="corpus.yaml", default=None,
+                    metavar="PATH",
+                    help="Also generate the corpus.yaml this profile implies. Refuses to "
+                         "overwrite an existing file: regenerating a live config would "
+                         "change node_prefix and orphan the graph already loaded under "
+                         "the old one.")
+    ap.add_argument("--force", action="store_true",
+                    help="Allow --write-config to overwrite.")
     args = ap.parse_args()
 
     if not os.path.exists(args.corpus):
@@ -443,6 +568,24 @@ def main() -> int:
     raw_lines = io.open(args.corpus, encoding="utf-8").read().splitlines()
     hy = hygiene(raw_lines)
 
+    def emit_config(profile, profile_path):
+        """Write the generated corpus.yaml, if asked and if it is safe to."""
+        if not args.write_config:
+            return
+        target = args.write_config
+        if os.path.exists(target) and not args.force:
+            print("\nNOT writing %s: it already exists. Regenerating a live config would "
+                  "change node_prefix and orphan the graph loaded under the old one. Pass "
+                  "--force, or --write-config with another path." % target, file=sys.stderr)
+            return
+        config = corpus_config_dict(profile, raw_lines, args.corpus, profile_path)
+        write_corpus_config(target, config, args.corpus)
+        print("\nwrote %s" % target)
+        print("  file prefix : %s_*" % config["file_prefix"])
+        print("  node prefix : %s  <- check this is not already in use" % config["node_prefix"])
+        print("  key prefix  : %s  <- counted from the corpus"
+              % config["provision"]["key_prefix"])
+
     # --- offline path: validate a profile someone wrote --------------------------
     if args.profile:
         import yaml
@@ -450,6 +593,8 @@ def main() -> int:
             profile = Profile.from_dict(yaml.safe_load(fh))
         val = validate(raw_lines, profile)
         report(hy, val, profile)
+        if val.ok:
+            emit_config(profile, args.profile)
         return 0 if val.ok else 1
 
     # --- dry run ------------------------------------------------------------------
@@ -482,6 +627,7 @@ def main() -> int:
             os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
             write_profile(out, profile, val.metrics, args.corpus)
             print("\nwrote %s" % out)
+            emit_config(profile, out)
             print("cost: $%.4f (%d in, %d out)"
                   % ((spent_in * PRICE_IN + spent_out * PRICE_OUT) / 1e6, spent_in, spent_out))
             return 0

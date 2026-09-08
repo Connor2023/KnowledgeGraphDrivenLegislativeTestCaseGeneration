@@ -12,15 +12,15 @@
 #
 # Correct it by hand if a pattern is slightly wrong -- that is cheaper than
 # re-inducing, and this file is what the pipeline actually reads.
-name: privacy_act_1988_part_iiic
+name: notification_of_eligible_data_breaches
 description: Part IIIC of the Privacy Act 1988 (Cth)
 levels:
 - name: part
   role: heading
-  pattern: ^Part\s+[IVXLCDM]+[A-Z]?\s+-\s+(.+)$
+  pattern: ^Part\s+([IVXLCDM]+[A-Z]*)\s+-\s+(.+)$
 - name: division
   role: heading
-  pattern: ^Division\s+\d+\s+-\s+(.+)$
+  pattern: ^Division\s+(\d+)\s+-\s+(.+)$
 - name: section
   role: container
   pattern: ^(\d{2}[A-Z]{1,3})\s+(.+)$
@@ -29,16 +29,14 @@ levels:
   pattern: ^\((\d+)\)\s+(.+)$
 - name: paragraph
   role: body
-  pattern: ^\((\w)\)\s+(.+)$
+  pattern: ^\((a|b|c|d|e|f|g|h)\)\s+(.+)$
 - name: subparagraph
   role: body
-  pattern: ^\((\w{1,2})\)\s+(.+)$
+  pattern: ^\((i|ii|iii|iv|v|vi|vii|viii|ix|x)\)\s+(.+)$
 id_template: '{section}({subsection})'
+identifier_pattern: \b(\d{2}[A-Z]{1,3}(?:\(\d+\))?)
 citation_nouns:
-- section
 - subsection
-- paragraph
-- division
-- part
+- section
 note_pattern: '^Note(\s+\d+)?:'
 min_provision_words: 8

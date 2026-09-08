@@ -142,9 +142,24 @@ def provision_key(provision_id: str) -> str:
     return ident
 
 
+_SLUG_RE = re.compile(r"[^0-9A-Za-z]+")
+
+
+def provision_slug(provision_id: str) -> str:
+    """`6.1` -> `6_1`, `26WE(1)` -> `26WE_1`.
+
+    Was `provision_id.replace(".", "_")`, which is a rule about one numbering scheme.
+    Part IIIC composes identifiers with parentheses, and while those are legal on NTFS
+    they are hostile in a glob and in a shell. Any run of non-alphanumerics becomes a
+    single underscore, which leaves every existing Schedule 1 filename unchanged --
+    asserted in tests, since renaming 62 committed artefacts would be a silent rebuild.
+    """
+    return _SLUG_RE.sub("_", provision_id).strip("_")
+
+
 def provision_filename(provision_id: str, suffix: str) -> str:
     """`6.1`, `.yaml` -> `app_6_1.yaml`. The dot is not filename-safe on Windows."""
-    return "%s_%s%s" % (FILE_PREFIX, provision_id.replace(".", "_"), suffix)
+    return "%s_%s%s" % (FILE_PREFIX, provision_slug(provision_id), suffix)
 
 
 def provision_glob(suffix: str = ".yaml") -> str:

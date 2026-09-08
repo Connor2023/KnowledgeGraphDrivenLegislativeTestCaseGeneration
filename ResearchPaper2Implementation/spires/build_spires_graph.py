@@ -117,7 +117,7 @@ def build(provisions, texts=None):
 
     for pid, document in sorted(provisions.items()):
         prov_key = "provision:%s" % pid
-        node(prov_key, L("Provision"), name="subclause %s" % pid, provision=pid,
+        node(prov_key, L("Provision"), name=corpus_config.provision_key(pid), provision=pid,
              text_raw=texts.get(pid, ""))
 
         for index, norm in enumerate(document.get("norms") or [], 1):
@@ -153,6 +153,19 @@ def build(provisions, texts=None):
     return nodes, edges, counts
 
 
+def strip_key_prefix(key):
+    """`subclause 6.2` -> `6.2`. The inverse of corpus_config.provision_key.
+
+    Was `.replace("subclause ", "")` in three places, which is a statement about one
+    instrument's citation vocabulary sitting in a graph builder.
+    """
+    prefix = corpus_config.PROVISION_KEY_PREFIX
+    text = str(key).strip()
+    if prefix and text.lower().startswith(prefix.lower() + " "):
+        text = text[len(prefix) + 1:]
+    return text.strip()
+
+
 def add_reference_edges(nodes, edges, counts, provisions):
     """Cross-reference edges from the regex, which measured far better than SPIRES."""
     raw = prep_corpus.provisions()
@@ -165,7 +178,7 @@ def add_reference_edges(nodes, edges, counts, provisions):
         # self-reference it discards has to be given in that form too.
         targets, _principles = parse_references(text, corpus_config.provision_key(pid))
         for target in targets:
-            target_pid = target.replace("subclause ", "")
+            target_pid = strip_key_prefix(target)
             if target_pid not in known or target_pid == pid:
                 skipped += 1
                 continue
@@ -179,7 +192,7 @@ def add_reference_edges(nodes, edges, counts, provisions):
     # pattern. Kept alongside SP_REFERS_TO rather than instead of it.
     for pid, document in sorted(provisions.items()):
         for target in (document.get("disapplies") or []):
-            target_pid = str(target).replace("subclause ", "").strip()
+            target_pid = strip_key_prefix(str(target))
             if target_pid in known and target_pid != pid:
                 edges.append({"from_key": "provision:%s" % pid,
                               "rel": L("DISAPPLIES"),

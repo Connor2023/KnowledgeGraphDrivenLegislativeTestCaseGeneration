@@ -72,14 +72,19 @@ class Profile:
     an induction that got something slightly wrong can be corrected by hand without
     touching code, and so that what was induced is auditable rather than implicit.
 
-    Not yet wired into corpus.yaml: this is stage 0, and the generic prep_corpus that
-    consumes a profile is the next step. `segment()` below is that consumer in embryo --
-    it is the whole of what prep_app.py's line classification does, driven by data.
+    corpus.yaml is generated from it: `induce_structure.py --write-config` derives the
+    file and node prefixes, the paths, the identifier pattern and the key prefix, so a new
+    statute is a .txt file and two generated configs rather than a config someone had to
+    reason their way to.
     """
     name: str
     description: str
     levels: List[Level]
     id_template: str                     # "{section}({subsection})" or "{clause}"
+    # Finds an identifier inside running text, e.g. "see subclause 6.2". Distinct from
+    # the level patterns, which classify whole lines: this one has to match a citation
+    # mid-sentence. Group 1 is the identifier.
+    identifier_pattern: Optional[str] = None
     citation_nouns: List[str] = field(default_factory=list)
     note_pattern: Optional[str] = None
     min_provision_words: int = MIN_PROVISION_WORDS
@@ -100,6 +105,7 @@ class Profile:
             description=str(d.get("description", "")),
             levels=levels,
             id_template=str(d.get("id_template", "")),
+            identifier_pattern=d.get("identifier_pattern") or None,
             citation_nouns=[str(x) for x in d.get("citation_nouns", [])],
             note_pattern=d.get("note_pattern") or None,
             min_provision_words=int(d.get("min_provision_words", MIN_PROVISION_WORDS)),
@@ -112,6 +118,7 @@ class Profile:
             "levels": [{"name": l.name, "role": l.role, "pattern": l.pattern}
                        for l in self.levels],
             "id_template": self.id_template,
+            "identifier_pattern": self.identifier_pattern,
             "citation_nouns": list(self.citation_nouns),
             "note_pattern": self.note_pattern,
             "min_provision_words": self.min_provision_words,

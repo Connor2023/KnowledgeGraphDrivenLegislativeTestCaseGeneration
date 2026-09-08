@@ -118,6 +118,49 @@ def test_every_arm_is_covered():
         "expected %d arms, replayed %d: %s" % (EXPECTED_ARMS, len(arms_seen), sorted(arms_seen))
 
 
+def test_spires_context_is_reproduced():
+    """The replay above cannot catch this, so it is checked separately.
+
+    test_every_recorded_prompt_is_reproduced takes block 3 out of the stored prompt
+    rather than rebuilding it, because seeding calls an LLM and is not reproducible. That
+    makes it blind to a change in how the spires arm serialises -- which is exactly what
+    replacing the hard-coded "subclause %s" strings with corpus_config.provision_key
+    touches. This rebuilds the context against the live graph and demands the same bytes.
+
+    Needs Neo4j. Skips with a message when the credentials are not in the environment.
+    """
+    import os
+    if not os.environ.get("NEO4J_URI"):
+        print("  SKIP  no NEO4J_URI in the environment")
+        return
+    from kg_testgen.config import Config, secrets_from_env
+    from kg_testgen.neo4j_client import Neo4jClient
+    from kg_testgen import spires_query
+
+    secrets = secrets_from_env()
+    differing = []
+    for cell, hybrid in (("line34__spires__r1", False), ("line49__spires__r1", False),
+                         ("line60__spires__r1", False), ("line60__spires-hybrid__r1", True)):
+        directory = os.path.join(RUNS, cell)
+        if not os.path.exists(directory):
+            continue
+        record = json.load(io.open(os.path.join(directory, "run_record.json"), encoding="utf-8"))
+        stored = io.open(os.path.join(directory, "prompt.txt"), encoding="utf-8",
+                         newline="").read().replace("\r\n", "\n")
+        marker = stored.find("BLOCK 3 of 3")
+        body_start = stored.find(RULE, stored.find("\n", marker)) + len(RULE)
+        tail = stored.find("OUTPUT FORMAT")
+        stored_block = stored[body_start:stored.rfind(RULE, body_start, tail)].strip()
+
+        config = Config(context_mode="spires", spires_include_provision_text=hybrid)
+        config.validate()
+        with Neo4jClient(secrets, config) as client:
+            rebuilt = spires_query.build_context(client, record["input_section_text"], config)
+        if rebuilt.text.strip() != stored_block:
+            differing.append(cell)
+    assert not differing, "spires context changed for: %s" % differing
+
+
 def test_pipeline_refuses_arm_modes_it_no_longer_builds():
     """Asking the pipeline for a moved arm must fail loudly, not return no context."""
     from kg_testgen.config import Config

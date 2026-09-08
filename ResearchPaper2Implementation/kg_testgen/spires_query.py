@@ -284,12 +284,12 @@ def serialise(target: str, target_norms: List[Norm],
             # referred to by this one" call for opposite readings, and a bare list of
             # neighbouring clauses gives the model no way to tell them apart.
             if meta["direction"] == "inbound":
-                why = ("subclause %s DISAPPLIES the target" if meta["rel"] == L("DISAPPLIES")
-                       else "subclause %s refers to the target") % pid
+                why = ("%s DISAPPLIES the target" if meta["rel"] == L("DISAPPLIES")
+                       else "%s refers to the target") % _corpus.provision_key(pid)
             else:
                 why = ("the target DISAPPLIES subclause %s" if meta["rel"] == L("DISAPPLIES")
                        else "the target refers to subclause %s") % pid
-            lines.append("subclause %s — %s" % (pid, why))
+            lines.append("%s — %s" % (_corpus.provision_key(pid), why))
             for norm in norms:
                 lines += render_norm(norm, exceptions_first)
             lines.append("")
@@ -300,7 +300,7 @@ def serialise(target: str, target_norms: List[Norm],
         # model should be able to tell which is which at a glance.
         lines += ["VERBATIM TEXT OF THOSE PROVISIONS", ""]
         for pid in sorted(texts, key=lambda p: [int(x) for x in p.split(".")]):
-            lines += ["subclause %s:" % pid, "  %s" % texts[pid], ""]
+            lines += ["%s:" % _corpus.provision_key(pid), "  %s" % texts[pid], ""]
     return "\n".join(lines).rstrip() + "\n"
 
 
