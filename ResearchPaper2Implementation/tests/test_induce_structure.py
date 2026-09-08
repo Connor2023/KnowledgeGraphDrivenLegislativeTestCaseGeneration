@@ -63,7 +63,7 @@ def test_schedule1_profile_is_accepted():
 
 def test_schedule1_ids_match_the_handwritten_parser():
     """The strong form: same identifiers, not just the same count."""
-    import enrich_graph
+    from evaluation.arms import enrich_graph
     reference = {k.replace("subclause ", "") for k in enrich_graph.raw_clause_text()}
     profile = _profile(PROFILE_SCHEDULE)
     I.compile_profile(profile)
@@ -78,8 +78,8 @@ def test_prep_corpus_matches_the_parser_it_replaces():
     If a single character differs, the SPIRES inputs differ, and the graph built from a
     profile is not the graph the recorded results came from.
     """
-    import enrich_graph
     import prep_corpus
+    from evaluation.arms import enrich_graph
 
     reference = {k.replace("subclause ", ""): v
                  for k, v in enrich_graph.raw_clause_text().items()}

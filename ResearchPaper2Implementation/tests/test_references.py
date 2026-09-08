@@ -50,7 +50,7 @@ def _edges(parser, seg):
 # --- the equivalence that lets this replace the shipped parser ----------------------
 
 def test_schedule1_edges_are_identical_to_the_shipped_parser():
-    from enrich_graph import parse_references
+    from evaluation.arms.enrich_graph import parse_references
 
     parser, seg = _parser()
     shipped = set()

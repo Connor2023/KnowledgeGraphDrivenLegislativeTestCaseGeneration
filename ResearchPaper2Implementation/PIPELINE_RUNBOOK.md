@@ -267,14 +267,19 @@ transformers and torch.
 
 # Load, then add provision text and REFERS_TO edges
 python load_neo4j.py
-python enrich_graph.py --dry-run
-python enrich_graph.py
+python -m evaluation.arms.enrich_graph --dry-run
+python -m evaluation.arms.enrich_graph
 ```
 
 The SPIRES graph no longer depends on any of this. It used to: the `spires-hybrid` arm
 read provision text out of `:AppNode`, so on a corpus with only a norm graph it silently
 returned nothing and degraded to plain `spires`. `:SP_Provision` nodes now carry
 `text_raw` themselves.
+
+`prep_app.py` and `enrich_graph.py` moved into `evaluation/arms/` with the arms they
+serve. `build_graph.py` and `check_setup.py` are the same category and could follow;
+`load_neo4j.py` cannot, because `spires/build_spires_graph.py` reads its credential
+helper.
 
 ---
 

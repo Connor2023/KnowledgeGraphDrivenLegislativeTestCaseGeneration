@@ -1,5 +1,17 @@
 """Turn APPschedule1.txt into an EDC-ready dataset: one self-contained clause per line.
 
+NOT part of the pipeline. This is the parser prep_corpus.py replaced -- it knows that
+an Australian Privacy Principle is announced by "N Australian Privacy Principle
+N-title" and that clauses are numbered N.M, none of which transfers to another
+instrument. It survives for one reason: EDC ingests one document per line, and the
+flattening that produces those documents is roughly eighty lines of sentence-splicing
+tuned to APP phrasing. The `full-corpus` control arm reads the same file.
+
+Both of those are evaluation arms, so this moved here with them. prep_corpus.py
+reproduces its provision segmentation exactly -- the same 62 identifiers with
+byte-identical text -- which is what made the swap safe; see
+tests/test_induce_structure.py.
+
 EDC's run.py treats every line of the input file as an independent document, so the raw
 Schedule -- with its hanging-paragraph structure -- has to be flattened first. A bare
 "(a) free of charge; and" has no subject; here each emitted line carries its Part, its

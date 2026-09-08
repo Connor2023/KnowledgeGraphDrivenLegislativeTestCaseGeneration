@@ -1,4 +1,13 @@
-"""Add provision text and cross-reference edges to the APP knowledge graph.
+"""Add provision text and cross-reference edges to the EDC knowledge graph.
+
+NOT part of the pipeline. Its citation patterns were generalised into references.py,
+and :SP_Provision nodes now carry their own text, so the SPIRES construction path
+imports nothing from here. What remains serves the `kg` and `kg-text-only` arms,
+which is why it sits beside them.
+
+references.py reproduces parse_references exactly on Schedule 1 -- the same 33
+REFERS_TO edges -- which is the equivalence that let the pipeline stop calling this;
+see tests/test_references.py.
 
 Two enrichments, both idempotent and both additive — nothing existing is removed:
 
@@ -24,9 +33,12 @@ import os
 import re
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Three levels up: this module used to sit at the repository root and now sits in
+# evaluation/arms/. corpus_config, prep_corpus and load_neo4j all live at the root.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__)))))
 
-import prep_app  # noqa: E402  - reused for its line classification and normalisation
+from . import prep_app  # noqa: E402  - reused for its line classification
 import corpus_config  # noqa: E402
 from corpus_config import detect_provision_id, provision_key  # noqa: E402
 
