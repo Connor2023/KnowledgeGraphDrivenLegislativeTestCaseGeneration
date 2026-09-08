@@ -102,8 +102,12 @@ To check without printing any secret:
 
 ```powershell
 python check_key.py      # length, prefix family, stray characters — never the value
-python check_setup.py    # 11 dependency and connectivity preflight checks
 ```
+
+`check_setup.py` also exists, but it preflights the EDC construction path -- its
+dataset, its few-shot files, its dependencies -- and that path is now an evaluation arm.
+For the pipeline, `build_corpus.py --dry-run` is the preflight: it runs every free stage
+and every gate and stops before spending.
 
 ### Virtual environments
 
@@ -169,67 +173,93 @@ Measured so far:
 | Part IIIC, hand-written profile | 106 | 0.0% | — |
 | Part IIIC, induced profile | 106 | 0.4% | identical ids to the hand-written one |
 
-The controls are in `tests/test_induce_structure.py` and cost nothing to run:
+The controls cost nothing to run. None of them makes an API call, and the one check
+that wants Neo4j skips cleanly without it:
 
 ```powershell
-python tests/test_induce_structure.py
+python tests/test_induce_structure.py      # profile format, segmentation, 10 mutations
+python tests/test_references.py            # citation parsing, Schedule 1 equivalence
+python tests/test_build_gates.py           # the gates catch three broken profiles
+python tests/test_graph_registry.py        # prefix collisions are refused
+python tests/test_modality_vocabulary.py   # APPLICABILITY across two corpora
+python tests/test_pipeline_isolation.py    # the pipeline does not import evaluation
+python tests/test_arm_prompts_unchanged.py # 117 recorded prompts, byte for byte
 ```
 
-### 2.1 Prepare the corpus
+### 2.1 Segment it into provisions
 
-Put the raw statute at the repository root as a plain `.txt` file, one line per
-structural element, then flatten it into self-contained documents:
+`prep_corpus.py` applies the profile. It is what `prep_app.py` used to be, minus the
+statute-specific regexes:
 
 ```powershell
-python prep_app.py
+python prep_corpus.py                  # how many provisions, first and last
+python prep_corpus.py --list           # every identifier, in document order
+python prep_corpus.py --show 6.1       # one provision's verbatim text
 ```
 
-This reads `APPschedule1.txt` and writes `edc-main/edc-main/datasets/app_schedule1.txt`:
-134 documents from 62 clause blocks. Each document is self-contained — a clause's
-lettered paragraphs and any trailing text that closes them are joined into one line — so
-that a document can be read without its neighbours.
+**Check this before going further.** A provision count of zero or three means the
+profile's patterns did not match, and everything downstream would be built on nothing.
+`build_corpus.py` checks it for you and stops.
 
-**Check the output before going further.** If the clause-block count is zero or wildly
-wrong, the regexes did not match your statute and everything downstream will be built on
-nothing.
+Keys are bare identifiers — `6.1`, `26WE(1)` — and the order is the order the instrument
+states them in, which is also the sort key. Nothing derives an ordering from the
+identifier grammar; two places used to, with `[int(x) for x in pid.split(".")]`, and both
+raised on anything not numbered `N.M`.
+
+`prep_app.py` still exists and still produces the flattened one-document-per-line file
+under `edc-main/edc-main/datasets/`. Nothing in the pipeline reads it any more: it feeds
+the `full-corpus` and EDC arms, which are in `evaluation/arms/`.
 
 ### 2.2 Build the SPIRES norm graph
 
-This is the graph the `spires` arms use. Four stages.
+This is the graph the pipeline queries. Four stages, and `build_corpus.py` runs all of
+them — the commands below are for running one at a time.
 
 ```powershell
-# 1. Extract — one call per clause against the LinkML schema, resumable
-python spires\extract_corpus.py --dry-run     # how many clauses, what it costs
+# 1. Extract — one call per provision against the LinkML schema, resumable
+python spires\extract_corpus.py --dry-run     # how many provisions, what it costs
 python spires\extract_corpus.py               # ~20 min, ~$0.90 on gpt-4o for 62 clauses
 
 # 2. Clean — strip the prompt's own fill-in markers, which the model echoes back
-python spires\clean_extraction.py --glob "spires/output/app_*.yaml"
+python spires\clean_extraction.py
 
 # 3. Verify — recover exception clauses the recursive extraction drops
-python spires\verify_exceptions.py --glob "spires/output/app_*.yaml"
+python spires\verify_exceptions.py
 
 # 4. Build and load
 python spires\build_spires_graph.py --dry-run  # writes CSVs, reports node/edge counts
-python spires\build_spires_graph.py            # loads to Aura with an SP_ prefix
+python spires\build_spires_graph.py            # claims the node prefix, then loads
 ```
 
-`--wipe` on the last command deletes existing `SP_*` nodes first. It is scoped to that
-prefix, so `:AppNode` and `:RP1Entity` in the same instance survive.
+Cost scales with the corpus, not with Schedule 1: Part IIIC's 106 provisions are
+estimated at **$4.45** on gpt-4o. Always run `--dry-run` first; it prints the number.
 
-Two things worth knowing:
+`--wipe` on the last command deletes existing nodes under this corpus's prefix first. It
+is scoped to that prefix, so other graphs in the same instance survive.
 
+Four things worth knowing:
+
+- **The loader claims the node prefix before writing anything.** Neo4j has no namespaces,
+  so a second corpus loading under a prefix the first one owns would merge both graphs
+  with nothing reported. `python graph_registry.py` shows what is claimed and what is
+  live.
 - **Cleaning discards roughly 46% of condition and exception field values.** That is not
   a bug. SPIRES marks fill-in slots with angle brackets and the model returns them
   filled in but still bracketed, or echoes the field description itself. Run
   `python spires\review_discards.py` to audit what was dropped, ranked by how much it
   could cost rather than by frequency.
-- **Cross-reference edges come from the regex in `enrich_graph.py`, not from SPIRES.**
-  Over 62 clauses the regex found cross-references in 28 provisions against SPIRES' 10.
-  Two extractors, each doing what it measured best at.
+- **Cross-reference edges come from `references.py`, not from SPIRES.** Over 62 clauses
+  the parser finds cross-references in 26 provisions against SPIRES' 10, with exactly one
+  provision that only SPIRES found. Two extractors, each doing what it measured best at.
+- **Citations that leave the corpus become `:*_ExternalRef` stubs.** Part IIIC makes 25 of
+  them. They used to be dropped with a count printed, which left the graph understating
+  its own incompleteness.
 
-### 2.3 Optional: build the EDC graph and enrich it
+### 2.3 Optional: build the EDC graph
 
-Only needed for the `kg` and `kg-text-only` arms.
+Not part of the pipeline. It exists for the `kg` and `kg-text-only` comparison arms, which
+live in `evaluation/arms/`, and it pulls in the vendored `edc-main` tree along with
+transformers and torch.
 
 ```powershell
 # EDC three-stage construction (extract, define, canonicalize)
@@ -241,45 +271,54 @@ python enrich_graph.py --dry-run
 python enrich_graph.py
 ```
 
-`enrich_graph.py` is what makes `kg-text-only` possible: it puts each clause's verbatim
-text on its `:Provision` node and links provisions that cite one another. Without it the
-graph holds relationships but no law.
+The SPIRES graph no longer depends on any of this. It used to: the `spires-hybrid` arm
+read provision text out of `:AppNode`, so on a corpus with only a norm graph it silently
+returned nothing and degraded to plain `spires`. `:SP_Provision` nodes now carry
+`text_raw` themselves.
 
 ---
 
-## 3. Running a single arm on any clause
+## 3. Generating test cases
 
-The entry point takes a file or stdin:
+Name a provision and the text comes from the segmentation:
+
+```powershell
+python -m kg_testgen --list-provisions
+python -m kg_testgen --provision 6.1 --context-mode spires
+python -m kg_testgen --provision "26WE(1)" --context-mode spires --spires-provision-text
+```
+
+A file or stdin still works, for text that is not in the configured corpus:
 
 ```powershell
 python -m kg_testgen path\to\clause.txt --context-mode spires
 ```
 
-```powershell
-"6.1 If an APP entity holds personal information..." | python -m kg_testgen - --context-mode none
-```
+The provision identifier is detected from the text automatically; `--provision` sets it
+directly, which matters for instruments whose subsections do not carry their section
+number — `26WE(1)` reads "(1) This section applies if:" and nothing in it says 26WE.
 
-The input is one clause of text. The provision identifier is detected from it
-automatically; pass `--provision-id 6.1` when detection fails or the text does not
-contain its own number.
+### The pipeline builds one context mode
 
-### The seven arms
+`--context-mode spires` walks the norm graph. That is the only mode the pipeline builds,
+which is why it is the only choice the CLI offers.
 
-| Arm | Command | Reads Neo4j |
+| Arm | How to run it | Where it lives |
 |---|---|---|
-| `none` | `--context-mode none` | no |
-| `full-corpus` | `--context-mode full-corpus` | no |
-| `kg` | `--context-mode kg` | yes |
-| `kg-text-only` | `--context-mode kg --no-triples` | yes |
-| `rp1` | `--context-mode rp1` | yes |
-| `spires` | `--context-mode spires` | yes |
-| `spires-hybrid` | `--context-mode spires --spires-provision-text` | yes |
+| `spires` | `--context-mode spires` | the pipeline |
+| `spires-hybrid` | `--context-mode spires --spires-provision-text` | the pipeline |
+| `none`, `full-corpus`, `kg`, `kg-text-only`, `rp1`, six `fmt-*` probes | `python -m evaluation.run_experiment` | `evaluation/arms/` |
+
+The comparison arms are kept and runnable — they are what the spires results are quoted
+against — but they reach the pipeline through an `ExternalContext` they build themselves,
+so the pipeline never imports them. Asking it for one of their modes fails with a message
+naming where the arm went. See `EVALUATION.md`.
 
 ### Tuning the SPIRES arm
 
 ```powershell
-python -m kg_testgen sections\line60_app_6_1.txt --context-mode spires `
-    --spires-hop-depth 2 `            # follow references two hops instead of one
+python -m kg_testgen --provision 6.1 --context-mode spires `
+    --spires-hop-depth 2 `             # follow references two hops instead of one
     --spires-modality-filter deontic ` # keep only MUST / MUST NOT / MAY norms
     --no-spires-inbound `              # forwards only (see the warning below)
     --no-spires-exceptions-first       # conditions above exceptions
@@ -290,14 +329,19 @@ the provision that *defeats* the target: APP 2.1 read alone states an unqualifie
 to anonymity and is misleading until 2.2 — which points at it — is in view. Outbound-only
 retrieval can never reach 2.2 from 2.1.
 
+**There is no node cap on this arm.** `max_nodes` belongs to the EDC arm. A whole-section
+citation reaches every subsection of that section, so a provision citing an eleven-
+subsection section pulls all eleven. Measured worst case in Part IIIC is 14 provisions at
+roughly 1,250 tokens, against 4 and 537 for Schedule 1 — comfortable, but measured rather
+than enforced, and worth re-checking on a new corpus.
+
 ### Other useful flags
 
 ```
 --model gpt-4o                 the generator model (default gpt-4o-mini)
 --temperature 0.0              not strictly deterministic even at 0
---provision-text-scope none    for kg arms: withhold cross-referenced statutory text
+--provision-id 6.1             override the identifier detected from the text
 --block3-format terse|neutral  alternative header phrasings, for sensitivity testing only
---corpus-path <file>           the corpus for --context-mode full-corpus
 --output-dir <dir>             where to write (default: a timestamped folder under runs/)
 --allow-unaugmented            proceed when retrieval finds nothing, instead of failing
 ```
@@ -305,7 +349,6 @@ retrieval can never reach 2.2 from 2.1.
 `--block3-format` exists to measure how much of a score is the context and how much is
 the wording around it. It is not a configuration you would ship.
 
----
 
 ## 4. Where the output goes
 
@@ -316,7 +359,7 @@ it writes exactly where you say.
 |---|---|
 | `generated.feature` | **The test cases.** Gherkin: one `Feature`, one `Scenario` per obligation, condition or exception, each tagged with its provision and carrying a `# Derives from:` quote |
 | `prompt.txt` | The full four-block prompt as sent, so a result can be reproduced or audited |
-| `run_record.json` | Everything else: config, seeding, retrieval, ranking, serialisation, the raw model response, and any structural problems found in the Gherkin |
+| `run_record.json` | Everything else: config, the graph context that was retrieved, the raw model response, and any structural problems found in the Gherkin |
 
 `runs/` is in `.gitignore` — these are regenerable and there are thousands of them.
 
@@ -326,9 +369,11 @@ it writes exactly where you say.
 python -c "import json; d=json.load(open('runs/<dir>/run_record.json')); print(d['spires_context'])"
 ```
 
-Useful keys: `augmented` (did context reach the prompt), `spires_context` /
-`rp1_context` / `retrieval` (what the graph returned), `provision_text` (which clauses
-contributed statutory text), `gherkin_structure_problems` (malformed output).
+Useful keys: `augmented` (did context reach the prompt), `spires_context` (what the
+norm graph returned, including which provisions were reached inbound and outbound, and
+the token estimate), `gherkin_structure_problems` (malformed output). A record written by
+an evaluation arm carries that arm's own keys instead -- `seeding`, `retrieval`,
+`ranking`, `serialisation`, `provision_text` for the EDC arm, `rp1_context` for RP1.
 
 ---
 
