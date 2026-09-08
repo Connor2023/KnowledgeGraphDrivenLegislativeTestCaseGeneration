@@ -47,6 +47,14 @@ _DEFAULTS = {
         "schema": os.path.join("spires", "norm.yaml"),
     },
     "modality_overrides": {"6.6": {1: "NONE"}, "4.4": {2: "NONE"}},
+    "prompt": {
+        # The newline and indent are load-bearing: this is substituted into a
+        # hand-wrapped paragraph, and a single-line value re-flows the line it lands in.
+        "citation_examples": ('"Australian Privacy Principle 6", "subclause 6.2", "the\n'
+                              '   Privacy Act" or "as required by Australian law"'),
+        "example_provision": "subclause 6.2",
+        "provision_plural": "Australian subclauses",
+    },
     "provision": {
         "pattern": r"\b(?:subclause\s+)?(\d{1,2}\.\d{1,2})\b",
         "key_prefix": "subclause",
@@ -68,7 +76,7 @@ def _load():
         return _DEFAULTS
     merged = dict(_DEFAULTS)
     merged.update({k: v for k, v in loaded.items() if k not in ("paths", "provision")})
-    for section in ("paths", "provision"):
+    for section in ("paths", "provision", "prompt"):
         merged[section] = dict(_DEFAULTS[section])
         merged[section].update(loaded.get(section) or {})
     return merged
@@ -89,6 +97,10 @@ PROVISION_RE = re.compile(PROVISION_PATTERN, re.IGNORECASE)
 # YAML will give "6.6" as a string key but 1 as an integer.
 MODALITY_OVERRIDES = {str(pid): {int(i): m for i, m in overrides.items()}
                       for pid, overrides in (_CFG.get("modality_overrides") or {}).items()}
+
+# Corpus-specific strings the prompt renders. See corpus.yaml.
+PROMPT = dict(_DEFAULTS["prompt"])
+PROMPT.update(_CFG.get("prompt") or {})
 
 
 def path(key: str) -> str:

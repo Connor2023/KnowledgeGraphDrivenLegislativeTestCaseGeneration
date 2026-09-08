@@ -8,9 +8,18 @@ elsewhere in the legislation and must not be mistaken for the target section's c
 
 from __future__ import annotations
 
+import re
+import sys as _sys, os as _os
 from typing import Optional
 
-SYSTEM_INSTRUCTION = """\
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+import corpus_config as _corpus  # noqa: E402
+
+# The examples in rule 1 and in the third BAD case name provisions of the configured
+# instrument, because naming one is the only way to teach "a policy will never cite this".
+# They come from corpus.yaml, whose defaults reproduce the wording the recorded results
+# were generated with, character for character.
+_SYSTEM_INSTRUCTION_TEMPLATE = """\
 You derive compliance test cases from a section of privacy legislation.
 
 The test cases are NOT executable software tests. Each one will be checked, by a person
@@ -26,8 +35,7 @@ Three rules govern every Then step, because a scenario that breaks them cannot b
 checked against a real policy and is worthless:
 
 1. NEVER require the policy to cite, name or number a legislative provision. A company
-   privacy policy will not say "Australian Privacy Principle 6", "subclause 6.2", "the
-   Privacy Act" or "as required by Australian law". Test the SUBSTANCE the provision
+   privacy policy will not say %(citation_examples)s. Test the SUBSTANCE the provision
    requires, not the provision's identity.
 
 2. Write in the vocabulary a privacy policy actually uses -- "personal data", "collect",
@@ -40,8 +48,8 @@ checked against a real policy and is worthless:
    BAD:  Then the privacy policy states that the entity must not use the information for
          another purpose unless certain conditions are met
          (untestable: "certain conditions" names nothing)
-   BAD:  Then the privacy policy explains when subclause 6.2 applies
-         (untestable: no policy references Australian subclauses)
+   BAD:  Then the privacy policy explains when %(example_provision)s applies
+         (untestable: no policy references %(provision_plural)s)
    GOOD: Then the privacy policy states that personal data collected for one purpose will
          not be used for an unrelated purpose without the individual's consent
          (a reader can confirm or deny this from the policy)
@@ -99,6 +107,8 @@ instruments and two modalities warrants well more than two scenarios. Completene
 matters more than brevity: it is better to write two scenarios that differ only in which
 instrument triggers them than to merge them into one that names neither.\
 """
+
+SYSTEM_INSTRUCTION = _SYSTEM_INSTRUCTION_TEMPLATE % _corpus.PROMPT
 
 OUTPUT_CONTRACT = """\
 Produce a single valid Gherkin feature file.
@@ -174,11 +184,25 @@ target section alone.
 """
 
 
+_TAG_RE = re.compile(r"[^0-9a-z]+")
+
+
 def provision_tag(provision_id: Optional[str]) -> str:
-    """Tag stem identifying the source provision, for manual evaluation."""
+    """Tag stem identifying the source provision, for manual evaluation.
+
+    `6.1` -> `s6-1`, `26WE(1)` -> `s26we-1`. Was `.replace("subclause", "")` followed by
+    `.replace(".", "-")`, which strips one instrument's citation noun and assumes clauses
+    are numbered N.M -- the tag for a Part IIIC subsection would have kept its
+    parentheses. Verified to leave every Schedule 1 tag unchanged, since the tags appear
+    in the recorded prompts.
+    """
     if not provision_id:
         return "section"
-    return "s" + provision_id.strip().lower().replace("subclause", "").strip().replace(".", "-")
+    bare = provision_id.strip().lower()
+    prefix = _corpus.PROVISION_KEY_PREFIX.lower()
+    if prefix and bare.startswith(prefix):
+        bare = bare[len(prefix):]
+    return "s" + _TAG_RE.sub("-", bare).strip("-")
 
 
 # Plausible alternative phrasings of the block 3 header, for measuring how much of an

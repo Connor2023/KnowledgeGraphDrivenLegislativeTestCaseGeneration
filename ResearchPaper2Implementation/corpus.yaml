@@ -61,6 +61,18 @@ modality_overrides:
   "4.4":
     2: NONE
 
+# Strings block 1 of the prompt renders. They teach the model what a privacy policy
+# will never say, and the only way to teach that is with examples from the instrument at
+# hand -- so they are corpus-specific by nature. The defaults reproduce the wording the
+# recorded results were generated with, character for character.
+prompt:
+  # The embedded newline and three-space indent are deliberate: this value is substituted
+  # into a hand-wrapped paragraph, and a single-line value re-flows the line it lands in.
+  # The 117 recorded prompts are byte-compared in tests, and that is how it was caught.
+  citation_examples: "\"Australian Privacy Principle 6\", \"subclause 6.2\", \"the\n   Privacy Act\" or \"as required by Australian law\""
+  example_provision: subclause 6.2
+  provision_plural: Australian subclauses
+
 provision:
   # Finds the provision identifier inside a piece of text. This is the single most
   # instrument-specific value in the file: 'N.M' suits the APPs, but another statute may

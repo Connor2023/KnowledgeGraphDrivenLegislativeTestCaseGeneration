@@ -19,6 +19,11 @@ paths:
   spires_dir: spires
   profile: profiles/part_iiic.yaml
 modality_overrides: {}
+prompt:
+  citation_examples: '"section 26WA", "Part IIIC of the Privacy Act 1988 (Cth) - notification
+    of eligible data breaches"'
+  example_provision: section 26WA
+  provision_plural: sections
 provision:
   pattern: \b(\d{2}[A-Z]{1,3}(?:\(\d+[A-Z]?\))?)
   key_prefix: section

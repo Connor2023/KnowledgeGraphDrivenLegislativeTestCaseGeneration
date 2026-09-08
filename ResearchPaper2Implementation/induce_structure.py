@@ -413,10 +413,32 @@ def corpus_config_dict(profile: Profile, raw_lines: List[str], raw_path: str,
             "profile": profile_path.replace(os.sep, "/"),
         },
         "modality_overrides": {},
+        "prompt": _prompt_strings(profile, raw_lines),
         "provision": {
             "pattern": profile.identifier_pattern,
             "key_prefix": derive_key_prefix(raw_lines, profile),
         },
+    }
+
+
+def _prompt_strings(profile: Profile, raw_lines: List[str]) -> dict:
+    """Examples block 1 of the prompt uses to teach "a policy will never cite this".
+
+    Naming a provision is the only way to teach that rule, so these are corpus-specific by
+    nature. Generated from the first real provision this instrument has, which is a
+    starting point rather than an answer: the point of putting them in corpus.yaml is that
+    a human can improve them without touching the prompt.
+    """
+    noun = derive_key_prefix(raw_lines, profile)
+    try:
+        first = segment(raw_lines, profile).order[0]
+    except Exception:  # noqa: BLE001 - a profile that cannot segment is rejected elsewhere
+        first = ""
+    example = ("%s %s" % (noun, first)).strip()
+    return {
+        "citation_examples": '"%s", "%s"' % (example, profile.description or "the Act"),
+        "example_provision": example,
+        "provision_plural": "%ss" % noun if noun else "provision identifiers",
     }
 
 

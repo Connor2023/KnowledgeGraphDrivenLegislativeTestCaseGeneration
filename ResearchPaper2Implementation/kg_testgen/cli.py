@@ -6,6 +6,10 @@ import argparse
 import logging
 import sys
 
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+import corpus_config  # noqa: E402
+
 from .config import ConfigError, add_cli_arguments, config_from_args, secrets_from_env
 from .neo4j_client import GraphUnavailable
 from .llm import LLMError
@@ -20,10 +24,43 @@ def _build_parser() -> argparse.ArgumentParser:
                     "legislation, using a Neo4j knowledge graph for supplementary context.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("input", nargs="?", default="-",
-                        help="Path to a file containing the legislation section, or '-' for stdin.")
+    parser.add_argument("input", nargs="?", default=None,
+                        help="Path to a file containing the legislation section, or '-' for "
+                             "stdin. Omit it and use --provision instead.")
+    parser.add_argument("--provision", metavar="ID",
+                        help="Generate for this provision of the configured corpus, e.g. "
+                             "'6.1' or '26WE(1)'. The text comes from the segmentation, so "
+                             "no file has to be made by hand.")
+    parser.add_argument("--list-provisions", action="store_true",
+                        help="Print every provision identifier, in document order, and exit.")
     add_cli_arguments(parser)
     return parser
+
+
+def _provision_text(identifier: str) -> str:
+    """One provision's text, straight from the segmentation.
+
+    Without this, generating for a clause meant hand-making a file under sections/ --
+    which is why that directory holds eleven of them. It is also the difference between
+    "a graph exists" and "test cases are ready to generate": the corpus already knows what
+    every provision says, and asking the user to copy it into a file is asking them to
+    reproduce work the pipeline has already done.
+
+    The identifier is prefixed onto the text. Part IIIC's subsections do not carry their
+    section number -- 26WE(1) reads "(1) This section applies if:" -- so without this the
+    generator could not tell which provision it had been given.
+    """
+    import prep_corpus
+
+    provisions = prep_corpus.provisions()
+    text = provisions.get(identifier)
+    if text is None:
+        near = [p for p in provisions if p.startswith(identifier.split("(")[0])][:6]
+        raise ConfigError(
+            "No provision %r in corpus %r.%s\nRun --list-provisions to see them all."
+            % (identifier, corpus_config.NAME,
+               (" Did you mean: %s?" % ", ".join(near)) if near else ""))
+    return text if text.startswith(identifier) else "%s %s" % (identifier, text)
 
 
 def _read_input(path: str) -> str:
@@ -45,6 +82,12 @@ def _read_input(path: str) -> str:
 def main(argv=None) -> int:
     args = _build_parser().parse_args(argv)
 
+    if args.list_provisions:
+        import prep_corpus
+        for identifier in prep_corpus.order():
+            print(identifier)
+        return 0
+
     try:
         config = config_from_args(args)
     except ConfigError as exc:
@@ -65,10 +108,18 @@ def main(argv=None) -> int:
         except ImportError:
             pass
 
+        # Resolve the input BEFORE asking for credentials: a mistyped provision id
+        # should not require a working Neo4j connection to discover.
+        if args.provision:
+            section_text = _provision_text(args.provision)
+            input_path = "%s:%s" % (corpus_config.NAME, args.provision)
+            config.provision_id = config.provision_id or args.provision
+        else:
+            section_text = _read_input(args.input or "-")
+            input_path = None if (args.input or "-") == "-" else args.input
+
         secrets = secrets_from_env()
-        section_text = _read_input(args.input)
-        result = run_pipeline(section_text, config, secrets,
-                              input_path=None if args.input == "-" else args.input)
+        result = run_pipeline(section_text, config, secrets, input_path=input_path)
     except ConfigError as exc:
         print("Configuration error: %s" % exc, file=sys.stderr)
         return 2
