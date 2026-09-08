@@ -31,11 +31,11 @@ carries a self-preference bias. Two mitigations are built in: `--judge-model` so
 judge can differ from the generator, and `--sample-for-human` / `--kappa` so agreement
 with a human annotator can be measured and reported rather than assumed.
 
-    python score_elements.py --dry-run          # how many calls, what it costs
-    python score_elements.py                    # score everything (resumable)
-    python score_elements.py --report-only      # rebuild the document
-    python score_elements.py --sample-for-human 60
-    python score_elements.py --kappa runs/elements/human_sample_annotated.csv
+    python -m evaluation.score_elements --dry-run          # how many calls, what it costs
+    python -m evaluation.score_elements                    # score everything (resumable)
+    python -m evaluation.score_elements --report-only      # rebuild the document
+    python -m evaluation.score_elements --sample-for-human 60
+    python -m evaluation.score_elements --kappa runs/elements/human_sample_annotated.csv
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ import sys
 import yaml
 
 from kg_testgen.config import (ENV_LLM_KEY_FALLBACK, ENV_LLM_KEY_PRIMARY, ConfigError)
-from run_experiment import ARMS, SECTIONS, cell_dir
+from .run_experiment import ARMS, SECTIONS, cell_dir
 
 ELEMENTS_PATH = os.path.join("elements", "legal_elements.yaml")
 OUT_DIR = "runs/elements"
@@ -485,7 +485,7 @@ def sample_for_human(judgements, n, elements, seed=0):
           % (worksheet, len(rows), len(cells)))
     print("Answers   : %s   <- fill in the YES/NO column" % answers)
     print("Key       : %s   <- do not open until finished" % key_path)
-    print("\nThen: python score_elements.py --kappa %s" % answers)
+    print("\nThen: python -m evaluation.score_elements --kappa %s" % answers)
 
 
 def cohens_kappa(a, b):

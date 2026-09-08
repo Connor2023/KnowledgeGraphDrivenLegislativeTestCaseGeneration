@@ -9,9 +9,9 @@ Repeats exist because temperature 0 is not strictly deterministic. With only thr
 sections, run-to-run variance has to be visible or a difference between arms cannot be
 distinguished from noise.
 
-    python run_experiment.py                 # run everything, write the comparison
-    python run_experiment.py --repeats 1     # quick pass
-    python run_experiment.py --report-only   # rebuild the document from existing runs
+    python -m evaluation.run_experiment                 # run everything, write the comparison
+    python -m evaluation.run_experiment --repeats 1     # quick pass
+    python -m evaluation.run_experiment --report-only   # rebuild the document from existing runs
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ import sys
 import traceback
 
 from kg_testgen.config import Config, secrets_from_env
-from kg_testgen.gherkin import parse_feature_text
+from .gherkin import parse_feature_text
 from kg_testgen.pipeline import run as run_pipeline
 
 SECTIONS = [

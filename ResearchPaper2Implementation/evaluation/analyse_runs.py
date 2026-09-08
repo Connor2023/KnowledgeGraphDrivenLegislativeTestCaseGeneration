@@ -16,8 +16,8 @@ computed before the headline numbers are believed:
 Legal-element coverage (Tier 2) and gold-standard recall (Tier 1) need a hand-built
 decomposition and a fixed matching protocol; they are deliberately not here.
 
-    python analyse_runs.py
-    python analyse_runs.py --repeats 3 --json
+    python -m evaluation.analyse_runs
+    python -m evaluation.analyse_runs --repeats 3 --json
 """
 
 from __future__ import annotations
@@ -32,8 +32,8 @@ import random
 import re
 import sys
 
-from kg_testgen.gherkin import parse_feature_text
-from run_experiment import ARMS, SECTIONS, cell_dir
+from .gherkin import parse_feature_text
+from .run_experiment import ARMS, SECTIONS, cell_dir
 
 # gpt-4o-mini list price, USD per 1M tokens. Every arm uses the same model, so the
 # comparison holds under any price; only the absolute figures depend on these.

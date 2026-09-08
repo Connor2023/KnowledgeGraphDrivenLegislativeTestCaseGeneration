@@ -1,6 +1,6 @@
 """Legal soundness of individual scenarios. The correctness half of the evaluation.
 
-`score_elements.py` measures recall: did any scenario address this proposition? It never
+`evaluation/score_elements.py` measures recall: did any scenario address this proposition? It never
 asks whether the scenario is RIGHT. A scenario asserting the reverse of the law scores as
 covering the element it reverses -- and that error class is not hypothetical here, it is
 the direction bug the generator prompt had to be patched for.
@@ -22,11 +22,11 @@ Design, mirroring the element judge because those choices were validated there:
                           (the SPIRES arms do this constantly), so judging it against the
                           target clause alone would mark correct law as unsound
 
-    python score_soundness.py --dry-run
-    python score_soundness.py --per-arm 14
-    python score_soundness.py --report-only
-    python score_soundness.py --sample-for-human 20
-    python score_soundness.py --kappa runs/soundness/human_sample_answers.csv
+    python -m evaluation.score_soundness --dry-run
+    python -m evaluation.score_soundness --per-arm 14
+    python -m evaluation.score_soundness --report-only
+    python -m evaluation.score_soundness --sample-for-human 20
+    python -m evaluation.score_soundness --kappa runs/soundness/human_sample_answers.csv
 """
 
 from __future__ import annotations
@@ -45,9 +45,9 @@ import time
 import yaml
 
 from kg_testgen.config import (ENV_LLM_KEY_FALLBACK, ENV_LLM_KEY_PRIMARY, ConfigError)
-from kg_testgen.gherkin import parse_feature_text
-from run_experiment import ARMS, SECTIONS, cell_dir
-from score_elements import cohens_kappa, llm_key_from_env, normalise_ws
+from .gherkin import parse_feature_text
+from .run_experiment import ARMS, SECTIONS, cell_dir
+from .score_elements import cohens_kappa, llm_key_from_env, normalise_ws
 
 OUT_DIR = "runs/soundness"
 SCHEDULE = "APPschedule1.txt"
@@ -515,7 +515,7 @@ def sample_for_human(judgements, n, seed=0):
 
     lines = ["# Scenario soundness — human annotation worksheet", "",
              "For each scenario, label the **Then** step(s): SOUND, UNSOUND, "
-             "UNVERIFIABLE or TRIVIAL. Definitions are in `score_soundness.py`.",
+             "UNVERIFIABLE or TRIVIAL. Definitions are in `evaluation/score_soundness.py`.",
              "",
              "A scenario testing a provision OTHER than the one named is still SOUND if "
              "the law supports it. Judge correctness, not relevance.",

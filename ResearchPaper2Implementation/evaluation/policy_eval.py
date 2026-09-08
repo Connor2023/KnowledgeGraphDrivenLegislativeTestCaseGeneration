@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from . import policy_check
-from .config import Config, Secrets
+from kg_testgen.config import Config, Secrets
 from .gherkin import Feature, Scenario, parse_feature
 from .policy_check import NOT_SATISFIED, SATISFIED, PolicyVerdict
 

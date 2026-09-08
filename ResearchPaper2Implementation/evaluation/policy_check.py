@@ -18,9 +18,9 @@ import re
 from dataclasses import dataclass, field
 from typing import Optional
 
-from .config import Config, Secrets
+from kg_testgen.config import Config, Secrets
 from .gherkin import Scenario
-from .llm import MAX_ATTEMPTS, LLMError
+from kg_testgen.llm import MAX_ATTEMPTS, LLMError
 
 logger = logging.getLogger(__name__)
 

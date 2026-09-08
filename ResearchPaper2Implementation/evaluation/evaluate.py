@@ -1,6 +1,6 @@
 """CLI for evaluating a generated .feature against the two Microsoft privacy policies.
 
-    python -m kg_testgen.evaluate runs/final_6_1/generated.feature
+    python -m evaluation.evaluate runs/final_6_1/generated.feature
 """
 
 from __future__ import annotations
@@ -10,9 +10,9 @@ import logging
 import os
 import sys
 
-from .config import ConfigError, Config, secrets_from_env
-from .evaluation import evaluate_feature, write_results, GREEN_TICK, ORANGE_CROSS, RED_CROSS
-from .llm import LLMError
+from kg_testgen.config import ConfigError, Config, secrets_from_env
+from .policy_eval import evaluate_feature, write_results, GREEN_TICK, ORANGE_CROSS, RED_CROSS
+from kg_testgen.llm import LLMError
 
 DEFAULT_POLICY_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
