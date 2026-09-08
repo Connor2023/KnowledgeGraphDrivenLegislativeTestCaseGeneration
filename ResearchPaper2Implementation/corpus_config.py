@@ -44,6 +44,7 @@ _DEFAULTS = {
         "spires_dir": "spires",
         "profile": os.path.join("profiles", "app_schedule1.yaml"),
     },
+    "modality_overrides": {"6.6": {1: "NONE"}},
     "provision": {
         "pattern": r"\b(?:subclause\s+)?(\d{1,2}\.\d{1,2})\b",
         "key_prefix": "subclause",
@@ -81,6 +82,11 @@ NODE_PREFIX = _CFG["node_prefix"]
 PROVISION_PATTERN = _CFG["provision"]["pattern"]
 PROVISION_KEY_PREFIX = _CFG["provision"]["key_prefix"]
 PROVISION_RE = re.compile(PROVISION_PATTERN, re.IGNORECASE)
+
+# provision id -> {norm index (1-based): modality}. Read as strings and ints, since
+# YAML will give "6.6" as a string key but 1 as an integer.
+MODALITY_OVERRIDES = {str(pid): {int(i): m for i, m in overrides.items()}
+                      for pid, overrides in (_CFG.get("modality_overrides") or {}).items()}
 
 
 def path(key: str) -> str:

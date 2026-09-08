@@ -60,12 +60,51 @@ _ANGLE = re.compile(r"^\s*<\s*(.*?)\s*>\s*$", re.DOTALL)
 # clauses -- and APP 6.2's limbs are exactly the content elements 6.1-E13..E17 need. The
 # rule below matched 23 of 23 such norms with one collision (6.6), overridden explicitly.
 _NORMS_LINE = re.compile(r"^norms:\s*(.+?)(?=^\w+:|\Z)", re.M | re.S)
-_APPLICABILITY = re.compile(r"^\s*this\s+(subclause|principle)\s+applies\b", re.I)
+# Fallback alternation, matching what this pattern was hard-coded to before it became
+# corpus-driven. Used only when the structural profile cannot be read.
+_UNIT_FALLBACK = ("subclause", "principle")
+
+
+def _structural_units(profile=None):
+    """The words this instrument uses for "a provision of itself".
+
+    Was the literal alternation (subclause|principle), which is Schedule 1's vocabulary
+    and nothing else's. Part IIIC opens five provisions with "This section applies if",
+    every one of which the literal pattern misses -- so five APPLICABILITY norms would be
+    left labelled NONE, silently, on a corpus the rule was never told about.
+
+    Taken from the profile's level names and its citation nouns together, because the two
+    carry different halves of the vocabulary: "principle" and "clause" are what Schedule 1
+    calls its levels, while "subclause" only ever appears there as a citation.
+    """
+    if profile is None:
+        try:
+            import prep_corpus
+            profile = prep_corpus.load_profile()
+        except Exception:  # noqa: BLE001 - a missing profile must not stop a cleaning run
+            return _UNIT_FALLBACK
+    units = {level.name.replace("_", " ") for level in profile.levels}
+    units |= {noun.lower() for noun in profile.citation_nouns}
+    units |= set(_UNIT_FALLBACK)
+    # Longest first, so "subclause" is tried before "clause" and the alternation cannot
+    # match the shorter word inside the longer one.
+    return tuple(sorted(units, key=len, reverse=True))
+
+
+def applicability_pattern(profile=None):
+    """The "This <unit> applies ..." matcher for one instrument's vocabulary."""
+    return re.compile(
+        r"^\s*this\s+(?:%s)\s+applies\b"
+        % "|".join(re.escape(unit) for unit in _structural_units(profile)), re.I)
+
+
+_APPLICABILITY = applicability_pattern()
 
 # provision id -> {norm index (1-based): modality}. Reserved for readings the grammar
-# gets wrong. 6.6 says the principle "applies AS IF the entity's primary purpose ...",
-# which modifies another provision rather than disapplying it or gating an exception.
-MANUAL_OVERRIDES = {"6.6": {1: "NONE"}}
+# gets wrong. Schedule 1's 6.6 says the principle "applies AS IF the entity's primary
+# purpose ...", which modifies another provision rather than disapplying it or gating an
+# exception. Corpus-specific by nature, so it is declared in corpus.yaml, not here.
+MANUAL_OVERRIDES = corpus_config.MODALITY_OVERRIDES
 
 
 def relabel_modality(norm, sentence, provision_id=None, index=None):

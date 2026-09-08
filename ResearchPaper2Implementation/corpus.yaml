@@ -42,6 +42,15 @@ paths:
   # Hand-editable -- correcting one pattern is cheaper than re-inducing.
   profile: profiles/app_schedule1.yaml
 
+# Readings the modality grammar gets wrong, as provision id -> {norm index: modality}.
+# The cleaner labels "This <unit> applies ..." provisions APPLICABILITY, which matched 23
+# of 23 such norms in Schedule 1 with one collision: 6.6 says the principle "applies AS IF
+# the entity's primary purpose ...", which modifies another provision rather than gating
+# an exception. Corpus-specific by nature, which is why it is here and not in the cleaner.
+modality_overrides:
+  "6.6":
+    1: NONE
+
 provision:
   # Finds the provision identifier inside a piece of text. This is the single most
   # instrument-specific value in the file: 'N.M' suits the APPs, but another statute may
