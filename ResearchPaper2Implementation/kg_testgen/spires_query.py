@@ -300,9 +300,33 @@ def serialise(target: str, target_norms: List[Norm],
         # extraction and may be wrong, the text below is the statute and cannot be. The
         # model should be able to tell which is which at a glance.
         lines += ["VERBATIM TEXT OF THOSE PROVISIONS", ""]
-        for pid in sorted(texts, key=lambda p: [int(x) for x in p.split(".")]):
-            lines += ["%s:" % _corpus.provision_key(pid), "  %s" % texts[pid], ""]
+        # Document order from the segmentation. The key here was
+        # [int(x) for x in p.split(".")], which assumes every statute numbers clauses N.M
+        # and raises ValueError on "26WH(2)" -- so this whole branch crashed on any
+        # instrument that does not. It went unnoticed because it is off by default and
+        # Schedule 1 happens to satisfy the assumption. The same key was removed from
+        # spires/extract_corpus.py for the same reason.
+        lines += _ordered_text_lines(texts)
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _ordered_text_lines(texts: Dict[str, str]) -> List[str]:
+    """Provision texts in the order the instrument states them.
+
+    Document order is already known and is always right; deriving one from the identifier
+    grammar means parsing "26WE(1)" into something comparable, which is what the previous
+    sort key tried and failed to do. Falls back to sorting by identifier if the
+    segmentation cannot be read, so a context block is still produced.
+    """
+    try:
+        import prep_corpus
+        order = {pid: i for i, pid in enumerate(prep_corpus.order())}
+    except Exception:  # noqa: BLE001 - ordering must never be why a run fails
+        order = {}
+    lines = []
+    for pid in sorted(texts, key=lambda p: (order.get(p, len(order)), p)):
+        lines += ["%s:" % _corpus.provision_key(pid), "  %s" % texts[pid], ""]
+    return lines
 
 
 def build_context(client: Neo4jClient, section_text: str, config: Config) -> SpiresContext:
