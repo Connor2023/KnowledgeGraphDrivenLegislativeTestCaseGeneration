@@ -31,10 +31,27 @@ class LLMResponse:
     model: str
     attempts: int
     finish_reason: Optional[str] = None
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    usage_source: str = "unavailable"
+    """'api' when the provider reported usage, 'unavailable' when it did not.
+
+    Recorded rather than assumed, because a run whose cost was reconstructed from the
+    stored text and one whose cost was reported by the provider are not the same
+    measurement and a results table should not present them as though they were."""
+
+    @property
+    def total_tokens(self) -> int:
+        return self.prompt_tokens + self.completion_tokens
 
     def as_dict(self) -> dict:
         return {"model": self.model, "attempts": self.attempts,
-                "finish_reason": self.finish_reason, "text": self.text}
+                "finish_reason": self.finish_reason,
+                "prompt_tokens": self.prompt_tokens,
+                "completion_tokens": self.completion_tokens,
+                "total_tokens": self.total_tokens,
+                "usage_source": self.usage_source,
+                "text": self.text}
 
 
 def request_additional_context(*_args, **_kwargs):
@@ -53,6 +70,12 @@ def generate(prompt: str, config: Config, secrets: Secrets) -> LLMResponse:
     client = OpenAI(api_key=secrets.llm_api_key)
     last_error = None
 
+    # Accumulated across attempts, not taken from the last one. A response that arrives
+    # and is then rejected -- an empty completion, below -- was still billed, and a run
+    # that reports only the attempt that succeeded understates what it cost.
+    billed_prompt = billed_completion = 0
+    usage_source = "unavailable"
+
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
             completion = client.chat.completions.create(
@@ -61,17 +84,27 @@ def generate(prompt: str, config: Config, secrets: Secrets) -> LLMResponse:
                 temperature=config.temperature,
                 max_tokens=config.max_output_tokens,
             )
+            # Before the empty check, so a rejected response still counts.
+            usage = getattr(completion, "usage", None)
+            if usage is not None:
+                billed_prompt += getattr(usage, "prompt_tokens", 0) or 0
+                billed_completion += getattr(usage, "completion_tokens", 0) or 0
+                usage_source = "api"
+
             choice = completion.choices[0]
             text = (choice.message.content or "").strip()
             if not text:
                 raise LLMError("model returned an empty response")
-            logger.info("LLM call succeeded on attempt %d (finish_reason=%s)",
-                        attempt, choice.finish_reason)
+            logger.info("LLM call succeeded on attempt %d (finish_reason=%s, %d+%d tokens)",
+                        attempt, choice.finish_reason, billed_prompt, billed_completion)
             if choice.finish_reason == "length":
                 logger.warning("Response hit the %d-token output cap and may be truncated; "
                                "raise --max-output-tokens", config.max_output_tokens)
             return LLMResponse(text=text, model=config.llm_model, attempts=attempt,
-                               finish_reason=choice.finish_reason)
+                               finish_reason=choice.finish_reason,
+                               prompt_tokens=billed_prompt,
+                               completion_tokens=billed_completion,
+                               usage_source=usage_source)
         except Exception as exc:  # noqa: BLE001 - retry transient, surface the rest
             last_error = exc
             logger.warning("LLM call failed (attempt %d/%d): %s", attempt, MAX_ATTEMPTS, exc)

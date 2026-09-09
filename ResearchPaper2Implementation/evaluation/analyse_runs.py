@@ -167,9 +167,19 @@ def load_cell(section_key, arm, repeat, encoder):
         with io.open(record_path, encoding="utf-8") as fh:
             record = json.load(fh)
 
-    prompt = record.get("prompt", "")
-    completion = (record.get("llm") or {}).get("text", "")
-    tin, tout = len(encoder(prompt)), len(encoder(completion))
+    # The provider's own count when the run recorded one, and only otherwise a
+    # reconstruction from the stored text. The two are not the same measurement: the
+    # reconstruction cannot see the chat envelope's per-message overhead, and it counts a
+    # retried call once when both attempts were billed. Cells recorded before usage was
+    # captured have no such field and still fall back, so old and new stay comparable --
+    # but which method was used is carried through, not averaged away.
+    llm = record.get("llm") or {}
+    if llm.get("usage_source") == "api":
+        tin, tout, basis = llm.get("prompt_tokens", 0), llm.get("completion_tokens", 0), "api"
+    else:
+        prompt = record.get("prompt", "")
+        completion = llm.get("text", "")
+        tin, tout, basis = len(encoder(prompt)), len(encoder(completion)), "reconstructed"
     texts = [scenario_text(s) for s in feature.scenarios]
     tags = set()
     for s in feature.scenarios:
@@ -182,6 +192,7 @@ def load_cell(section_key, arm, repeat, encoder):
         "tags": tags,
         "tokens_in": tin,
         "tokens_out": tout,
+        "token_basis": basis,
         "cost": tin / 1e6 * PRICE_IN + tout / 1e6 * PRICE_OUT,
         "self_bleu": self_bleu(texts),
         "distinct_1": distinct_n(texts, 1),
@@ -202,6 +213,31 @@ def make_encoder(model="gpt-4o-mini"):
 
 
 # --- formatting ---------------------------------------------------------------------
+
+def _token_basis_note(grid):
+    """Say how the token counts in this table were arrived at.
+
+    A table mixing provider-reported counts with counts reconstructed from stored text
+    is presenting two different measurements in one column. Rather than hide that, the
+    report states which cells are which, so a reader can weigh the comparison.
+    """
+    bases = [c.get("token_basis", "reconstructed")
+             for cells in grid.values() for c in cells]
+    api, recon = bases.count("api"), bases.count("reconstructed")
+    if not bases:
+        return ""
+    if not recon:
+        return "Token counts are the provider's own, summed across retries."
+    if not api:
+        return ("Token counts are **reconstructed** by re-tokenising the stored prompt "
+                "and completion. They omit the chat envelope's per-message overhead, and "
+                "count a retried call once where both attempts were billed, so they are "
+                "a floor rather than a measurement.")
+    return ("Token counts are the provider's own for %d cell(s) and **reconstructed** "
+            "from stored text for %d. The reconstruction omits per-message overhead and "
+            "counts a retried call once, so those cells read slightly low."
+            % (api, recon))
+
 
 def fmt(value, spec="%.3f", dash="--"):
     return dash if value is None else spec % value
@@ -247,6 +283,8 @@ def main():
         "",
         "Mean over repeats. `cost/scenario` is the number that matters: it prices the "
         "context each arm carries against what that context actually produced.",
+        "",
+        _token_basis_note(grid),
         "",
         "| Section | Arm | Prompt tok | Completion tok | Cost (USD) | Tok/scenario | Cost/scenario |",
         "|---|---|---|---|---|---|---|",
