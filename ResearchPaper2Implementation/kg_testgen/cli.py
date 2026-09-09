@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import logging
 import sys
 
@@ -27,10 +28,17 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("input", nargs="?", default=None,
                         help="Path to a file containing the legislation section, or '-' for "
                              "stdin. Omit it and use --provision instead.")
-    parser.add_argument("--provision", metavar="ID",
-                        help="Generate for this provision of the configured corpus, e.g. "
-                             "'6.1' or '26WE(1)'. The text comes from the segmentation, so "
-                             "no file has to be made by hand.")
+    parser.add_argument("--provision", metavar="ID", nargs="+",
+                        help="Generate for these provisions of the configured corpus, e.g. "
+                             "'6.1' or '26WE(1)'. Several may be given and each produces "
+                             "its own run. The text comes from the segmentation, so no "
+                             "file has to be made by hand.")
+    parser.add_argument("--corpus", metavar="CONFIG",
+                        help="Which corpus to generate from: a corpus config path, or a "
+                             "bare name resolving to corpus.<name>.yaml. Equivalent to "
+                             "setting CORPUS_CONFIG, which corpus_config reads at import "
+                             "-- so this re-executes rather than mutating an import that "
+                             "has already happened.")
     parser.add_argument("--list-provisions", action="store_true",
                         help="Print every provision identifier, in document order, and exit.")
     add_cli_arguments(parser)
@@ -79,8 +87,50 @@ def _read_input(path: str) -> str:
     return text
 
 
+def _reexec_for_corpus(args) -> int:
+    """Re-run this command against a different corpus, or return None to carry on.
+
+    corpus_config resolves CORPUS_CONFIG at import, and this module imported it several
+    frames ago, so a corpus chosen on the command line cannot be applied in place -- the
+    segmentation, node prefix and provision pattern are all already bound. build_corpus.py
+    has the same constraint and solves it the same way.
+    """
+    import os
+    import subprocess
+
+    name = args.corpus
+    target = name if name.endswith(".yaml") else "corpus.%s.yaml" % name
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if not os.path.isabs(target):
+        target = os.path.join(root, target)
+    if not os.path.exists(target):
+        raise ConfigError("No corpus config at %s." % target)
+    if os.path.abspath(target) == os.path.abspath(corpus_config.CONFIG_PATH):
+        return None                                   # already the configured corpus
+    if os.environ.get("_KG_TESTGEN_CORPUS"):
+        raise ConfigError(
+            "re-executed for %s and still reading %s. Unset CORPUS_CONFIG and retry."
+            % (target, corpus_config.CONFIG_PATH))
+
+    env = dict(os.environ)
+    env["CORPUS_CONFIG"] = target
+    env["_KG_TESTGEN_CORPUS"] = "1"
+    argv = [a for a in (sys.argv[1:] if len(sys.argv) > 1 else []) ]
+    return subprocess.run([sys.executable, "-m", "kg_testgen"] + argv,
+                          cwd=root, env=env).returncode
+
+
 def main(argv=None) -> int:
     args = _build_parser().parse_args(argv)
+
+    if args.corpus:
+        try:
+            code = _reexec_for_corpus(args)
+        except ConfigError as exc:
+            print("Configuration error: %s" % exc, file=sys.stderr)
+            return 2
+        if code is not None:
+            return code
 
     if args.list_provisions:
         import prep_corpus
@@ -100,46 +150,64 @@ def main(argv=None) -> int:
         stream=sys.stderr,
     )
 
+    # Loading a .env is a convenience; the environment still wins.
     try:
-        # Loading a .env is a convenience; the environment still wins.
-        try:
-            from dotenv import load_dotenv
-            load_dotenv()
-        except ImportError:
-            pass
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
 
-        # Resolve the input BEFORE asking for credentials: a mistyped provision id
-        # should not require a working Neo4j connection to discover.
+    # Resolve every input BEFORE asking for credentials or spending anything: a mistyped
+    # provision id should not require a working Neo4j connection to discover, and in a
+    # batch it should not be discovered after the earlier provisions have been paid for.
+    try:
         if args.provision:
-            section_text = _provision_text(args.provision)
-            input_path = "%s:%s" % (corpus_config.NAME, args.provision)
-            config.provision_id = config.provision_id or args.provision
+            targets = [(pid, _provision_text(pid), "%s:%s" % (corpus_config.NAME, pid))
+                       for pid in args.provision]
         else:
-            section_text = _read_input(args.input or "-")
-            input_path = None if (args.input or "-") == "-" else args.input
-
-        secrets = secrets_from_env()
-        result = run_pipeline(section_text, config, secrets, input_path=input_path)
+            path = args.input or "-"
+            targets = [(None, _read_input(path), None if path == "-" else path)]
     except ConfigError as exc:
         print("Configuration error: %s" % exc, file=sys.stderr)
         return 2
-    except GraphUnavailable as exc:
-        print("Database error: %s" % exc, file=sys.stderr)
-        return 3
-    except ContextError as exc:
-        print("Retrieval failed: %s" % exc, file=sys.stderr)
-        return 4
-    except LLMError as exc:
-        print("LLM error: %s" % exc, file=sys.stderr)
-        return 5
+
+    secrets = secrets_from_env()
+    failures, results = [], []
+    for index, (pid, section_text, input_path) in enumerate(targets, 1):
+        if len(targets) > 1:
+            print("\n=== %d/%d  %s ===" % (index, len(targets), pid), file=sys.stderr)
+        run_config = dataclasses.replace(config, provision_id=config.provision_id or pid)
+        try:
+            results.append((pid, run_pipeline(section_text, run_config, secrets,
+                                              input_path=input_path)))
+        except ConfigError as exc:
+            print("Configuration error: %s" % exc, file=sys.stderr)
+            failures.append((pid, 2))
+        except GraphUnavailable as exc:
+            print("Database error: %s" % exc, file=sys.stderr)
+            failures.append((pid, 3))
+        except ContextError as exc:
+            print("Retrieval failed: %s" % exc, file=sys.stderr)
+            failures.append((pid, 4))
+        except LLMError as exc:
+            print("LLM error: %s" % exc, file=sys.stderr)
+            failures.append((pid, 5))
 
     print()
-    print("Run directory : %s" % result.run_dir)
-    print("Feature file  : %s" % result.feature_path)
-    print("Run record    : %s" % result.record_path)
-    print("KG augmented  : %s" % ("yes" if result.augmented else "NO (unaugmented)"))
-    if result.structure_problems:
-        print("Gherkin warnings: %s" % "; ".join(result.structure_problems))
+    for pid, result in results:
+        if len(results) > 1 or len(targets) > 1:
+            print("--- %s" % pid)
+        print("Run directory : %s" % result.run_dir)
+        print("Feature file  : %s" % result.feature_path)
+        print("Run record    : %s" % result.record_path)
+        print("KG augmented  : %s" % ("yes" if result.augmented else "NO (unaugmented)"))
+        if result.structure_problems:
+            print("Gherkin warnings: %s" % "; ".join(result.structure_problems))
+    if failures:
+        print("\n%d of %d failed: %s" % (len(failures), len(targets),
+                                        ", ".join(str(p) for p, _c in failures)),
+              file=sys.stderr)
+        return failures[0][1]
     return 0
 
 
