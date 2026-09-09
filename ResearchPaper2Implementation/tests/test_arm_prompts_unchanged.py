@@ -179,11 +179,21 @@ def test_spires_context_is_reproduced():
     replacing the hard-coded "subclause %s" strings with corpus_config.provision_key
     touches. This rebuilds the context against the live graph and demands the same bytes.
 
-    Needs Neo4j. Skips with a message when the credentials are not in the environment.
+    Needs Neo4j. Skips with a message when no credentials can be found.
+
+    A .env counts. Gating on os.environ alone made this skip silently on exactly the
+    setup the runbook now recommends -- credentials in .env rather than dot-sourced into
+    a shell -- so the one check that can catch a serialisation change was quietly not
+    running for anyone following the documented instructions.
     """
     import os
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
     if not os.environ.get("NEO4J_URI"):
-        print("  SKIP  no NEO4J_URI in the environment")
+        print("  SKIP  no Neo4j credentials in the environment or .env")
         return
     from kg_testgen.config import Config, secrets_from_env
     from kg_testgen.neo4j_client import Neo4jClient
