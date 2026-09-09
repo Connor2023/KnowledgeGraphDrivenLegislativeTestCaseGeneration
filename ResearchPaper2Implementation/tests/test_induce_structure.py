@@ -231,23 +231,10 @@ def test_induced_profile_agrees_with_the_handwritten_one():
     assert out[0] == out[1], "differ: %s" % sorted(out[0] ^ out[1])
 
 
-def test_hygiene_flags_wrapped_pdf_text():
-    """The likeliest real failure is a bad .txt, not an exotic statute."""
-    wrapped = ["the entity must take", "such steps as are", "reasonable in the"] * 40
-    h = I.hygiene(wrapped)
-    assert h.warnings, "wrapped PDF-style text raised no warning"
-    assert any("wrapped" in w or "PDF" in w for w in h.warnings)
-
-
-def test_hygiene_flags_running_headers():
-    body = ["Some ordinary provision text that runs to a reasonable length here."] * 30
-    withheaders = []
-    for i, line in enumerate(body):
-        withheaders.append(line)
-        if i % 5 == 0:
-            withheaders.append("Privacy Act 1988")
-    h = I.hygiene(withheaders)
-    assert any("repeat" in w for w in h.warnings), h.warnings
+# Input hygiene used to be tested here with synthetic fixtures. It moved to
+# tests/test_hygiene.py, which derives its damage from the real corpora and can
+# therefore assert the thing that matters: that the damage corrupts provision
+# text while every structural gate still passes.
 
 
 # --- runner ------------------------------------------------------------------------

@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import io
 import os
+import re
 import subprocess
 import sys
 import time
@@ -77,6 +78,33 @@ def stage_profile(corpus_path: str, profile_path: str, model: str, dry_run: bool
         return
     _run("profile", [PYTHON, "induce_structure.py", corpus_path, "--out", profile_path,
                      "--model", model])
+
+
+def gate_hygiene(corpus_path: str) -> dict:
+    """0.5. Is the .txt a faithful rendering of the statute?
+
+    This runs before anything looks at structure, and it is the only check in the build
+    that can see its class of damage. Measured by wrecking Schedule 1 three ways: a
+    hyphenated wrap corrupts 45 of 62 provision texts and a paginated rendering corrupts
+    13, and BOTH still segment to exactly 62 provisions with an orphan rate under the
+    ceiling. Provision count, orphan rate and reference resolution all pass on a file
+    whose text is three-quarters mangled.
+
+    It used to run only inside induce_structure, so a corpus that already had a profile
+    never saw it -- which is precisely the case of re-running over a freshly downloaded
+    file.
+    """
+    with io.open(corpus_path, encoding="utf-8") as fh:
+        report = prep_corpus.hygiene(fh.read().splitlines())
+    _say("hygiene", "%d lines (%d non-blank), mean %.1f words, %d dangling hyphen(s), "
+                    "%d numeric-only line(s), %d repeated line(s)"
+         % (report.lines, report.non_blank, report.mean_words, report.dangling_hyphens,
+            report.numeric_only_lines, len(report.repeated_lines)))
+    for warning in report.warnings:
+        _say("hygiene", "note: %s" % warning.split(".")[0])
+    if report.problems:
+        raise GateFailed("\n".join(report.problems))
+    return {"non_blank": report.non_blank}
 
 
 def gate_segmentation(profile_path: str, corpus_path: str) -> dict:
@@ -182,6 +210,85 @@ def stage_build(dry_run: bool) -> None:
     _run("build", argv)
 
 
+# --- bootstrapping a corpus this checkout has never seen ------------------------------
+
+def corpus_slug(corpus_path: str) -> str:
+    """`APPartIIIC.txt` -> `appartiiic`. Names the profile and the config derived from it."""
+    stem = os.path.splitext(os.path.basename(corpus_path))[0]
+    return re.sub(r"[^0-9a-z]+", "_", stem.lower()).strip("_") or "corpus"
+
+
+def existing_config_for(corpus_path: str):
+    """A corpus.*.yaml in this checkout whose `paths.raw` is this file, if there is one."""
+    import glob
+    try:
+        import yaml
+    except ImportError:
+        return None
+    target = os.path.abspath(corpus_path)
+    for candidate in sorted(glob.glob(os.path.join(ROOT, "corpus*.yaml"))):
+        try:
+            with io.open(candidate, encoding="utf-8") as fh:
+                loaded = yaml.safe_load(fh) or {}
+        except Exception:  # noqa: BLE001 - a malformed config is simply not a match
+            continue
+        raw = ((loaded.get("paths") or {}).get("raw") or "")
+        if raw and os.path.abspath(os.path.join(ROOT, raw)) == target:
+            return candidate
+    return None
+
+
+def bootstrap(corpus_path: str, args):
+    """Make sure the configured corpus IS the one that was asked for.
+
+    Without this, `build_corpus.py MyStatute.txt` ran the configured corpus's profile and
+    node prefix over a different file. The segmentation gate caught it -- but reported
+    "the profile's provision pattern did not match", which blames the pattern when the
+    real problem is that it is Schedule 1's pattern applied to another Act.
+
+    Returns None to carry on in this process, or an exit code when it has re-executed.
+    Re-execution is necessary rather than tidy: corpus_config reads its file at import,
+    and the gates run in-process, so a config chosen after import would be ignored by
+    exactly the checks that matter.
+    """
+    if os.path.abspath(corpus_path) == os.path.abspath(corpus_config.RAW_PATH):
+        return None                                   # already the configured corpus
+
+    slug = corpus_slug(corpus_path)
+    # Look for a config by what it POINTS AT, not by what it is called. corpus.yaml files
+    # are named after the instrument and corpora after the download, so
+    # corpus.part_iiic.yaml and APPartIIIC.txt belong together and no filename rule would
+    # pair them. Without this, a corpus that already had a config got a second one.
+    config_path = existing_config_for(corpus_path) or os.path.join(
+        ROOT, "corpus.%s.yaml" % slug)
+    profile_path = os.path.join(ROOT, "profiles", "%s.yaml" % slug)
+
+    if os.environ.get("_KG_BOOTSTRAPPED"):
+        # Re-executed once already and still pointing elsewhere: refuse rather than loop.
+        raise GateFailed(
+            "%s is configured for %r, but %s was asked for. Set CORPUS_CONFIG, or fix "
+            "`paths.raw` in that file." % (corpus_config.CONFIG_PATH, corpus_config.NAME,
+                                           corpus_path))
+
+    if not os.path.exists(config_path):
+        _say("bootstrap", "%s is a corpus this checkout has no config for" % corpus_path)
+        if args.dry_run:
+            _say("bootstrap", "would induce %s and write %s (~$0.02), then re-run"
+                 % (os.path.relpath(profile_path, ROOT), os.path.relpath(config_path, ROOT)))
+            return 0
+        argv = [PYTHON, "induce_structure.py", corpus_path,
+                "--out", profile_path, "--model", args.model,
+                "--write-config", config_path]
+        _run("bootstrap", argv)
+
+    _say("bootstrap", "re-running with %s" % os.path.relpath(config_path, ROOT))
+    env = dict(os.environ)
+    env["CORPUS_CONFIG"] = config_path
+    env["_KG_BOOTSTRAPPED"] = "1"
+    return subprocess.run([PYTHON, os.path.abspath(__file__)] + sys.argv[1:],
+                          cwd=ROOT, env=env).returncode
+
+
 # --- driver -------------------------------------------------------------------------
 
 def main() -> int:
@@ -200,10 +307,15 @@ def main() -> int:
     args = ap.parse_args()
 
     corpus_path = args.corpus or corpus_config.RAW_PATH
-    profile_path = args.profile or corpus_config.PROFILE_PATH
     if not os.path.exists(corpus_path):
         print("No such corpus: %s" % corpus_path, file=sys.stderr)
         return 2
+
+    if not args.profile:
+        bootstrapped = bootstrap(corpus_path, args)
+        if bootstrapped is not None:
+            return bootstrapped
+    profile_path = args.profile or corpus_config.PROFILE_PATH
 
     started = time.time()
     print("corpus  : %s" % corpus_path)
@@ -216,6 +328,7 @@ def main() -> int:
         if not os.path.exists(profile_path):
             _say("profile", "no profile yet; stopping here (dry run)")
             return 0
+        gate_hygiene(corpus_path)
         gate_segmentation(profile_path, corpus_path)
         gate_references(profile_path, corpus_path)
         gate_prefix()

@@ -325,6 +325,145 @@ def segment(raw_lines: List[str], profile: Profile) -> Segmentation:
                         hits, discarded)
 
 
+# --- input hygiene -------------------------------------------------------------------
+# Everything above assumes the .txt is a faithful rendering of the statute. This is where
+# that assumption gets checked, and it earns its place: the segmentation gates cannot see
+# this class of damage at all.
+#
+# Measured by damaging Schedule 1 the three ways a PDF text layer damages a statute and
+# checking whether the provision TEXT survived:
+#
+#     damage                        provisions found   texts corrupted
+#     hard wrap, no hyphenation     62 (correct)        0 / 62
+#     hard wrap with hyphenation    62 (correct)       45 / 62
+#     running headers + page nums   62 (correct)       13 / 62
+#
+# All three segment to exactly 62 provisions with an interior orphan rate under the
+# ceiling, so provision count, orphan rate and reference resolution all pass. You would
+# get a graph, and test cases generated from mangled statutory text, with nothing
+# reporting a problem.
+
+# A token ending in "-" followed by whitespace: the residue of a hyphenated line break
+# after the wrapped lines are rejoined. Zero occurrences in both real corpora and in a
+# plain (non-hyphenating) wrap; 100 in a hyphenated one.
+_DANGLING_HYPHEN = re.compile(r"\w-\s")
+
+# A line that is nothing but a number. Page numbers increment, so they never repeat and
+# the repeated-line check cannot see them. Zero in both real corpora; 17 in a paginated
+# rendering.
+_NUMERIC_ONLY = re.compile(r"^\d{1,4}$")
+
+# A running header repeats. Clean Part IIIC repeats a short line at most 4 times -- "If:"
+# and "Scope" are legitimate sub-headings -- so the threshold sits just above that.
+REPEAT_THRESHOLD = 5
+
+# ...and repeats at the page pitch. Measured: 0.02 for a real running header against
+# 0.73-0.93 for the fragments a wrap leaves behind.
+MAX_HEADER_PITCH_VARIATION = 0.25
+
+
+def _running_headers(normalised: List[str]) -> List[str]:
+    """Lines that recur at a fixed pitch: page furniture, not content.
+
+    Repetition alone is not enough, and measuring showed why. Wrapping a statute leaves
+    fragments -- "personal information", "court/tribunal order; or" -- repeating five or
+    more times, and rejecting a file for those would reject a plain wrap whose provision
+    texts come through byte-identical.
+
+    A running header sits at the page pitch. Measured over the same files, the coefficient
+    of variation of the gaps between occurrences is 0.02 for "Privacy Act 1988" against
+    0.73-0.93 for every wrap fragment, so the two do not overlap anywhere near the
+    threshold.
+    """
+    where: Dict[str, List[int]] = {}
+    for index, line in enumerate(normalised):
+        if 0 < len(line) < 80 and len(line.split()) >= 2:
+            where.setdefault(line, []).append(index)
+
+    headers = []
+    for line, positions in where.items():
+        if len(positions) < REPEAT_THRESHOLD:
+            continue
+        gaps = [b - a for a, b in zip(positions, positions[1:])]
+        mean_gap = sum(gaps) / float(len(gaps))
+        if not mean_gap:
+            continue
+        variance = sum((g - mean_gap) ** 2 for g in gaps) / float(len(gaps))
+        if (variance ** 0.5) / mean_gap <= MAX_HEADER_PITCH_VARIATION:
+            headers.append((len(positions), line))
+    return [line for _count, line in sorted(headers, reverse=True)]
+
+
+@dataclass
+class Hygiene:
+    """What the input file looks like before anything tries to parse it.
+
+    `problems` are fatal: each corresponds to damage that corrupts provision text while
+    every downstream check still passes. `warnings` are advisory, because they have a
+    real false-positive mode -- a plain wrap trips the line-length warning and yet the
+    text comes through byte-identical, since segmentation appends unmatched lines to the
+    open provision and normalise() collapses the whitespace.
+    """
+    lines: int
+    non_blank: int
+    mean_words: float
+    short_line_rate: float
+    dangling_hyphens: int = 0
+    numeric_only_lines: int = 0
+    repeated_lines: List[str] = field(default_factory=list)
+    problems: List[str] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
+
+    @property
+    def ok(self) -> bool:
+        return not self.problems
+
+
+def hygiene(raw_lines: List[str]) -> Hygiene:
+    non_blank = [l for l in raw_lines if l.strip()]
+    normalised = [normalise(l) for l in non_blank]
+    words = [len(l.split()) for l in non_blank] or [0]
+    mean_words = sum(words) / float(len(words))
+    short = sum(1 for w in words if w < 5) / float(len(words))
+
+    repeated = _running_headers(normalised)
+
+    dangling = len(_DANGLING_HYPHEN.findall(" ".join(normalised)))
+    numeric = sum(1 for l in normalised if _NUMERIC_ONLY.match(l))
+
+    h = Hygiene(len(raw_lines), len(non_blank), mean_words, short,
+                dangling, numeric, repeated[:10])
+
+    if dangling:
+        h.problems.append(
+            "%d word(s) end in a hyphen followed by a space -- the residue of a "
+            "hyphenated line break. The text was wrapped and rejoined, and roughly three "
+            "quarters of provisions come out mangled while still segmenting correctly. "
+            "Re-extract with layout preserved, or de-hyphenate first." % dangling)
+    if numeric:
+        h.problems.append(
+            "%d line(s) are nothing but a number -- page numbers from a paginated "
+            "rendering. They are spliced into the middle of whatever provision was open. "
+            "Strip the page furniture before segmenting." % numeric)
+    if repeated:
+        h.problems.append(
+            "%d line(s) repeat %d+ times, e.g. %r -- running headers. They are read as "
+            "provision text, and nothing downstream notices."
+            % (len(repeated), REPEAT_THRESHOLD, repeated[0][:60]))
+
+    if mean_words < 8:
+        h.warnings.append(
+            "mean line length is %.1f words, which usually means wrapped text. On its own "
+            "this is survivable -- segmentation rejoins unmatched lines -- so it is a "
+            "warning, not a failure. It becomes fatal when the wrap hyphenated."
+            % mean_words)
+    if short > 0.5:
+        h.warnings.append(
+            "%.0f%% of non-blank lines are under 5 words. Expect headings to be "
+            "indistinguishable from fragments." % (100 * short))
+    return h
+
+
 # --- the corpus API ----------------------------------------------------------------
 # Everything above is the profile model and the interpreter. Everything below is what
 # the rest of the pipeline calls.

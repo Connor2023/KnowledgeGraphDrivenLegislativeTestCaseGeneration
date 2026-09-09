@@ -29,6 +29,11 @@ python -m kg_testgen --list-provisions
 python -m kg_testgen --provision "26WE(1)" --context-mode spires
 ```
 
+Naming a statute this checkout has no config for is enough: `build_corpus.py` induces the
+profile, generates `corpus.<name>.yaml`, and re-runs itself under it. If a config already
+points at that file it is found and used -- matched on what it points at, not what it is
+called, so `corpus.part_iiic.yaml` and `APPartIIIC.txt` pair up.
+
 That is the whole of it. The pipeline used to be coupled to Schedule 1 in seven places,
 each needing hand-written code for a new instrument. Six of them are now driven by a
 **structural profile** that `induce_structure.py` derives from the text and validates
@@ -55,6 +60,7 @@ the next runs, because every one of these has happened here and none of them rai
 
 | Gate | Catches |
 |---|---|
+| **input hygiene** | **a .txt whose structure is intact and whose text is mangled** |
 | provision count | a profile that segments the file into almost nothing |
 | interior orphan rate | a structural form unrecognised mid-instrument, its text dropped |
 | reference resolution | an identifier pattern that recovers nothing |
@@ -63,6 +69,28 @@ the next runs, because every one of these has happened here and none of them rai
 | node prefix | a second corpus about to merge into the first |
 
 A failed gate stops the run before extraction, which is the first stage that costs money.
+
+**The hygiene gate is the one that catches what the others cannot.** Every other gate
+looks at structure. Measured by damaging Schedule 1 three ways and checking whether the
+provision *text* survived:
+
+| Damage | Provisions found | Texts corrupted | Old gates catch it |
+|---|---|---|---|
+| Hard wrap, no hyphenation | 62 (correct) | 0 / 62 | — nothing to catch |
+| Hard wrap **with hyphenation** | 62 (correct) | **45 / 62** | no |
+| Running headers + page numbers | 62 (correct) | **13 / 62** | no |
+
+Both corrupting variants segment to exactly the right count with an orphan rate under the
+ceiling, so provision count, orphan rate and reference resolution all pass — on a file
+whose text is three-quarters mangled.
+
+The three signals are each unambiguous, and each measured at zero on both real corpora: a
+word ending in a hyphen before a space (a rejoined line break), a line that is nothing but
+a number (a page number), and a line repeating five or more times **at a regular pitch**
+(a running header). That last qualifier matters — wrapping leaves fragments like "personal
+information" repeating just as often, and their gaps vary by 0.73–0.93 against 0.02 for a
+real header. A plain wrap is deliberately allowed through, because its provision texts
+come out byte-identical.
 
 ---
 
@@ -184,6 +212,7 @@ python tests/test_graph_registry.py        # prefix collisions are refused
 python tests/test_modality_vocabulary.py   # APPLICABILITY across two corpora
 python tests/test_pipeline_isolation.py    # the pipeline does not import evaluation
 python tests/test_arm_prompts_unchanged.py # 117 recorded prompts, byte for byte
+python tests/test_hygiene.py               # damaged .txt files the other gates miss
 ```
 
 ### 2.1 Segment it into provisions

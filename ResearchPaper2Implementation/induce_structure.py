@@ -53,8 +53,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # not with this one-off tool. Importing them the other way round would make a routine
 # corpus rebuild depend on a module that pulls in an OpenAI client.
 from prep_corpus import (  # noqa: E402
-    MIN_PROVISION_WORDS, ROLES, Level, Profile, Segmentation, compile_profile,
-    normalise, segment, unclaimed_heading_shapes)
+    MIN_PROVISION_WORDS, ROLES, Hygiene, Level, Profile, Segmentation,
+    compile_profile, hygiene, normalise, segment, unclaimed_heading_shapes)
 
 try:
     import truststore  # noqa: F401  - routes TLS through the Windows cert store
@@ -68,10 +68,6 @@ ENV_LLM_KEY_FALLBACK = "OPENAI_KEY"
 # gpt-4o list price, USD per 1M tokens.
 PRICE_IN, PRICE_OUT = 2.50, 10.00
 
-# A line class is one of these. `heading` closes whatever provision is open and belongs
-# to none; `container` opens an identifier namespace and may become a provision itself if
-# nothing below it does; `provision` is the unit the graph is keyed on; `body` continues
-# the open provision.
 # Legislative drafting has a closed vocabulary for citations. This is not per-statute and
 # is not asked of the model -- it is only offered, so an instrument using a subset says so.
 CITATION_NOUNS = ("section", "subsection", "paragraph", "subparagraph", "clause",
@@ -86,54 +82,6 @@ MAX_ORPHAN_RATE = 0.10
 MIN_PROVISIONS = 5
 MAX_LARGEST_SHARE = 0.25
 MAX_PATTERN_HIT_RATE = 0.60      # a line class matching most of the file classifies nothing
-# --- pre-flight --------------------------------------------------------------------
-
-@dataclass
-class Hygiene:
-    """What the input file looks like before anything tries to parse it.
-
-    The likeliest failure of this whole design is not an exotic statute, it is a .txt
-    extracted from a PDF: wrapped lines, running headers, page numbers. No line
-    classifier survives that, induced or hand-written, so it is worth naming up front
-    rather than debugging as a coverage failure three steps later.
-    """
-    lines: int
-    non_blank: int
-    mean_words: float
-    short_line_rate: float          # lines under 5 words: headings, or PDF wrap damage
-    repeated_lines: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-
-
-def hygiene(raw_lines: List[str]) -> Hygiene:
-    non_blank = [l for l in raw_lines if l.strip()]
-    words = [len(l.split()) for l in non_blank] or [0]
-    mean_words = sum(words) / float(len(words))
-    short = sum(1 for w in words if w < 5) / float(len(words))
-
-    counts: Dict[str, int] = {}
-    for line in non_blank:
-        key = normalise(line)
-        if 0 < len(key) < 80:
-            counts[key] = counts.get(key, 0) + 1
-    repeated = sorted((k for k, v in counts.items() if v >= 5), key=lambda k: -counts[k])
-
-    h = Hygiene(len(raw_lines), len(non_blank), mean_words, short, repeated[:10])
-    if mean_words < 8:
-        h.warnings.append(
-            "mean line length is %.1f words -- this looks like wrapped PDF text, where "
-            "one sentence spans several lines. Line-based classification will not work "
-            "on it. Re-extract with layout preserved, or unwrap first." % mean_words)
-    if short > 0.5:
-        h.warnings.append(
-            "%.0f%% of non-blank lines are under 5 words. Expect headings to be "
-            "indistinguishable from fragments." % (100 * short))
-    if repeated:
-        h.warnings.append(
-            "%d line(s) repeat 5+ times, e.g. %r -- running headers or page furniture. "
-            "Strip them before inducing, or they will be classified as structure."
-            % (len(repeated), repeated[0][:60]))
-    return h
 
 
 # --- validation --------------------------------------------------------------------

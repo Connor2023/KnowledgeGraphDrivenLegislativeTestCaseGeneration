@@ -32,6 +32,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 import build_corpus  # noqa: E402
+import corpus_config  # noqa: E402
 import prep_corpus  # noqa: E402
 
 SCHEDULE = os.path.join(ROOT, "APPschedule1.txt")
@@ -104,6 +105,28 @@ def test_the_modality_gate_rejects_a_single_label():
     assert len(counts) > 1, "the real corpus should use several modalities: %s" % counts
     top = max(counts.values()) / float(sum(counts.values()))
     assert top <= build_corpus.MAX_SINGLE_MODALITY_SHARE, counts
+
+
+def test_bootstrap_finds_a_config_by_what_it_points_at():
+    """corpus.part_iiic.yaml and APPartIIIC.txt belong together; no filename rule pairs
+    them. Matching on `paths.raw` is what stops a second config being induced for a
+    corpus that already has one."""
+    found = build_corpus.existing_config_for(os.path.join(ROOT, "APPartIIIC.txt"))
+    assert found and os.path.basename(found) == "corpus.part_iiic.yaml", found
+    assert build_corpus.existing_config_for(os.path.join(ROOT, "nosuchfile.txt")) is None
+
+
+def test_bootstrap_leaves_the_configured_corpus_alone():
+    """The common case must not re-execute: it is already the corpus being asked for."""
+    class Args:
+        dry_run = True
+        model = "gpt-4o"
+    assert build_corpus.bootstrap(corpus_config.RAW_PATH, Args()) is None
+
+
+def test_the_corpus_slug_is_filename_safe():
+    assert build_corpus.corpus_slug("APPartIIIC.txt") == "appartiiic"
+    assert build_corpus.corpus_slug("/a/b/My Statute (2024).TXT") == "my_statute_2024"
 
 
 def main():
