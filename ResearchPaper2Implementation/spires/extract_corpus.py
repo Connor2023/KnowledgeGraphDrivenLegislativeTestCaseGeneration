@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import io
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -32,7 +33,29 @@ import prep_corpus  # noqa: E402
 SCHEMA = corpus_config.SPIRES_SCHEMA
 INPUT_DIR = corpus_config.SPIRES_INPUT_DIR
 OUTPUT_DIR = corpus_config.SPIRES_OUTPUT_DIR
-PYTHON = os.path.join(".venv-ontogpt", "Scripts", "ontogpt.exe")
+def find_ontogpt():
+    """Where the ontogpt executable is.
+
+    Was the literal `.venv-ontogpt/Scripts/ontogpt.exe`, which is Windows-only, relative
+    to the working directory, and silently wrong everywhere else -- the failure is a
+    FileNotFoundError from subprocess with no indication that a virtualenv is missing.
+
+    ONTOGPT overrides everything, for a system install or an unusual layout.
+    """
+    override = os.environ.get("ONTOGPT")
+    if override:
+        return override
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for venv in (".venv-ontogpt", ".venv"):
+        for sub, name in (("Scripts", "ontogpt.exe"), ("bin", "ontogpt")):
+            candidate = os.path.join(root, venv, sub, name)
+            if os.path.exists(candidate):
+                return candidate
+    found = shutil.which("ontogpt")
+    return found or os.path.join(root, ".venv-ontogpt", "Scripts", "ontogpt.exe")
+
+
+PYTHON = find_ontogpt()
 
 
 
@@ -131,10 +154,16 @@ def main():
         print("estimated cost: $%.2f on %s   (%s)" % (estimate, args.model, detail))
         return 0
 
+    if not os.path.exists(PYTHON) and not shutil.which(PYTHON):
+        print("ontogpt not found at %s.\n"
+              "Run bootstrap.ps1 to create the environments, or set ONTOGPT to the "
+              "executable." % PYTHON, file=sys.stderr)
+        return 1
+
     env = dict(os.environ)
     key = env.get("OPENAI_API_KEY") or env.get("OPENAI_KEY")
     if not key:
-        print("No OPENAI_API_KEY or OPENAI_KEY in the environment.")
+        print("No OPENAI_API_KEY or OPENAI_KEY in the environment.", file=sys.stderr)
         return 1
     env["OPENAI_API_KEY"] = key
 

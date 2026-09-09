@@ -113,10 +113,20 @@ That last row costs people an hour. Aura names the database after the instance
 
 ### Loading them
 
+Either dot-source the Aura file, or write a `.env`. The second needs no PowerShell:
+
 ```powershell
 # Dot-sourced, so the variables land in YOUR shell and not a child process that exits
 . .\setup_env.ps1
 ```
+
+```powershell
+Copy-Item .env.example .env    # then fill it in; never commit it
+```
+
+Everything that needs these values goes through `load_neo4j.load_credentials`, which
+reads a `.env`. Precedence, weakest first: the Aura credentials file, then `.env`, then
+the environment.
 
 `setup_env.ps1` reads the Neo4j values straight out of the Aura credentials file so the
 password is never duplicated, takes `OPENAI_API_KEY` from your user environment, and
@@ -139,20 +149,39 @@ and every gate and stops before spending.
 
 ### Virtual environments
 
+```powershell
+.\bootstrap.ps1            # the pipeline and SPIRES extraction
+.\bootstrap.ps1 -All       # plus the EDC arm, which pulls ~1 GB of torch
+.\bootstrap.ps1 -Check     # report what is installed, change nothing
+python check_environment.py  # the same report, on its own
+```
+
 Three, deliberately separate, because their dependencies conflict:
 
-| venv | Used by | Install |
+| venv | Used by | Requirements |
 |---|---|---|
-| `.venv-testgen` | The query pipeline | `pip install neo4j openai python-dotenv truststore tiktoken pyyaml` |
-| `.venv-edc` | EDC knowledge-graph construction | `pip install -r edc-main/edc-main/requirements.txt` |
-| `.venv-ontogpt` | SPIRES extraction | `pip install ontogpt truststore` |
+| `.venv-testgen` | The pipeline, and the code that measures it | `requirements/evaluation.txt` |
+| `.venv-ontogpt` | SPIRES extraction | `requirements/ontogpt.txt` |
+| `.venv-edc` | The EDC comparison arm only | `requirements/edc.txt` |
+
+Everything is pinned to the versions this was built and measured against. The runbook
+used to say `pip install -r edc-main/edc-main/requirements.txt`, and **that file does not
+exist** -- the vendored tree ships a conda `environment.yml`. `requirements/edc.txt` is
+what the EDC arm was actually run with.
+
+Only `.venv-testgen` and `.venv-ontogpt` are needed to take a statute to a graph and
+generate test cases. `.venv-edc` exists for the `kg` and `kg-text-only` control arms.
 
 **If you are behind a TLS-inspecting proxy**, Python will fail every HTTPS call with
 `CERTIFICATE_VERIFY_FAILED` while `curl` works fine. The fix is `truststore`, which
-routes verification through the Windows certificate store. It is called at the top of
-`run.py` and `llm.py`; for OntoGPT, whose console script has no such hook, there is a
-`sitecustomize.py` in `.venv-ontogpt/Lib/site-packages/` that injects it at interpreter
-startup.
+routes verification through the OS certificate store. It is called at the top of
+`run.py` and `llm.py`; for OntoGPT, whose console script has no such hook, the injection
+has to happen at interpreter startup instead.
+
+`sitecustomize.py` at the repository root does that, and `bootstrap.ps1` copies it into
+`.venv-ontogpt`'s site-packages. It used to exist only inside that venv, which is
+gitignored -- so a fresh checkout lost it, and the failure it prevents arrives as a
+`CERTIFICATE_VERIFY_FAILED` on every extraction with nothing to say why.
 
 ---
 

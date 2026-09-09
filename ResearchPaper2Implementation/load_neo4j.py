@@ -23,8 +23,22 @@ EDGE_BATCH = 500
 
 
 def load_credentials(path):
-    """Parse an Aura credentials dump into a dict. Values are never echoed."""
+    """Neo4j credentials, from an Aura dump, a .env file, or the environment.
+
+    Three sources, so there is a path that needs no PowerShell. `setup_env.ps1` reads the
+    Aura file and dot-sources the values into a shell, which is convenient on Windows and
+    unavailable anywhere else -- a .env is the portable equivalent and works the same for
+    every consumer, because they all come through here.
+
+    Precedence, weakest first: the Aura file, then .env, then the environment. Values are
+    never echoed.
+    """
     creds = {}
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()                      # populates os.environ; does not overwrite it
+    except ImportError:
+        pass
     if path:
         with io.open(path, encoding="utf-8") as fh:
             for line in fh:
