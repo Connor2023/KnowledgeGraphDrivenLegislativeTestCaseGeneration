@@ -39,6 +39,17 @@ import graph_registry  # noqa: E402
 import prep_corpus  # noqa: E402
 import references  # noqa: E402
 
+# Every stage below is a subprocess, and each one reads the LLM key from the environment
+# it inherits from here. .env is the documented portable way to set it, but it was only
+# ever read by the Neo4j loader and the generator -- not by the build path. So a checkout
+# configured entirely through .env authenticated fine for the graph load and failed for
+# every extraction, which is the expensive half.
+try:
+    from dotenv import load_dotenv
+    load_dotenv()                      # does not overwrite anything already in the env
+except ImportError:
+    pass
+
 PYTHON = sys.executable
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -203,6 +214,44 @@ def gate_prefix() -> None:
         raise GateFailed("\n".join(problems))
 
 
+def gate_auth(model: str) -> None:
+    """5.5. Does the key actually work, and is the model reachable with it?
+
+    Free: listing models is not a generation and bills nothing. It runs in --dry-run too,
+    because "every free stage and every gate" is what that flag promises and this is the
+    one gate that stands between a stale key and an hour of failures.
+
+    Presence is not validity, and every check upstream of here only tested presence.
+    check_environment reported `ok OPENAI_API_KEY set, 164 chars` for a revoked key; the
+    build then authenticated 106 times, failed 106 times at ~10s each, wrote one stanza
+    per failure into errors.log, and reported nothing until the whole run was over. The
+    provisions were all still marked `to do`, so nothing downstream noticed either.
+    """
+    key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENAI_KEY")
+    if not key:
+        raise GateFailed(
+            "No OPENAI_API_KEY or OPENAI_KEY. Put one in .env (see .env.example), or "
+            "dot-source setup_env.ps1.")
+    try:
+        from openai import OpenAI
+    except ImportError:
+        _say("auth", "openai package not importable here; skipping the liveness check")
+        return
+    try:
+        ids = {m.id for m in OpenAI(api_key=key.strip()).models.list().data}
+    except Exception as exc:  # noqa: BLE001 - any failure here must stop the run
+        raise GateFailed(
+            "the LLM key was rejected: %s: %s\nThe key is present but not valid. Check "
+            "which one is reaching the process -- OPENAI_API_KEY wins over OPENAI_KEY, "
+            "and a stale OPENAI_KEY in the user environment outranks nothing at all."
+            % (type(exc).__name__, str(exc).split(chr(10))[0][:160]))
+    _say("auth", "key accepted, %d models visible" % len(ids))
+    if model not in ids:
+        raise GateFailed(
+            "%r is not available to this key. Visible models include: %s"
+            % (model, ", ".join(sorted(m for m in ids if m.startswith("gpt-4"))[:6])))
+
+
 def stage_build(dry_run: bool) -> None:
     argv = [PYTHON, os.path.join("spires", "build_spires_graph.py")]
     if dry_run:
@@ -332,6 +381,7 @@ def main() -> int:
         gate_segmentation(profile_path, corpus_path)
         gate_references(profile_path, corpus_path)
         gate_prefix()
+        gate_auth(args.model)
 
         stage_extract(args.model, args.dry_run, args.only)
         if args.dry_run:

@@ -106,8 +106,8 @@ def check_ontogpt(report):
                path if found else "not found at %s -- run bootstrap.ps1, or set ONTOGPT" % path)
 
 
-def check_secrets(report):
-    """Presence and shape only. No value is printed, here or anywhere."""
+def check_secrets(report, live=False):
+    """Presence and shape only, unless --live. No value is printed, here or anywhere."""
     try:
         from dotenv import load_dotenv
         load_dotenv()
@@ -120,8 +120,24 @@ def check_secrets(report):
                    "not set -- needed only for extraction and generation")
     elif not key.startswith("sk-"):
         report.add(WARN, "OPENAI_API_KEY", "set, but does not begin 'sk-'")
+    elif not live:
+        # Presence is not validity. A revoked key reports exactly like a good one here,
+        # and the build then fails authentication once per provision. --live settles it
+        # for free; build_corpus.py gates on the same call before it spends anything.
+        report.add(OK, "OPENAI_API_KEY", "set, %d chars (not verified -- pass --live)"
+                   % len(key))
     else:
-        report.add(OK, "OPENAI_API_KEY", "set, %d chars" % len(key))
+        try:
+            from openai import OpenAI
+            models = {m.id for m in OpenAI(api_key=key.strip()).models.list().data}
+        except Exception as exc:  # noqa: BLE001
+            report.add(FAIL, "OPENAI_API_KEY", "REJECTED: %s: %s"
+                       % (type(exc).__name__, str(exc).splitlines()[0][:120]))
+        else:
+            missing = [m for m in ("gpt-4o", "gpt-4o-mini") if m not in models]
+            report.add(FAIL if missing else OK, "OPENAI_API_KEY",
+                       "accepted, %d models; MISSING %s" % (len(models), ", ".join(missing))
+                       if missing else "accepted, %d models visible" % len(models))
 
     neo4j = {k: os.environ.get(k) for k in
              ("NEO4J_URI", "NEO4J_USERNAME", "NEO4J_PASSWORD", "NEO4J_DATABASE")}
@@ -146,6 +162,9 @@ def check_secrets(report):
 def main() -> int:
     ap = argparse.ArgumentParser(description="Check this checkout can run the pipeline.")
     ap.add_argument("-q", "--quiet", action="store_true", help="Only show what is wrong.")
+    ap.add_argument("--live", action="store_true",
+                    help="Also verify the LLM key against the API. Free -- listing "
+                         "models is not a generation and bills nothing.")
     args = ap.parse_args()
 
     report = Report()
@@ -153,7 +172,7 @@ def main() -> int:
     check_modules(report, PIPELINE_MODULES)
     check_corpus(report)
     check_ontogpt(report)
-    check_secrets(report)
+    check_secrets(report, live=args.live)
     check_modules(report, EVALUATION_MODULES, optional_label="evaluation")
     report.show(args.quiet)
 

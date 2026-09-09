@@ -160,12 +160,24 @@ def main():
               "executable." % PYTHON, file=sys.stderr)
         return 1
 
+    # build_corpus.py loads this too and subprocesses inherit it, but this script is also
+    # run on its own to resume a partial extraction, and then nothing else would.
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
+
     env = dict(os.environ)
     key = env.get("OPENAI_API_KEY") or env.get("OPENAI_KEY")
     if not key:
         print("No OPENAI_API_KEY or OPENAI_KEY in the environment.", file=sys.stderr)
         return 1
+    # OPENAI_API_KEY wins, and is written back over whatever ontogpt would have read.
+    # Without this an ontogpt subprocess inheriting a stale OPENAI_KEY authenticates with
+    # the stale one even when a good OPENAI_API_KEY is present.
     env["OPENAI_API_KEY"] = key
+    env["OPENAI_KEY"] = key
 
     started, failed = time.time(), []
     for index, (pid, path, out) in enumerate(todo, 1):
