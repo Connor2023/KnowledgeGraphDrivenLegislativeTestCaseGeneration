@@ -150,9 +150,15 @@ Produce a single valid Gherkin feature file.
 Structure:
 - Exactly one `Feature:` covering the target section.
 - One `Scenario:` for each distinct obligation, prohibition, permission, condition or
-  exception in the TARGET SECTION. Do not create scenarios for the supplementary
-  context; use that context only to inform wording and to catch related requirements
-  that the target section depends on.
+  exception in the TARGET SECTION.
+- ALSO one `Scenario:` for each provision in the supplementary context that switches the
+  target off or carves an exception out of it — the lines marked DISAPPLIES, SWITCHES OFF
+  or EXCEPT. A suite that states an obligation but never states when it stops applying
+  leaves the boundary of that obligation untested, and the boundary is what a compliance
+  dispute turns on. Give each of these a third tag naming the provision that creates the
+  carve-out, so it is distinguishable from a scenario the target states itself.
+- Write no scenario for a context provision that merely elaborates on the target, defines
+  a term it uses, or is referred to in passing. Those inform wording only.
 - Every `Scenario:` must be preceded by a tag identifying which part of the target
   section it derives from, in the form `@{provision_tag}` plus a short obligation
   slug, for example `@{provision_tag} @notify-purpose-of-collection`.
