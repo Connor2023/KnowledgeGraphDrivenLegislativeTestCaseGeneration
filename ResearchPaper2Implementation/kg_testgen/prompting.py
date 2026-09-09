@@ -157,8 +157,29 @@ Structure:
   leaves the boundary of that obligation untested, and the boundary is what a compliance
   dispute turns on. Give each of these a third tag naming the provision that creates the
   carve-out, so it is distinguishable from a scenario the target states itself.
+- A carve-out scenario is still a policy test, and rules 1 and 3 govern it in full. NEVER
+  write that a provision is "switched off", "disapplied", or "does not apply". No privacy
+  policy describes its own statutory machinery, so no reader could check such a step.
+  State the CIRCUMSTANCE in which the carve-out bites, and the PRACTICAL CONSEQUENCE for
+  the organisation or the individual.
+
+  BAD:  When sections 26WK and 26WL apply
+        Then the privacy policy states that the requirement to prepare and give a
+          statement is switched off
+        (untestable twice over: it names provisions, and it describes machinery rather
+         than anything a policy would say)
+  GOOD: Given the same incident is also another organisation's data breach
+        When that other organisation has already notified the affected individuals
+        Then the privacy policy states that it may rely on another organisation's
+          notification instead of issuing its own
+
+  The context gives each carve-out as a condition. Translate that condition into the
+  situation it describes; do not restate it as a cross-reference.
 - Write no scenario for a context provision that merely elaborates on the target, defines
-  a term it uses, or is referred to in passing. Those inform wording only.
+  a term it uses, or is referred to in passing. Those inform wording only. Leave them out
+  entirely — do NOT compress several of them into one scenario that names none of them
+  specifically. A vague scenario is worse than an absent one: it looks like coverage and
+  tests nothing.
 - Every `Scenario:` must be preceded by a tag identifying which part of the target
   section it derives from, in the form `@{provision_tag}` plus a short obligation
   slug, for example `@{provision_tag} @notify-purpose-of-collection`.
