@@ -8,8 +8,10 @@ elsewhere in the legislation and must not be mistaken for the target section's c
 
 from __future__ import annotations
 
+import hashlib
 import re
 import sys as _sys, os as _os
+from dataclasses import dataclass
 from typing import Optional
 
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
@@ -110,6 +112,38 @@ instrument triggers them than to merge them into one that names neither.\
 
 SYSTEM_INSTRUCTION = _SYSTEM_INSTRUCTION_TEMPLATE % _corpus.PROMPT
 
+
+@dataclass(frozen=True)
+class Contract:
+    """The instruction text and output format a prompt was assembled from.
+
+    Passed rather than always read from the module because runs/experiment/ holds 117
+    prompts recorded under an earlier contract, and tests/test_arm_prompts_unchanged.py
+    proves the assembly still reproduces them byte for byte. That test is about assembly
+    -- block order, header selection, how a provision key is rendered -- and a deliberate
+    change to the instruction text should not read as assembly drift. So the replay
+    supplies the contract that was in force when those runs were recorded, frozen in
+    tests/fixtures/prompt_contract_v1.json, and the text below applies to new runs only.
+    """
+
+    system_instruction_template: str
+    output_contract: str
+
+    def system_instruction(self) -> str:
+        """Substituted for the configured corpus, as the module-level constant is."""
+        return self.system_instruction_template % _corpus.PROMPT
+
+    @property
+    def fingerprint(self) -> str:
+        """Twelve hex characters identifying this contract's text.
+
+        Recorded on each run so a reader can tell which contract produced it. A hash
+        rather than a version number because nobody has to remember to bump it.
+        """
+        digest = hashlib.sha256(
+            (self.system_instruction_template + self.output_contract).encode("utf-8"))
+        return digest.hexdigest()[:12]
+
 OUTPUT_CONTRACT = """\
 Produce a single valid Gherkin feature file.
 
@@ -127,7 +161,10 @@ Structure:
 
 Step style:
 - `Given` establishes the entity or circumstance the requirement applies to.
-- `When` states the handling activity or the individual's request.
+- `When` states the event or act that triggers the requirement -- a handling activity, a
+  request, a notification, a direction, the passing of a deadline, or whatever else this
+  provision makes the trigger. Every scenario needs one: without it the scenario asserts
+  a standing property rather than a duty that something sets off.
 - `Then` asserts what the privacy policy must state, disclose or commit to, obeying the
   three rules above: no legislative citations, policy vocabulary, one checkable claim.
 
@@ -141,6 +178,11 @@ matching scenario for when it does not apply. Add any that are missing.
 
 Output the Gherkin only. No markdown code fences, no commentary before or after.\
 """
+
+# What new runs are built from. Earlier contracts are not kept here -- the only one that
+# still has to be reproducible lives in tests/fixtures/, next to the test that replays it.
+CURRENT = Contract(_SYSTEM_INSTRUCTION_TEMPLATE, OUTPUT_CONTRACT)
+
 
 TARGET_HEADER = """\
 ================================================================================
@@ -253,7 +295,8 @@ def _block3_header(context_mode: str, block3_format: str = "default") -> str:
 def build_prompt(section_text: str, context_block: Optional[str],
                  provision_id: Optional[str], context_mode: str = "spires",
                  block3_format: str = "default",
-                 block3_header: Optional[str] = None) -> str:
+                 block3_header: Optional[str] = None,
+                 contract: Optional[Contract] = None) -> str:
     """Assemble the four-block prompt.
 
     The block 3 header differs by arm. The KG header asserts that its statements come
@@ -261,13 +304,17 @@ def build_prompt(section_text: str, context_block: Optional[str],
     contains the target section as well. `block3_header` lets an evaluation arm supply
     its own; without it the pipeline picks the spires header, which is the only context
     it builds.
+
+    `contract` defaults to the text in this module. The replay test passes an earlier one
+    so that a deliberate change to the instructions does not read as assembly drift.
     """
+    contract = contract or CURRENT
     tag = provision_tag(provision_id)
     parts = [
         "================================================================================",
         "BLOCK 1 of 3 — TASK",
         "================================================================================",
-        SYSTEM_INSTRUCTION,
+        contract.system_instruction(),
         "",
         TARGET_HEADER,
         section_text.strip(),
@@ -282,6 +329,6 @@ def build_prompt(section_text: str, context_block: Optional[str],
         "================================================================================",
         "OUTPUT FORMAT",
         "================================================================================",
-        OUTPUT_CONTRACT.format(provision_tag=tag),
+        contract.output_contract.format(provision_tag=tag),
     ]
     return "\n".join(parts)

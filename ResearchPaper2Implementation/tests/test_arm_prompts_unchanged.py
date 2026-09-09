@@ -42,8 +42,33 @@ RULE = "=" * 80
 EXPECTED_ARMS = 13
 
 
+V1_CONTRACT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "fixtures", "prompt_contract_v1.json")
+
+
 def _cells():
     return sorted(glob.glob(os.path.join(RUNS, "*__*__r*")))
+
+
+def _v1_contract():
+    """The instruction text these runs were actually sent.
+
+    This test is about ASSEMBLY -- block order, header selection, how a provision key is
+    rendered -- not about the wording of the instructions. Replaying against whatever the
+    module currently says would conflate the two: a deliberate rewrite of the contract
+    would fail here as though a header had drifted, and the only way to make it pass
+    again would be to regenerate 117 cells and, with them, every number the results are
+    quoted against.
+
+    So the contract is pinned to what was in force when these runs were recorded. If the
+    assembly changes, this still fails, which is the point.
+    """
+    from kg_testgen import prompting
+
+    with io.open(V1_CONTRACT, encoding="utf-8") as fh:
+        frozen = json.load(fh)
+    return prompting.Contract(frozen["system_instruction_template"],
+                              frozen["output_contract"])
 
 
 def _replay(cell):
@@ -83,7 +108,7 @@ def _replay(cell):
     header = arms.block3_header(mode, fmt) if mode in arms.ARM_MODES else None
     rebuilt = prompting.build_prompt(section_text, context_block, provision_id,
                                      context_mode=mode, block3_format=fmt,
-                                     block3_header=header)
+                                     block3_header=header, contract=_v1_contract())
     return rebuilt.strip(), stored.strip()
 
 
@@ -105,6 +130,33 @@ def test_every_recorded_prompt_is_reproduced():
             stored.split("\n"), rebuilt.split("\n"), "stored", "rebuilt", lineterm=""))[:24])
         raise AssertionError(
             "%d of %d prompts changed. First: %s\n%s" % (len(bad), len(cells), cell, diff))
+
+
+def test_replay_still_detects_assembly_drift():
+    """Pinning the contract must not have turned the replay into a no-op.
+
+    The risk in fixing the contract is that the comparison stops depending on the code
+    under test. It still does: with the contract held constant, changing what the
+    assembly is given changes the prompt. If this passes while the replay above fails,
+    the failure is real drift; if this fails, the guard has stopped guarding.
+    """
+    from kg_testgen import prompting
+
+    v1 = _v1_contract()
+    base = prompting.build_prompt("6.1 text", "some context", "6.1",
+                                  context_mode="spires", contract=v1)
+    other_header = prompting.build_prompt("6.1 text", "some context", "6.1",
+                                          context_mode="spires",
+                                          block3_header="DIFFERENT HEADER", contract=v1)
+    other_tag = prompting.build_prompt("6.1 text", "some context", "11.2",
+                                       context_mode="spires", contract=v1)
+    assert base != other_header, "block 3 header no longer reaches the prompt"
+    assert base != other_tag, "provision tag no longer reaches the prompt"
+
+    # And the pin is load-bearing: the live contract has moved away from v1, so an
+    # unpinned replay would now be comparing against text these runs never saw.
+    assert prompting.CURRENT.fingerprint != v1.fingerprint, \
+        "live contract equals v1 -- either the pin is unnecessary or the fixture is stale"
 
 
 def test_every_arm_is_covered():

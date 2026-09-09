@@ -70,6 +70,9 @@ def _generate_and_write(record, section_text, context_block, config, secrets,
                                     block3_format=config.block3_format,
                                     block3_header=block3_header)
     record["prompt"] = prompt
+    # Which instruction text produced this. Runs recorded before the contract could vary
+    # have no such field, and are all the one contract frozen in tests/fixtures/.
+    record["prompt_contract"] = prompting.CURRENT.fingerprint
 
     logger.info("Calling %s (temperature %.1f)%s", config.llm_model, config.temperature,
                 "" if augmented else " WITHOUT KG context")
