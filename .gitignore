@@ -10,7 +10,10 @@ Neo4j-*.txt
 # Python
 __pycache__/
 *.py[cod]
+*.egg-info/
 .venv/
+ResearchPaper2Implementation/.venv-testgen/
+ResearchPaper2Implementation/.venv-ontogpt/
 
 # Experiment run outputs: prompts, features, run records. Regenerable.
 runs/
