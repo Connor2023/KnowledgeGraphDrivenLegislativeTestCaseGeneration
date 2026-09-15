@@ -31,17 +31,17 @@ structure in one call. Implemented in OntoGPT.
 
 **Everything this pipeline ships is SPIRES output** — 146 norms for Schedule 1, 202 for
 Part IIIC. Its schema-as-prompt design is why the `description:` fields in
-`spires/norm.yaml` read as instructions rather than documentation: they are sent to the
-model verbatim. Its recursion — a root call plus one per `CompoundExpression` slot — is
-why extraction costs more than one call per provision, and why cost tracks provision
-count rather than corpus size.
+`pipeline/spires/norm.yaml` read as instructions rather than documentation: they are
+sent to the model verbatim. Its recursion — a root call plus one per
+`CompoundExpression` slot — is why extraction costs more than one call per provision,
+and why cost tracks provision count rather than corpus size.
 
 *Do not repeat the "the whole schema is resent with every call" claim without checking
 it.* Measured here, the recorded root prompts average 223 tokens across Part IIIC's 106
 provisions, against a 2,373-token schema file — SPIRES sends the slot descriptions of the
 class being extracted, not the file. The cost estimator assumes otherwise and still lands
 near the measured spend, so its breakdown is not established even though its total is
-calibrated. See the note in `spires/extract_corpus.py`.
+calibrated. See the note in `pipeline/spires/extract_corpus.py`.
 
 The OntoGPT project asks that this paper be cited for the software as well; it gives no
 separate citation for the tool.
@@ -51,7 +51,7 @@ terms against ontologies. There is no ontology to ground legislative actors or a
 against, so the `NamedEntity` slots carry no `annotators` and the hand-written deontic
 schema does the work alone.
 
-Used in: `spires/extract_corpus.py` · `.venv-ontogpt` (ontogpt 1.1.1)
+Used in: `pipeline/spires/extract_corpus.py` · `.venv-ontogpt` (ontogpt 1.1.1)
 
 ### LinkML — the schema language **[verified]**
 
@@ -67,13 +67,13 @@ The earlier conference paper, if a 2021 reference is wanted instead:
 > General-Purpose Data Modeling Framework Grounded in Machine-Readable Semantics."
 > *International Conference on Biomedical Ontology (ICBO)*, CEUR-WS Vol-3073, 2021.
 
-The YAML modelling language `spires/norm.yaml` is written in. Its
+The YAML modelling language `pipeline/spires/norm.yaml` is written in. Its
 `CompoundExpression` / `NamedEntity` distinction is load-bearing rather than
 presentational: `Norm`, `Condition` and `Exemption` are compound and each gets its own
 extraction call, while `Actor`, `Action` and `InformationType` are named entities and do
 not.
 
-Used in: `spires/norm.yaml` · `.venv-ontogpt` (linkml 1.11.1)
+Used in: `pipeline/spires/norm.yaml` · `.venv-ontogpt` (linkml 1.11.1)
 
 ### Gherkin — the output syntax **[specification, not a paper]**
 
@@ -87,7 +87,8 @@ states — a claim about a document, not about a running system — so nothing h
 handed to Cucumber and run. What the syntax buys is the decomposition: one circumstance,
 one trigger, one checkable consequence.
 
-Used in: `kg_testgen/prompting.py` · checked by `kg_testgen/llm.py check_gherkin_structure`
+Used in: `pipeline/kg_testgen/prompting.py`
+Checked by: `pipeline/kg_testgen/llm.py check_gherkin_structure`
 
 ---
 
@@ -109,12 +110,17 @@ authors state), the enriched schema is held in memory and never written out, and
 dependency pins could not be reproduced on Windows.
 
 *Worth engaging with directly:* EDC's motivating claim is that putting the schema in the
-prompt does not scale. The SPIRES cost model measured here agrees — the schema is resent
-per provision and dominates the prompt — which makes this project evidence for EDC's
-premise while not adopting its solution.
+prompt does not scale. This project bears on that claim but does not settle it, and the
+distinction matters. Cost here tracks provision count rather than corpus size, which is
+consistent with EDC's premise — but the mechanism is SPIRES' recursion, not schema bulk:
+the measured root prompt is 223 tokens, not the 2,373-token schema file. So this is
+evidence that per-provision schema-driven extraction is expensive, not evidence that a
+large schema in the prompt is what makes it expensive. Claiming the latter would overstate
+what was measured.
 
-Used in: `edc-main/` · `evaluation/arms/edc_bridge.py` · `KG_Construction_Report.docx`
-PDF: `2024.emnlp-main.548.pdf`
+Used in: `evaluation/edc/edc-main/` · `evaluation/arms/edc_bridge.py`
+Written up in: `docs/KG_Construction_Report.docx`
+PDF: `docs/2024.emnlp-main.548.pdf`
 
 ### SPECMATE **[verified from the paper's cover page]**
 
@@ -128,7 +134,7 @@ generates a minimal test set from it.
 The precedent for the output half of this pipeline. A statutory provision substitutes for
 an acceptance criterion and a privacy policy for a system under test, but the
 decomposition-then-generate shape is the same — and the conditions / exemptions split in
-`spires/norm.yaml` is recognisably the same move.
+`pipeline/spires/norm.yaml` is recognisably the same move.
 
 PDF: `../Literature/SPECMATE-Automated-Creation-of-Test-Cases-from-Acceptance-Criteria.pdf`
 
@@ -161,17 +167,17 @@ below is what the code says; the fuller detail is **[unverified]** identificatio
 
 | Work | As the code cites it | What it contributes | Applied in |
 |---|---|---|---|
-| BLEU | Papineni et al., ACL 2002 | N-gram precision; the base measure self-BLEU is built from | `analyse_runs.py` `sentence_bleu()` |
-| BLEU smoothing | Chen & Cherry, method 2 | Scenarios run to a few dozen tokens, so one unmatched 4-gram sends unsmoothed sentence-BLEU to zero and every cell reads as maximally diverse | `analyse_runs.py` `sentence_bleu()` |
-| Self-BLEU | Zhu et al., SIGIR 2018 | Whether an 11-scenario run is eleven tests or five paraphrased — the check that stops scenario count masquerading as coverage | `analyse_runs.py` `self_bleu()` |
-| distinct-n | Li et al., NAACL 2016 | Vocabulary-level diversity alongside phrasing-level self-BLEU | `analyse_runs.py` `distinct_n()` |
-| G-Eval | Liu et al., EMNLP 2023 | Licenses LLM-as-judge and documents its self-preference bias; both mitigations here (`--judge-model`, `--sample-for-human` with Cohen's κ) come from it | `score_elements.py`, `score_soundness.py` |
-| Prompt format sensitivity | Sclar et al., ICLR 2024 | Justifies the six format probes — whether the gaps between arms survive plausible rephrasing of the framing | `evaluation/arms/`, `kg_testgen/prompting.py` |
-| Non-determinism at temperature 0 | Ouyang et al., arXiv:2308.02828 | Why the experiment runs repeats and reports a mean; one run's count is a sample, not a measurement | `run_experiment.py` |
-| Privacy-policy completeness | Amaral et al., IEEE TSE 2022 | Completeness and correctness as separate measures — why `score_soundness.py` exists at all | `score_soundness.py` |
-| Relevance vs completeness | Hassani et al., IST 2026 | Rating Relevance apart from Completeness | `score_soundness.py` |
-| Perturbation checklists | Sai et al., EMNLP 2021 | The known-answer controls that check each judge before a full run is paid for | `score_soundness.py` `SELF_TEST` |
-| Fault classes | Basili & Selby, IEEE TSE 1987 | Testing techniques differ by fault *class*, not only count — why unsound scenarios are broken down by class rather than reported as a rate | `score_soundness.py` report |
+| BLEU | Papineni et al., ACL 2002 | N-gram precision; the base measure self-BLEU is built from | `evaluation/analyse_runs.py` `sentence_bleu()` |
+| BLEU smoothing | Chen & Cherry, method 2 | Scenarios run to a few dozen tokens, so one unmatched 4-gram sends unsmoothed sentence-BLEU to zero and every cell reads as maximally diverse | `evaluation/analyse_runs.py` `sentence_bleu()` |
+| Self-BLEU | Zhu et al., SIGIR 2018 | Whether an 11-scenario run is eleven tests or five paraphrased — the check that stops scenario count masquerading as coverage | `evaluation/analyse_runs.py` `self_bleu()` |
+| distinct-n | Li et al., NAACL 2016 | Vocabulary-level diversity alongside phrasing-level self-BLEU | `evaluation/analyse_runs.py` `distinct_n()` |
+| G-Eval | Liu et al., EMNLP 2023 | Licenses LLM-as-judge and documents its self-preference bias; both mitigations here (`--judge-model`, `--sample-for-human` with Cohen's κ) come from it | `evaluation/score_elements.py`, `evaluation/score_soundness.py` |
+| Prompt format sensitivity | Sclar et al., ICLR 2024 | Justifies the six format probes — whether the gaps between arms survive plausible rephrasing of the framing | `evaluation/arms/`, `pipeline/kg_testgen/prompting.py` |
+| Non-determinism at temperature 0 | Ouyang et al., arXiv:2308.02828 | Why the experiment runs repeats and reports a mean; one run's count is a sample, not a measurement | `evaluation/run_experiment.py` |
+| Privacy-policy completeness | Amaral et al., IEEE TSE 2022 | Completeness and correctness as separate measures — why `evaluation/score_soundness.py` exists at all | `evaluation/score_soundness.py` |
+| Relevance vs completeness | Hassani et al., IST 2026 | Rating Relevance apart from Completeness | `evaluation/score_soundness.py` |
+| Perturbation checklists | Sai et al., EMNLP 2021 | The known-answer controls that check each judge before a full run is paid for | `evaluation/score_soundness.py` `SELF_TEST` |
+| Fault classes | Basili & Selby, IEEE TSE 1987 | Testing techniques differ by fault *class*, not only count — why unsound scenarios are broken down by class rather than reported as a rate | `evaluation/score_soundness.py` report |
 
 `Hassani et al., IST 2026` could not be identified at all when this file was written.
 Check the volume and pages with particular care.
@@ -182,7 +188,7 @@ Check the volume and pages with particular care.
 
 - **Privacy Act 1988 (Cth), Schedule 1** — the Australian Privacy Principles. 62
   provisions; the primary corpus and the source of the element decomposition in
-  `elements/legal_elements.yaml`.
+  `evaluation/ground_truth/elements/legal_elements.yaml`.
 - **Privacy Act 1988 (Cth), Part IIIC** — notification of eligible data breaches. 106
   provisions; the second corpus, and the instrument that tested whether the pipeline
   generalised beyond the one it was built on.
