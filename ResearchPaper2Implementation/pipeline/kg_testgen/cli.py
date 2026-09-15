@@ -102,9 +102,14 @@ def _reexec_for_corpus(args) -> int:
     target = name if name.endswith(".yaml") else "corpus.%s.yaml" % name
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if not os.path.isabs(target):
-        target = os.path.join(root, target)
+        # corpora/ first, where the configs live beside the statutes they describe; then
+        # the pipeline root, so an explicit relative path still works.
+        candidates = [os.path.join(root, "corpora", target), os.path.join(root, target)]
+        target = next((c for c in candidates if os.path.exists(c)), candidates[0])
     if not os.path.exists(target):
-        raise ConfigError("No corpus config at %s." % target)
+        raise ConfigError(
+            "No corpus config for %r. Looked in %s."
+            % (name, os.path.join(root, "corpora")))
     if os.path.abspath(target) == os.path.abspath(corpus_config.CONFIG_PATH):
         return None                                   # already the configured corpus
     if os.environ.get("_KG_TESTGEN_CORPUS"):

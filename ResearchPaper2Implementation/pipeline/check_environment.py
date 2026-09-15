@@ -178,10 +178,10 @@ def main() -> int:
 
     print()
     if report.failures:
-        print("%d problem(s). Run bootstrap.ps1, or see PIPELINE_RUNBOOK.md section 1."
+        print("%d problem(s). Run bootstrap.ps1, or see pipeline/PIPELINE_RUNBOOK.md section 1."
               % len(report.failures))
         return 1
-    print("Ready. `python build_corpus.py --dry-run` runs every free stage and gate.")
+    print("Ready. `python pipeline/build_corpus.py --dry-run` runs every free gate.")
     return 0
 
 

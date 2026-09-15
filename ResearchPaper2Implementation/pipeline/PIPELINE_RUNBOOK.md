@@ -23,8 +23,8 @@ are set.
 ## 0. A new statute is a .txt file
 
 ```powershell
-python build_corpus.py MyStatute.txt --dry-run    # every free stage and gate, no spending
-python build_corpus.py MyStatute.txt              # induce, segment, extract, clean, build
+python pipeline/build_corpus.py MyStatute.txt --dry-run    # every free stage and gate, no spending
+python pipeline/build_corpus.py MyStatute.txt              # induce, segment, extract, clean, build
 python -m kg_testgen --list-provisions
 python -m kg_testgen --provision "26WE(1)" --context-mode spires
 ```
@@ -153,20 +153,20 @@ and every gate and stops before spending.
 .\bootstrap.ps1            # the pipeline and SPIRES extraction
 .\bootstrap.ps1 -All       # plus the EDC arm, which pulls ~1 GB of torch
 .\bootstrap.ps1 -Check     # report what is installed, change nothing
-python check_environment.py  # the same report, on its own
+python pipeline/check_environment.py  # the same report, on its own
 ```
 
 Three, deliberately separate, because their dependencies conflict:
 
 | venv | Used by | Requirements |
 |---|---|---|
-| `.venv-testgen` | The pipeline, and the code that measures it | `requirements/evaluation.txt` |
-| `.venv-ontogpt` | SPIRES extraction | `requirements/ontogpt.txt` |
-| `.venv-edc` | The EDC comparison arm only | `requirements/edc.txt` |
+| `.venv-testgen` | The pipeline, and the code that measures it | `evaluation/requirements/evaluation.txt` |
+| `.venv-ontogpt` | SPIRES extraction | `pipeline/requirements/ontogpt.txt` |
+| `.venv-edc` | The EDC comparison arm only | `evaluation/requirements/edc.txt` |
 
 Everything is pinned to the versions this was built and measured against. The runbook
-used to say `pip install -r edc-main/edc-main/requirements.txt`, and **that file does not
-exist** -- the vendored tree ships a conda `environment.yml`. `requirements/edc.txt` is
+used to say `pip install -r evaluation/edc/edc-main/requirements.txt`, and **that file does not
+exist** -- the vendored tree ships a conda `environment.yml`. `evaluation/requirements/edc.txt` is
 what the EDC arm was actually run with.
 
 Only `.venv-testgen` and `.venv-ontogpt` are needed to take a statute to a graph and
@@ -196,8 +196,8 @@ profile is then validated against the whole file before it is allowed anywhere n
 extraction.
 
 ```powershell
-python induce_structure.py APPartIIIC.txt --dry-run    # prompt size and cost, no call
-python induce_structure.py APPartIIIC.txt              # ~$0.013, writes profiles/<name>.yaml
+python pipeline/induce_structure.py APPartIIIC.txt --dry-run    # prompt size and cost, no call
+python pipeline/induce_structure.py APPartIIIC.txt              # ~$0.013, writes profiles/<name>.yaml
 ```
 
 Validation is the point, not the call. A profile is rejected if too many lines belong to
@@ -219,7 +219,7 @@ re-inducing, and the header records what the numbers were when it was accepted.
 To check a hand-written profile without spending anything:
 
 ```powershell
-python induce_structure.py APPschedule1.txt --profile profiles/app_schedule1.yaml
+python pipeline/induce_structure.py APPschedule1.txt --profile profiles/app_schedule1.yaml
 ```
 
 Measured so far:
@@ -234,14 +234,14 @@ The controls cost nothing to run. None of them makes an API call, and the one ch
 that wants Neo4j skips cleanly without it:
 
 ```powershell
-python tests/test_induce_structure.py      # profile format, segmentation, 10 mutations
-python tests/test_references.py            # citation parsing, Schedule 1 equivalence
-python tests/test_build_gates.py           # the gates catch three broken profiles
-python tests/test_graph_registry.py        # prefix collisions are refused
-python tests/test_modality_vocabulary.py   # APPLICABILITY across two corpora
-python tests/test_pipeline_isolation.py    # the pipeline does not import evaluation
-python tests/test_arm_prompts_unchanged.py # 117 recorded prompts, byte for byte
-python tests/test_hygiene.py               # damaged .txt files the other gates miss
+python pipeline/tests/test_induce_structure.py      # profile format, segmentation, 10 mutations
+python pipeline/tests/test_references.py            # citation parsing, Schedule 1 equivalence
+python pipeline/tests/test_build_gates.py           # the gates catch three broken profiles
+python pipeline/tests/test_graph_registry.py        # prefix collisions are refused
+python pipeline/tests/test_modality_vocabulary.py   # APPLICABILITY across two corpora
+python evaluation/tests/test_pipeline_isolation.py    # the pipeline does not import evaluation
+python evaluation/tests/test_arm_prompts_unchanged.py # 117 recorded prompts, byte for byte
+python pipeline/tests/test_hygiene.py               # damaged .txt files the other gates miss
 ```
 
 ### 2.1 Segment it into provisions
@@ -265,7 +265,7 @@ identifier grammar; two places used to, with `[int(x) for x in pid.split(".")]`,
 raised on anything not numbered `N.M`.
 
 `prep_app.py` still exists and still produces the flattened one-document-per-line file
-under `edc-main/edc-main/datasets/`. Nothing in the pipeline reads it any more: it feeds
+under `evaluation/edc/edc-main/datasets/`. Nothing in the pipeline reads it any more: it feeds
 the `full-corpus` and EDC arms, which are in `evaluation/arms/`.
 
 ### 2.2 Build the SPIRES norm graph

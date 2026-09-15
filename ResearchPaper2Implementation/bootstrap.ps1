@@ -59,11 +59,11 @@ function Install-Venv($venv, $requirements, $description) {
 }
 
 # --- the pipeline ------------------------------------------------------------------
-Install-Venv ".venv-testgen" "requirements/evaluation.txt" `
+Install-Venv ".venv-testgen" "evaluation/requirements/evaluation.txt" `
     "pipeline + the code that measures it"
 
 # --- SPIRES extraction --------------------------------------------------------------
-Install-Venv ".venv-ontogpt" "requirements/ontogpt.txt" "SPIRES extraction"
+Install-Venv ".venv-ontogpt" "pipeline/requirements/ontogpt.txt" "SPIRES extraction"
 
 # The ontogpt console script has no hook to call truststore, so TLS interception has to
 # be handled at interpreter startup. This file used to exist only inside the venv, which
@@ -81,7 +81,7 @@ if ($ontogptPy -and -not $Check) {
 
 # --- the EDC comparison arm ---------------------------------------------------------
 if ($All) {
-    Install-Venv ".venv-edc" "requirements/edc.txt" "EDC arm -- pulls ~1 GB of torch"
+    Install-Venv ".venv-edc" "evaluation/requirements/edc.txt" "EDC arm -- pulls ~1 GB of torch"
 } else {
     Write-Step ".venv-edc  (EDC comparison arm)"
     Write-Warn "skipped -- pass -All to build it. Only the 'kg' and 'kg-text-only' arms need it."
@@ -91,7 +91,7 @@ if ($All) {
 Write-Step "verifying"
 $py = Get-VenvPython ".venv-testgen"
 if ($py) {
-    & $py (Join-Path $root "check_environment.py")
+    & $py (Join-Path $root "pipeline\check_environment.py")
     if ($LASTEXITCODE -ne 0) { throw "the pipeline environment is incomplete" }
 }
 
@@ -99,5 +99,5 @@ Write-Host ""
 Write-Host "Next:" -ForegroundColor Cyan
 Write-Host "  . .\setup_env.ps1                      # load credentials into this shell"
 Write-Host "  python check_key.py                    # confirm the LLM key, without printing it"
-Write-Host "  python build_corpus.py --dry-run       # every free stage and gate"
-Write-Host "  python tests\run_all.py -q             # 57 checks, no API calls"
+Write-Host "  python pipeline\build_corpus.py --dry-run     # every free stage and gate"
+Write-Host "  python pipeline\tests\run_all.py -q      # 53 checks, no API calls"

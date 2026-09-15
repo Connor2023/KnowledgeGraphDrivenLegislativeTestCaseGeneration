@@ -23,4 +23,7 @@ dependencies = [
 kg-testgen = "kg_testgen.cli:main"
 
 [tool.setuptools]
+# The package lives in pipeline/ since the repository was split into what the project
+# proposes and what measures it. Installing from the repository root still works.
+package-dir = {"" = "pipeline"}
 packages = ["kg_testgen"]

@@ -21,6 +21,23 @@ import os
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def _evaluation_on_path():
+    """Put the repository root on sys.path so `evaluation` is importable, if it exists.
+
+    The equivalence checks below compare this package against the superseded code it
+    replaced, which lives in evaluation/. These tests run with pipeline/ as the working
+    directory -- deliberately, so the suite proves the pipeline stands alone -- and that
+    also means `evaluation` is not importable by default. Without this the checks would
+    skip even where both trees are present, which is the silent kind of loss they exist
+    to prevent.
+    """
+    repo = os.path.dirname(ROOT)
+    for entry in (repo, os.path.join(repo, "evaluation", "edc")):
+        if entry not in sys.path:
+            sys.path.insert(0, entry)
+    return os.path.isdir(os.path.join(repo, "evaluation"))
+
 sys.path.insert(0, ROOT)
 
 import corpus_config  # noqa: E402
@@ -54,6 +71,7 @@ def test_schedule1_edges_are_identical_to_the_shipped_parser():
     # equivalence proof, so it can only run where both trees are present -- and the
     # pipeline is meant to run without evaluation at all. Skip rather than fail.
     try:
+        _evaluation_on_path()
         from evaluation.arms.enrich_graph import parse_references
     except ImportError:
         print("  SKIP  evaluation/ not present; equivalence unchecked")
@@ -79,6 +97,7 @@ def test_provision_key_matches_the_function_it_replaced():
     # Equivalence against superseded code in evaluation/. Runs only where both trees
     # are present; the pipeline is meant to run without evaluation at all.
     try:
+        _evaluation_on_path()
         from build_graph import normalise as normalise_mention
     except ImportError:
         print("  SKIP  evaluation/ not present; equivalence unchecked")

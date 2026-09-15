@@ -2,7 +2,7 @@
 #
 # Everything the pipeline needs, plus what only the judges and the comparison arms use.
 
--r pipeline.txt
+-r ../../pipeline/requirements/pipeline.txt
 
 # Reads the hand-written reference cases out of a .docx.
 python-docx==1.2.0

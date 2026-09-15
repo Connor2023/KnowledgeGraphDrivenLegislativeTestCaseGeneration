@@ -24,6 +24,23 @@ import os
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def _evaluation_on_path():
+    """Put the repository root on sys.path so `evaluation` is importable, if it exists.
+
+    The equivalence checks below compare this package against the superseded code it
+    replaced, which lives in evaluation/. These tests run with pipeline/ as the working
+    directory -- deliberately, so the suite proves the pipeline stands alone -- and that
+    also means `evaluation` is not importable by default. Without this the checks would
+    skip even where both trees are present, which is the silent kind of loss they exist
+    to prevent.
+    """
+    repo = os.path.dirname(ROOT)
+    for entry in (repo, os.path.join(repo, "evaluation", "edc")):
+        if entry not in sys.path:
+            sys.path.insert(0, entry)
+    return os.path.isdir(os.path.join(repo, "evaluation"))
+
 sys.path.insert(0, ROOT)
 
 import induce_structure as I  # noqa: E402
@@ -67,6 +84,7 @@ def test_schedule1_ids_match_the_handwritten_parser():
     # equivalence proof, so it can only run where both trees are present -- and the
     # pipeline is meant to run without evaluation at all. Skip rather than fail.
     try:
+        _evaluation_on_path()
         from evaluation.arms import enrich_graph
     except ImportError:
         print("  SKIP  evaluation/ not present; equivalence unchecked")
@@ -89,6 +107,7 @@ def test_prep_corpus_matches_the_parser_it_replaces():
     # Equivalence against superseded code in evaluation/. Runs only where both trees
     # are present; the pipeline is meant to run without evaluation at all.
     try:
+        _evaluation_on_path()
         from evaluation.arms import enrich_graph
     except ImportError:
         print("  SKIP  evaluation/ not present; equivalence unchecked")
