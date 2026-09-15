@@ -4,6 +4,19 @@ Four clearly delimited blocks: the task instruction, the verbatim target section
 supplementary KG context, and the output format contract. The separation between blocks
 2 and 3 is load-bearing -- the KG holds no source text, so retrieved triples come from
 elsewhere in the legislation and must not be mistaken for the target section's content.
+
+THE OUTPUT FORMAT is Gherkin, the Given/When/Then syntax from behaviour-driven
+development (specification: https://cucumber.io/docs/gherkin/reference/). There is no
+canonical paper; cite the specification. See REFERENCES.md.
+
+The borrowing is deliberate but unorthodox, and the write-up should say so before a
+reader assumes otherwise: these scenarios are NOT executable. A Then step asserts what a
+published privacy policy states, which is a claim about a document rather than about a
+running system, so nothing here can be handed to Cucumber and run. What the syntax buys
+is the decomposition -- one circumstance, one trigger, one checkable consequence -- which
+is the same structure SPECMATE (Fischbach et al., ICST 2020,
+doi:10.1109/ICST46399.2020.00040) recovers from acceptance criteria before generating
+tests from them.
 """
 
 from __future__ import annotations

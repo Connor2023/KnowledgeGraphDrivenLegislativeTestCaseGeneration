@@ -4,6 +4,14 @@ title: Legislative Norm Extraction
 description: >-
   Extracts deontic norms from the provisions of a legislative instrument.
 
+  WRITTEN IN LinkML (Moxon et al., "LinkML: an open data modeling framework",
+  GigaScience 15:giaf152, 2026, doi:10.1093/gigascience/giaf152) and read as an
+  extraction target by SPIRES (Caufield et al., Bioinformatics 40(3):btae104, 2024,
+  doi:10.1093/bioinformatics/btae104). Both are load-bearing rather than incidental: the
+  CompoundExpression / NamedEntity distinction LinkML supplies is what decides which
+  slots SPIRES recurses into, and the descriptions below are sent to the model verbatim
+  as the extraction prompt -- they are instructions, not documentation. See REFERENCES.md.
+
   The target is everything a flat (subject, predicate, object) triple destroys. An
   extraction that yields "entity - holds - personal information" has thrown away the
   modality, the condition and the exception, which is the entire testable content of a

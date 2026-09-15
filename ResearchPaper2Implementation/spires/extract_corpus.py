@@ -1,5 +1,36 @@
 """Run SPIRES extraction over every provision of the configured corpus, resumably.
 
+THE METHOD. SPIRES -- Structured Prompt Interrogation and Recursive Extraction of
+Semantics (Caufield et al., Bioinformatics 40(3):btae104, 2024,
+doi:10.1093/bioinformatics/btae104) -- populates a knowledge base by interrogating an LLM
+against a user-supplied schema, recursing into each nested slot rather than asking for a
+whole structure in one call. This script is a driver around its reference implementation,
+OntoGPT; the authors ask that the SPIRES paper be cited for both. See REFERENCES.md.
+
+Two departures from the paper's setting are worth stating, because they are this
+project's adaptation rather than the method's:
+
+  * SPIRES was developed for biomedical text and grounds matched terms against
+    ontologies. There is no ontology to ground legislative actors or acts against, so the
+    NamedEntity slots in spires/norm.yaml carry no `annotators` and no grounding is
+    attempted -- the schema alone does the work.
+  * The recursion the paper describes is why cost is more than one call per provision:
+    SPIRES issues a root call and then a further call for each CompoundExpression slot it
+    has to fill. Only the root prompt is recorded in the output YAML.
+
+MEASURED, and it does not match what estimate_cost() assumes. The recorded root prompts
+across the 106 Part IIIC provisions average 223 tokens (min 77, max 528), while
+estimate_cost bills the whole 2,373-token schema FILE against every call -- a 10.6x
+over-count on that component, because the file's YAML scaffolding, licence, prefixes and
+top-level description never reach any prompt. SPIRES sends the slot descriptions of the
+class being extracted, nothing more.
+
+The estimate nonetheless lands near the measured spend, which means the over-count is
+being cancelled by an under-count elsewhere -- almost certainly RECURSION_MULTIPLIER,
+since each recursive call carries its own unmodelled prompt. Both numbers are wrong in
+opposite directions. Treat the total as calibrated and the breakdown as not yet
+established; see the note in estimate_cost().
+
 A hundred extractions at roughly half a minute each is long enough that a bash loop is
 the wrong tool: a network blip a third of the way through should not cost the whole run.
 Each clause is written as it completes and skipped if already present, so re-running
