@@ -48,7 +48,7 @@ def registry_checks():
 
 
 def connection():
-    from load_neo4j import load_credentials
+    from credentials import load_credentials
     from neo4j import GraphDatabase
     creds = load_credentials(None)
     if not creds.get("NEO4J_URI"):

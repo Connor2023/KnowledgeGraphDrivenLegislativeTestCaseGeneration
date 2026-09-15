@@ -18,39 +18,15 @@ import io
 import os
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Lives in credentials.py now. This loader is the EDC arm's and belongs with evaluation;
+# the same function is needed by the SPIRES graph builder and the workbench API, which do
+# not. Re-exported so `from load_neo4j import load_credentials` keeps working.
+from credentials import load_credentials  # noqa: E402,F401
+
 NODE_BATCH = 500
 EDGE_BATCH = 500
-
-
-def load_credentials(path):
-    """Neo4j credentials, from an Aura dump, a .env file, or the environment.
-
-    Three sources, so there is a path that needs no PowerShell. `setup_env.ps1` reads the
-    Aura file and dot-sources the values into a shell, which is convenient on Windows and
-    unavailable anywhere else -- a .env is the portable equivalent and works the same for
-    every consumer, because they all come through here.
-
-    Precedence, weakest first: the Aura file, then .env, then the environment. Values are
-    never echoed.
-    """
-    creds = {}
-    try:
-        from dotenv import load_dotenv
-        load_dotenv()                      # populates os.environ; does not overwrite it
-    except ImportError:
-        pass
-    if path:
-        with io.open(path, encoding="utf-8") as fh:
-            for line in fh:
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                key, _, value = line.partition("=")
-                creds[key.strip()] = value.strip()
-    for key in ("NEO4J_URI", "NEO4J_USERNAME", "NEO4J_PASSWORD", "NEO4J_DATABASE"):
-        if os.environ.get(key):          # environment wins over the file
-            creds[key] = os.environ[key]
-    return creds
 
 
 def read_csv(path):

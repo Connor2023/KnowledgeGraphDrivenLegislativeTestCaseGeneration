@@ -240,7 +240,7 @@ def write_csvs(nodes, edges):
 
 
 def load(nodes, edges, wipe, creds_path=None, force_prefix=False):
-    from load_neo4j import load_credentials
+    from credentials import load_credentials
     from neo4j import GraphDatabase
 
     creds = load_credentials(creds_path)

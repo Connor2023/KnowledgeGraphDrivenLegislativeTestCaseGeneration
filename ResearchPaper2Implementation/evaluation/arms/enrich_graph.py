@@ -203,7 +203,7 @@ def main() -> int:
         print("\nDry run -- nothing loaded.")
         return 0
 
-    from load_neo4j import load_credentials
+    from credentials import load_credentials
     creds = load_credentials(args.creds)
     from neo4j import GraphDatabase
     driver = GraphDatabase.driver(creds["NEO4J_URI"],

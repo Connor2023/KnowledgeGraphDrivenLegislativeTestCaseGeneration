@@ -21,7 +21,7 @@ def config_from_request(data):
 
 def preview(data, pid, text):
     from kg_testgen.config import Secrets
-    from load_neo4j import load_credentials
+    from credentials import load_credentials
     from kg_testgen.neo4j_client import Neo4jClient
     from kg_testgen.spires_query import build_context
     cfg = replace(config_from_request(data), provision_id=pid)
