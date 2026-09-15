@@ -196,9 +196,14 @@ def test_spires_context_is_reproduced():
         print("  SKIP  no Neo4j credentials in the environment or .env")
         return
     from kg_testgen.config import Config, secrets_from_env
-    from kg_testgen.neo4j_client import Neo4jClient
+    from kg_testgen.neo4j_client import GraphUnavailable, Neo4jClient
     from kg_testgen import spires_query
 
+    # An unreachable instance is an environment condition, not a regression in the code
+    # under test. Aura free-tier instances pause after inactivity and lose their DNS
+    # record, which is a normal resting state for this project -- failing the whole suite
+    # for it would train the reader to ignore a red suite. Skipping loudly is the right
+    # answer; a serialisation change simply goes unchecked until the instance is resumed.
     secrets = secrets_from_env()
     differing = []
     for cell, hybrid in (("line34__spires__r1", False), ("line49__spires__r1", False),
@@ -216,8 +221,14 @@ def test_spires_context_is_reproduced():
 
         config = Config(context_mode="spires", spires_include_provision_text=hybrid)
         config.validate()
-        with Neo4jClient(secrets, config) as client:
-            rebuilt = spires_query.build_context(client, record["input_section_text"], config)
+        try:
+            with Neo4jClient(secrets, config) as client:
+                rebuilt = spires_query.build_context(client, record["input_section_text"],
+                                                     config)
+        except GraphUnavailable as exc:
+            print("  SKIP  Neo4j unreachable (%s)"
+                  % str(exc).splitlines()[0].rstrip("."))
+            return
         if rebuilt.text.strip() != stored_block:
             differing.append(cell)
     assert not differing, "spires context changed for: %s" % differing
