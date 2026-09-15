@@ -18,11 +18,14 @@ import io
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Three levels up to the repository root, then into pipeline/, where credentials.py lives.
+# This loader is the EDC arm's and belongs here in evaluation; the credential resolution it
+# used to own is needed by the SPIRES graph builder and the workbench API, which do not.
+# Re-exported so `from load_neo4j import load_credentials` keeps working.
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "pipeline"))
 
-# Lives in credentials.py now. This loader is the EDC arm's and belongs with evaluation;
-# the same function is needed by the SPIRES graph builder and the workbench API, which do
-# not. Re-exported so `from load_neo4j import load_credentials` keeps working.
 from credentials import load_credentials  # noqa: E402,F401
 
 NODE_BATCH = 500
@@ -41,7 +44,7 @@ def chunks(seq, size):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--graph-dir", default="edc-main/edc-main/output/app_full/graph")
+    ap.add_argument("--graph-dir", default="evaluation/edc/edc-main/output/app_full/graph")
     ap.add_argument("--creds", default=None, help="Path to the Aura credentials file.")
     ap.add_argument("--dry-run", action="store_true",
                     help="Connect and report what is already there, but write nothing.")

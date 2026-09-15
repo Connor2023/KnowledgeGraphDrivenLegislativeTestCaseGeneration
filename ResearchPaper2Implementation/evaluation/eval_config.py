@@ -21,9 +21,11 @@ CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "eval_con
 _DEFAULTS = {
     "name": "app_schedule1_experiment",
     "description": "Measurement inputs for the 7-arm comparison",
-    "elements": os.path.join("elements", "legal_elements.yaml"),
-    "statute": "APPschedule1.txt",
-    "manual_cases": os.path.join("testcasecomparison", "Test cases FYP.docx"),
+    "elements": os.path.join("evaluation", "ground_truth", "elements",
+                             "legal_elements.yaml"),
+    "statute": os.path.join("pipeline", "corpora", "APPschedule1.txt"),
+    "manual_cases": os.path.join("evaluation", "ground_truth",
+                                 "testcasecomparison", "Test cases FYP.docx"),
     "policies": {
         "2016": os.path.join("..", "MicrosoftPrivacyPolicy", "2016.txt"),
         "2026": os.path.join("..", "MicrosoftPrivacyPolicy", "2026.txt"),

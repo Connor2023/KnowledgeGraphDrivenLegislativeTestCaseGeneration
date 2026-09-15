@@ -355,8 +355,6 @@ def corpus_config_dict(profile: Profile, raw_lines: List[str], raw_path: str,
         "node_prefix": "%s_" % short.upper(),
         "paths": {
             "raw": raw_path.replace(os.sep, "/"),
-            "corpus": "edc-main/edc-main/datasets/%s.txt" % slug,
-            "edc_graph_dir": "edc-main/edc-main/output/%s/graph" % slug,
             "spires_dir": "spires",
             "profile": profile_path.replace(os.sep, "/"),
         },

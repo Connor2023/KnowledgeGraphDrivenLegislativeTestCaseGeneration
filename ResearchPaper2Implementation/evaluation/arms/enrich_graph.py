@@ -33,10 +33,13 @@ import os
 import re
 import sys
 
-# Three levels up: this module used to sit at the repository root and now sits in
-# evaluation/arms/. corpus_config, prep_corpus and load_neo4j all live at the root.
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__)))))
+# Three levels up to the repository root, then into pipeline/, where corpus_config,
+# prep_corpus and credentials now live. The root itself stays on the path so the
+# `evaluation` package remains importable.
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, _ROOT)
+sys.path.insert(0, os.path.join(_ROOT, "pipeline"))
+sys.path.insert(0, os.path.join(_ROOT, "evaluation", "edc"))
 
 from . import prep_app  # noqa: E402  - reused for its line classification
 import corpus_config  # noqa: E402

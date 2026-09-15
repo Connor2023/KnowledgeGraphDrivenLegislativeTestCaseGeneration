@@ -25,10 +25,15 @@ import types
 from typing import List
 
 # Three levels up, not two: this module used to sit in kg_testgen/ and now sits in
-# evaluation/arms/. Getting this wrong points _EDC_ROOT at evaluation/edc-main, which
-# does not exist, and the import below fails with a bare "No module named 'edc'".
+# evaluation/arms/. Getting this wrong points _EDC_ROOT somewhere that does not exist,
+# and the import below fails with a bare "No module named 'edc'". It has been wrong twice.
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-_EDC_ROOT = os.path.join(_REPO_ROOT, "edc-main", "edc-main")
+_EVALUATION = os.path.join(_REPO_ROOT, "evaluation")
+# The vendored tree is doubled: evaluation/edc/edc-main/ holds the package.
+_EDC_ROOT = os.path.join(_EVALUATION, "edc", "edc-main")
+# The EDC loader and graph builder sit beside it and are imported by name.
+if _EDC_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(_EVALUATION, "edc"))
 
 # numpy is deliberately NOT stubbed: the neo4j driver detects it and calls into it
 # (np.bool_), so a fake module breaks the driver. It is a real dependency.

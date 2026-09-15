@@ -242,7 +242,7 @@ def parse(lines):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default="APPschedule1.txt")
-    ap.add_argument("--output", default="edc-main/edc-main/datasets/app_schedule1.txt")
+    ap.add_argument("--output", default="evaluation/edc/edc-main/datasets/app_schedule1.txt")
     args = ap.parse_args()
 
     with io.open(args.input, encoding="utf-8") as fh:

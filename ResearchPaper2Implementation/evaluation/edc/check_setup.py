@@ -12,7 +12,7 @@ import os
 import sys
 import types
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "edc-main", "edc-main")
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "edc-main")
 
 # Stub the heavy third-party imports so edc.utils.llm_utils can be imported for its
 # pure-python parsers without torch/transformers/openai being installed.

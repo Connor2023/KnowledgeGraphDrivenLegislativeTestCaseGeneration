@@ -110,9 +110,9 @@ def cypher_str(value):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run-dir", default="edc-main/edc-main/output/app_full/iter0")
-    ap.add_argument("--seed-schema", default="edc-main/edc-main/schemas/app_seed.csv")
-    ap.add_argument("--out-dir", default="edc-main/edc-main/output/app_full/graph")
+    ap.add_argument("--run-dir", default="evaluation/edc/edc-main/output/app_full/iter0")
+    ap.add_argument("--seed-schema", default="evaluation/edc/edc-main/schemas/app_seed.csv")
+    ap.add_argument("--out-dir", default="evaluation/edc/edc-main/output/app_full/graph")
     args = ap.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
