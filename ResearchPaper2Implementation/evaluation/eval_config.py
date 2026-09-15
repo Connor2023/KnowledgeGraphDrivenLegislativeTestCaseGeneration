@@ -28,6 +28,12 @@ _DEFAULTS = {
         "2016": os.path.join("..", "MicrosoftPrivacyPolicy", "2016.txt"),
         "2026": os.path.join("..", "MicrosoftPrivacyPolicy", "2026.txt"),
     },
+    "edc": {
+        "corpus": os.path.join("evaluation", "edc", "edc-main", "datasets",
+                               "app_schedule1.txt"),
+        "graph_dir": os.path.join("evaluation", "edc", "edc-main", "output", "app_full",
+                                  "graph"),
+    },
     "output": {
         "elements": "runs/elements",
         "soundness": "runs/soundness",
@@ -65,6 +71,8 @@ STATUTE_PATH = _CFG["statute"]
 MANUAL_CASES_PATH = _CFG["manual_cases"]
 POLICY_2016 = _CFG["policies"]["2016"]
 POLICY_2026 = _CFG["policies"]["2026"]
+EDC_CORPUS_PATH = _CFG["edc"]["corpus"]
+EDC_GRAPH_DIR = _CFG["edc"]["graph_dir"]
 ELEMENTS_OUT_DIR = _CFG["output"]["elements"]
 SOUNDNESS_OUT_DIR = _CFG["output"]["soundness"]
 EXPERIMENT_OUT_DIR = _CFG["output"]["experiment"]

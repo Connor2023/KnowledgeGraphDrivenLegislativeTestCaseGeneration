@@ -36,8 +36,8 @@ sys.path.insert(0, ROOT)
 
 import prep_corpus  # noqa: E402
 
-SCHEDULE = os.path.join(ROOT, "APPschedule1.txt")
-PART_IIIC = os.path.join(ROOT, "APPartIIIC.txt")
+SCHEDULE = os.path.join(ROOT, "corpora", "APPschedule1.txt")
+PART_IIIC = os.path.join(ROOT, "corpora", "APPartIIIC.txt")
 
 
 def _lines(path):

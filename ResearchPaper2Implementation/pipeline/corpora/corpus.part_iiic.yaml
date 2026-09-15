@@ -13,9 +13,7 @@ description: Part IIIC of the Privacy Act 1988 (Cth) - notification of eligible 
 file_prefix: part
 node_prefix: PI_
 paths:
-  raw: APPartIIIC.txt
-  corpus: edc-main/edc-main/datasets/part_iiic.txt
-  edc_graph_dir: edc-main/edc-main/output/part_iiic/graph
+  raw: corpora/APPartIIIC.txt
   spires_dir: spires
   profile: profiles/part_iiic.yaml
 modality_overrides: {}

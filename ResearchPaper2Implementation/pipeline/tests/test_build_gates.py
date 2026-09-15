@@ -35,7 +35,7 @@ import build_corpus  # noqa: E402
 import corpus_config  # noqa: E402
 import prep_corpus  # noqa: E402
 
-SCHEDULE = os.path.join(ROOT, "APPschedule1.txt")
+SCHEDULE = os.path.join(ROOT, "corpora", "APPschedule1.txt")
 PROFILE = os.path.join(ROOT, "profiles", "app_schedule1.yaml")
 
 
@@ -111,7 +111,7 @@ def test_bootstrap_finds_a_config_by_what_it_points_at():
     """corpus.part_iiic.yaml and APPartIIIC.txt belong together; no filename rule pairs
     them. Matching on `paths.raw` is what stops a second config being induced for a
     corpus that already has one."""
-    found = build_corpus.existing_config_for(os.path.join(ROOT, "APPartIIIC.txt"))
+    found = build_corpus.existing_config_for(os.path.join(ROOT, "corpora", "APPartIIIC.txt"))
     assert found and os.path.basename(found) == "corpus.part_iiic.yaml", found
     assert build_corpus.existing_config_for(os.path.join(ROOT, "nosuchfile.txt")) is None
 

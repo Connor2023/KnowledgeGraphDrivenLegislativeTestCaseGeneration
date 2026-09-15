@@ -275,7 +275,7 @@ def existing_config_for(corpus_path: str):
     except ImportError:
         return None
     target = os.path.abspath(corpus_path)
-    for candidate in sorted(glob.glob(os.path.join(ROOT, "corpus*.yaml"))):
+    for candidate in sorted(glob.glob(os.path.join(ROOT, "corpora", "corpus*.yaml"))):
         try:
             with io.open(candidate, encoding="utf-8") as fh:
                 loaded = yaml.safe_load(fh) or {}
@@ -309,7 +309,7 @@ def bootstrap(corpus_path: str, args):
     # corpus.part_iiic.yaml and APPartIIIC.txt belong together and no filename rule would
     # pair them. Without this, a corpus that already had a config got a second one.
     config_path = existing_config_for(corpus_path) or os.path.join(
-        ROOT, "corpus.%s.yaml" % slug)
+        ROOT, "corpora", "corpus.%s.yaml" % slug)
     profile_path = os.path.join(ROOT, "profiles", "%s.yaml" % slug)
 
     if os.environ.get("_KG_BOOTSTRAPPED"):

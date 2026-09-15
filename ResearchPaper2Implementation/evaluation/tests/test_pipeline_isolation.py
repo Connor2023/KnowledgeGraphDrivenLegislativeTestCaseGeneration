@@ -24,7 +24,9 @@ import os
 import re
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Three levels up to the repository root; the package it inspects is under pipeline/.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PIPELINE = os.path.join(ROOT, "pipeline")
 PIPELINE_PKG = "kg_testgen"
 EVALUATION_PKG = "evaluation"
 
@@ -49,7 +51,7 @@ EVALUATION_ONLY_DEPS = ("docx", "transformers", "torch", "edc", "sentence_transf
 
 
 def _module_files(package: str):
-    directory = os.path.join(ROOT, package)
+    directory = os.path.join(PIPELINE, package)
     for name in sorted(os.listdir(directory)):
         if name.endswith(".py"):
             yield name, os.path.join(directory, name)

@@ -32,7 +32,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import corpus_config  # noqa: E402
 
-REGISTRY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "corpora.yaml")
+REGISTRY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "corpora", "corpora.yaml")
 
 # Labels that predate prefixing. The EDC graph writes :AppNode plus a type sub-label; the
 # RP1 graph writes :RP1Entity. A generated prefix must not shadow any of them.

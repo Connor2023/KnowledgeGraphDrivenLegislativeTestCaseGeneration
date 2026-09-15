@@ -31,6 +31,13 @@ policies:
   "2016": ../MicrosoftPrivacyPolicy/2016.txt
   "2026": ../MicrosoftPrivacyPolicy/2026.txt
 
+# The vendored EDC tree, for the `kg` and `kg-text-only` arms. These two used to sit in
+# the pipeline's corpus.yaml, which meant the proposed artefact's configuration named a
+# comparison arm's data. Paths are relative to the repository root, as everything here is.
+edc:
+  corpus: evaluation/edc/edc-main/datasets/app_schedule1.txt
+  graph_dir: evaluation/edc/edc-main/output/app_full/graph
+
 # Where judgements, worksheets and reports are written. Under runs/, which is gitignored.
 output:
   elements: runs/elements

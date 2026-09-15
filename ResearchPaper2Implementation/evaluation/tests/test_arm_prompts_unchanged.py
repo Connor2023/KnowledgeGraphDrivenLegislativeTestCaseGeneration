@@ -31,8 +31,13 @@ import json
 import os
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Three levels up: evaluation/tests -> evaluation -> the repository root. This test
+# needs BOTH trees -- the pipeline's prompt assembly and evaluation's arm definitions --
+# and it replays the recorded cells under runs/, which are the repository's, not
+# evaluation's. pipeline/ goes on the path so corpus_config and kg_testgen resolve.
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
+sys.path.insert(0, os.path.join(ROOT, "pipeline"))
 
 RUNS = os.path.join(ROOT, "runs", "experiment")
 RULE = "=" * 80

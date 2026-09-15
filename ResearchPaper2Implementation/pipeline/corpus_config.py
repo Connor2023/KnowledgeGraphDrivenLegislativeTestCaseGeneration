@@ -37,9 +37,15 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 #     CORPUS_CONFIG=corpus.part_iiic.yaml python build_corpus.py APPartIIIC.txt --dry-run
 #
 # Read at import, like everything else here, so it must be set before Python starts.
-CONFIG_PATH = os.environ.get("CORPUS_CONFIG") or os.path.join(ROOT, "corpus.yaml")
+CORPORA_DIR = os.path.join(ROOT, "corpora")
+
+CONFIG_PATH = os.environ.get("CORPUS_CONFIG") or os.path.join(CORPORA_DIR, "corpus.yaml")
 if not os.path.isabs(CONFIG_PATH):
-    CONFIG_PATH = os.path.join(ROOT, CONFIG_PATH)
+    # A bare name is resolved against corpora/ first, so `CORPUS_CONFIG=corpus.part_iiic.yaml`
+    # keeps working now that the configs live together with the texts they describe.
+    beside_corpora = os.path.join(CORPORA_DIR, CONFIG_PATH)
+    CONFIG_PATH = beside_corpora if os.path.exists(beside_corpora) else os.path.join(
+        ROOT, CONFIG_PATH)
 
 # Mirrors corpus.yaml. Kept in sync by hand, and used verbatim when the file or PyYAML
 # is unavailable -- see the module docstring.
@@ -49,9 +55,11 @@ _DEFAULTS = {
     "file_prefix": "app",
     "node_prefix": "SP_",
     "paths": {
-        "raw": "APPschedule1.txt",
-        "corpus": os.path.join("edc-main", "edc-main", "datasets", "app_schedule1.txt"),
-        "edc_graph_dir": os.path.join("edc-main", "edc-main", "output", "app_full", "graph"),
+        # `corpus` and `edc_graph_dir` used to live here and pointed into the vendored EDC
+        # tree. They were read only by the full-corpus and EDC comparison arms, never by
+        # the pipeline, and they are now in evaluation/eval_config.yaml where the rest of
+        # the measurement paths are. Nothing below leaves this directory.
+        "raw": os.path.join("corpora", "APPschedule1.txt"),
         "spires_dir": "spires",
         "profile": os.path.join("profiles", "app_schedule1.yaml"),
         "schema": os.path.join("spires", "norm.yaml"),
@@ -120,8 +128,9 @@ def path(key: str) -> str:
 
 
 RAW_PATH = path("raw")
-CORPUS_PATH = path("corpus")
-EDC_GRAPH_DIR = path("edc_graph_dir")
+# CORPUS_PATH and EDC_GRAPH_DIR used to be here. They pointed into the vendored EDC tree
+# and were read only by evaluation/arms/, so they now live in evaluation's own config.
+# Their removal is what lets this file name nothing outside pipeline/.
 SPIRES_DIR = path("spires_dir")
 PROFILE_PATH = path("profile")
 
@@ -201,10 +210,10 @@ def label(name: str) -> str:
 
 def summary() -> str:
     return ("corpus %r (%s)\n  file prefix : %s_*\n  node prefix : %s\n"
-            "  raw         : %s\n  corpus      : %s\n  profile     : %s\n"
+            "  raw         : %s\n  profile     : %s\n  schema      : %s\n"
             "  provision   : %s"
             % (NAME, DESCRIPTION, FILE_PREFIX, NODE_PREFIX,
-               RAW_PATH, CORPUS_PATH, PROFILE_PATH, PROVISION_PATTERN))
+               RAW_PATH, PROFILE_PATH, SPIRES_SCHEMA, PROVISION_PATTERN))
 
 
 if __name__ == "__main__":

@@ -29,12 +29,7 @@ node_prefix: SP_
 
 paths:
   # The statute as downloaded, one line per structural element.
-  raw: APPschedule1.txt
-  # The flattened, self-contained documents evaluation/arms/prep_app.py produces. Read
-  # only by the full-corpus and EDC arms; the pipeline does not use it.
-  corpus: edc-main/edc-main/datasets/app_schedule1.txt
-  # Where build_graph.py writes the EDC node/edge CSVs. Evaluation only.
-  edc_graph_dir: edc-main/edc-main/output/app_full/graph
+  raw: corpora/APPschedule1.txt
   # Root of the SPIRES extraction pipeline: schema, input/, output/, graph/.
   spires_dir: spires
   # The structural profile: an ordered list of line classifiers saying how this

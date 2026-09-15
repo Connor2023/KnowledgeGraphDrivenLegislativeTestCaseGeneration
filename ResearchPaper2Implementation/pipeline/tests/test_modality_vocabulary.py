@@ -63,7 +63,7 @@ def _profile(name):
 
 def _sentences(profile_name, raw_name):
     seg = prep_corpus.segmentation(os.path.join(ROOT, "profiles", profile_name),
-                                   os.path.join(ROOT, raw_name))
+                                   os.path.join(ROOT, "corpora", raw_name))
     return [(pid, m.group(1))
             for pid, text in seg.provisions.items()
             for m in SHAPE.finditer(text)]

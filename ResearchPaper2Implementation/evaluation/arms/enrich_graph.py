@@ -42,9 +42,12 @@ from . import prep_app  # noqa: E402  - reused for its line classification
 import corpus_config  # noqa: E402
 from corpus_config import detect_provision_id, provision_key  # noqa: E402
 
+from evaluation import eval_config  # noqa: E402
+
 RAW_PATH = corpus_config.RAW_PATH
-CORPUS_PATH = corpus_config.CORPUS_PATH
-OUT_DIR = corpus_config.EDC_GRAPH_DIR
+# The flattened corpus and the EDC graph directory are this arm's, not the pipeline's.
+CORPUS_PATH = eval_config.EDC_CORPUS_PATH
+OUT_DIR = eval_config.EDC_GRAPH_DIR
 
 # --- cross-reference parsing -------------------------------------------------------
 # "subclause 6.2 or 6.3 applies" -- the bare 6.3 carries the prefix across the

@@ -37,8 +37,10 @@ def block3_header(context_mode: str, block3_format: str = "default") -> str:
 def _corpus_path(config: Config) -> str:
     if config.corpus_path:
         return config.corpus_path
-    import corpus_config
-    return corpus_config.CORPUS_PATH
+    # evaluation's own config, not the pipeline's: the flattened corpus is this arm's
+    # input and the pipeline never reads it.
+    from evaluation import eval_config
+    return eval_config.EDC_CORPUS_PATH
 
 
 def build_none(config: Config) -> ExternalContext:
