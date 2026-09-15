@@ -11,7 +11,11 @@ import shutil
 import yaml
 
 UI = Path(__file__).resolve().parents[2]
-ROOT = UI.parent
+# ROOT is the pipeline, not the repository: everything this module resolves -- configs,
+# statutes, profiles, the schema -- is the pipeline's, and corpus configs express their
+# paths relative to it.
+ROOT = UI.parent / "pipeline"
+CORPORA = ROOT / "corpora"
 DATA = UI / "data"
 
 
@@ -27,7 +31,7 @@ def absolute(value):
 
 
 def config_paths():
-    return sorted(set([ROOT / "corpus.yaml", *ROOT.glob("corpus.*.yaml"),
+    return sorted(set([CORPORA / "corpus.yaml", *CORPORA.glob("corpus.*.yaml"),
                        *(DATA / "corpora").glob("*/corpus.yaml")]))
 
 

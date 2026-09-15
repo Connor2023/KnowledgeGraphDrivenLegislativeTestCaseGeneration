@@ -14,7 +14,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote, urlparse
 
 UI_ROOT = Path(__file__).resolve().parents[1]
-PIPELINE_ROOT = UI_ROOT.parent
+# Two roots, because the split separated them: the virtualenvs and the .env sit at the
+# repository root, while the pipeline's scripts and corpus configs are in pipeline/ and
+# every command is run from there.
+REPO_ROOT = UI_ROOT.parent
+PIPELINE_ROOT = REPO_ROOT / "pipeline"
 DATA_ROOT = UI_ROOT / "data"
 JOB_ROOT = DATA_ROOT / "jobs"
 HOST = os.environ.get("PIPELINE_UI_HOST", "127.0.0.1")
@@ -26,7 +30,7 @@ ACTIVE = {"queued", "running", "cancelling"}
 
 
 def _python():
-    for path in (PIPELINE_ROOT / ".venv-testgen/Scripts/python.exe", PIPELINE_ROOT / ".venv-testgen/bin/python"):
+    for path in (REPO_ROOT / ".venv-testgen/Scripts/python.exe", REPO_ROOT / ".venv-testgen/bin/python"):
         if path.exists():
             return str(path)
     return sys.executable
@@ -290,7 +294,7 @@ class Handler(BaseHTTPRequestHandler):
             path = unquote(urlparse(self.path).path)
             if path == "/api/status":
                 self._send({"api": "ready", "testgenPython": _python() != sys.executable,
-                            "ontoGPT": (PIPELINE_ROOT / ".venv-ontogpt/Scripts/ontogpt.exe").exists()})
+                            "ontoGPT": (REPO_ROOT / ".venv-ontogpt/Scripts/ontogpt.exe").exists()})
             elif path == "/api/corpora":
                 self._send(_corpora())
             elif path == "/api/jobs":
