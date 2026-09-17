@@ -1,0 +1,47 @@
+schema_version: 1
+review_status: provisional_manual_review
+warning: "Policy-disclosure audit only; the October 2017 failures are counterfactual and are not allegations of a historical GDPR breach."
+policies:
+  historical: "GitHub Privacy Statement, effective October 11, 2017"
+  current: "GitHub General Privacy Statement, effective April 27, 2026"
+labels:
+  - requirement: GDPR-13-1-A
+    historical: satisfied
+    current: satisfied
+    transition: stable_satisfied
+  - requirement: GDPR-13-1-B
+    historical: not_satisfied
+    current: satisfied
+    transition: gap_closed
+  - requirement: GDPR-13-1-C
+    historical: not_satisfied
+    current: satisfied
+    transition: gap_closed
+  - requirement: GDPR-13-1-D
+    historical: not_satisfied
+    current: satisfied
+    transition: gap_closed
+  - requirement: GDPR-13-1-E
+    historical: satisfied
+    current: satisfied
+    transition: stable_satisfied
+  - requirement: GDPR-13-1-F
+    historical: satisfied
+    current: satisfied
+    transition: stable_satisfied
+  - requirement: GDPR-13-2-A
+    historical: satisfied
+    current: satisfied
+    transition: stable_satisfied
+  - requirement: GDPR-13-2-B
+    historical: not_satisfied
+    current: satisfied
+    transition: gap_closed
+  - requirement: GDPR-13-2-C
+    historical: not_satisfied
+    current: not_satisfied
+    transition: persistent_gap
+  - requirement: GDPR-13-2-D
+    historical: not_satisfied
+    current: satisfied
+    transition: gap_closed
