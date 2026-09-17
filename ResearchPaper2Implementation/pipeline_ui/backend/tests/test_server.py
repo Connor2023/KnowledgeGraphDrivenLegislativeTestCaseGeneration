@@ -79,6 +79,55 @@ class CorpusTests(LocalFiles):
 
 
 class ServerTests(LocalFiles):
+    def test_atomic_history_write_retries_windows_lock(self):
+        target = self.root / 'job.json'
+        target.write_text('{"old": true}')
+        replace = Path.replace
+        attempts = []
+        def locked_once(source, destination):
+            attempts.append(source)
+            if len(attempts) == 1:
+                raise PermissionError('Windows sharing lock')
+            return replace(source, destination)
+        with patch.object(Path, 'replace', locked_once), patch.object(server.time, 'sleep'):
+            server._write_json(target, {'new': True})
+        self.assertEqual(json.loads(target.read_text()), {'new': True})
+        self.assertEqual(len(attempts), 2)
+        self.assertEqual(list(self.root.glob('*.tmp')), [])
+
+    def test_failed_replace_preserves_previous_snapshot(self):
+        target = self.root / 'job.json'
+        target.write_text('{"old": true}')
+        with patch.object(Path, 'replace', side_effect=PermissionError('locked')), patch.object(server.time, 'sleep'):
+            with self.assertRaises(PermissionError):
+                server._write_json(target, {'new': True})
+        self.assertEqual(json.loads(target.read_text()), {'old': True})
+        self.assertEqual(list(self.root.glob('*.tmp')), [])
+
+    def test_history_failure_does_not_interrupt_worker(self):
+        job = {'id': 'test', 'status': 'queued', 'logs': []}
+        (self.root / 'test').mkdir()
+        process = Mock(stdout=iter(['[verify] first\n', '[verify] last\n']))
+        process.wait.return_value = 0
+        with patch.object(server, 'JOB_ROOT', self.root), patch.object(server, '_write_json', side_effect=PermissionError('locked')), patch.object(server.subprocess, 'Popen', return_value=process):
+            server._worker(job, ['fake-pipeline'])
+        process.wait.assert_called_once()
+        self.assertEqual(job['status'], 'succeeded')
+        self.assertEqual(job['logs'][-1], '[verify] last')
+        self.assertIn('persistenceWarning', job)
+        self.assertNotIn('test', server.PROCESSES)
+        with patch.object(server, 'JOB_ROOT', self.root):
+            server._save(job)
+        self.assertNotIn('persistenceWarning', job)
+        self.assertEqual(json.loads((self.root / 'test/job.json').read_text())['status'], 'succeeded')
+
+    def test_missing_graph_explains_loading_without_altering_pipeline_record(self):
+        original = {"status": "failed", "error": "GraphUnavailable: Configured node label :PVI_Provision is not present in the graph"}
+        (self.root / 'run_record.json').write_text(json.dumps(original))
+        payload = server._run_payload(self.root)
+        self.assertIn("Load into Neo4j after building", payload['error'])
+        self.assertEqual(payload['record'], original)
+
     def test_current_and_future_block_headers(self):
         for count in (3, 4):
             prompt = f"BLOCK 3 of {count} — CONTEXT\nDescription\n====================\nExact context\n\n====================\nOUTPUT FORMAT\n====================\nFeature: output"
@@ -145,7 +194,15 @@ from spires import build_spires_graph
 build_spires_graph.load = forbidden
 import workflow
 workflow.DATA = corpora.DATA
-result = workflow.build({'verifyExceptions': False, 'loadGraph': False})
+original_run = workflow.subprocess.run
+def free_commands_only(command, *args, **kwargs):
+    if any('verify_exceptions.py' in str(arg) for arg in command):
+        raise AssertionError('No paid verification is allowed in this test')
+    return original_run(command, *args, **kwargs)
+workflow.subprocess.run = free_commands_only
+result = workflow.build({'verifyExceptions': True, 'loadGraph': False})
+assert result['verification']
+assert not any(entry['status'] == 'failed' for entry in result['verification'])
 assert not result['loaded']
 assert (Path(cfg['paths']['spires_dir']) / 'graph/nodes.csv').exists()
 print('CACHED_BUILD_OK')

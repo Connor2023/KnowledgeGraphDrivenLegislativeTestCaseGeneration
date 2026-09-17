@@ -70,6 +70,7 @@ export type Job = {
   stage?: string;
   progress?: { done: number; total: number };
   logs: string[];
+  persistenceWarning?: string;
   error?: string;
   request: Record<string, unknown>;
   command?: string;
@@ -79,6 +80,7 @@ export type Job = {
     warnings?: string[];
     provisions?: string[] | number;
     profile?: string;
+    verification?: { provision: string; status: string; message: string }[];
     files?: string[];
     items?: Run[];
     runs?: Run[];

@@ -43,6 +43,19 @@ pipeline's existing environment / `.env`; they are not sent to the browser.
    keys first. Replacement requires typing the selected corpus prefix. Merge loading
    may leave obsolete nodes and relationships, as in the official loader.
 
+Preview and generation require the selected corpus to be loaded in Neo4j. A successful
+CSV-only build is not enough; use **Load into Neo4j after building**, then **Check Neo4j**.
+Do not select another corpus's label to work around a missing graph.
+
+Verification is recorded per provision in `verification-report.json`. Items with no
+structured norms are skipped without a model call (they may be headings or extraction
+omissions). Sentence/norm pairing mismatches also skip recovery and retain cleaned
+norms with an explicit review warning. No skipped item is marked verified. Other
+provisions continue. Actual API/verifier failures are recorded, incomplete new verified
+files are removed, and CSV construction still completes; graph loading stays blocked
+until those failures are resolved. Successful verified files are reused on retry.
+Identifier and cross-prefix collision checks still apply independently.
+
 Each setting has visible help describing its effect and tradeoffs. Production exposes
 SPIRES, including optional related provision text. EDC/RP1/no-context/full-corpus arms
 and their unrelated tuning controls belong to evaluation and are not exposed here.

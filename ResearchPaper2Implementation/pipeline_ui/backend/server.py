@@ -49,9 +49,22 @@ def _read_json(path, default=None):
 
 def _write_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_suffix(".tmp")
-    temp.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
-    temp.replace(path)
+    temp = path.with_name(f".{path.stem}-{uuid.uuid4().hex}.tmp")
+    try:
+        temp.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
+        for attempt in range(5):
+            try:
+                temp.replace(path)
+                break
+            except OSError as exc:
+                if attempt == 4 or not (isinstance(exc, PermissionError) or getattr(exc, "winerror", None) in (5, 32, 33)):
+                    raise
+                time.sleep(0.025 * 2 ** attempt)
+    finally:
+        try:
+            temp.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 def _corpora():
@@ -71,6 +84,11 @@ def _context_from_prompt(prompt):
 
 def _run_payload(directory):
     record = _read_json(directory / "run_record.json", {}) or {}
+    error = record.get("error")
+    if error and "Configured node label" in error and "not present" in error:
+        error = ("The selected corpus graph is not loaded in Neo4j. Generation reads Neo4j, not local CSVs or extraction files. "
+                 "In Build graph, enable 'Load into Neo4j after building', complete the build, then use Check Neo4j before generating. "
+                 "Keep the selected corpus label; choosing another corpus's label will not fix this.\n\n" + error)
     prompt = (directory / "prompt.txt").read_text(encoding="utf-8") if (directory / "prompt.txt").exists() else record.get("prompt", "")
     warnings = list(record.get("gherkin_structure_problems") or [])
     if record.get("error"):
@@ -82,7 +100,7 @@ def _run_payload(directory):
             "queryContext": _context_from_prompt(prompt), "prompt": prompt, "record": record,
             "details": record.get("spires_context") or {}, "usage": record.get("llm") or {},
             "warnings": warnings,
-            "error": record.get("error") if record.get("status") == "failed" else None}
+            "error": error if record.get("status") == "failed" else None}
 
 
 def _result(directory):
@@ -100,8 +118,19 @@ def _result(directory):
     return result
 
 
-def _save(job):
-    _write_json(JOB_ROOT / job["id"] / "job.json", job)
+def _save(job, strict=False):
+    # A history write must never stop draining a paid subprocess's output.
+    snapshot = {key: value for key, value in job.items() if key != "persistenceWarning"}
+    try:
+        _write_json(JOB_ROOT / job["id"] / "job.json", snapshot)
+    except OSError as exc:
+        if strict:
+            raise
+        job["persistenceWarning"] = (
+            "Could not save job history to disk. Live status remains available; "
+            "saving will be retried. Keep the API running. " + str(exc))
+    else:
+        job.pop("persistenceWarning", None)
 
 
 def _restore():
@@ -178,6 +207,7 @@ def _worker(job, command):
                                        start_new_session=os.name != "nt")
             PROCESSES[job["id"]] = process
         with (directory / "output.log").open("a", encoding="utf-8") as log:
+            last_save = time.monotonic()
             for line in process.stdout:
                 log.write(line)
                 log.flush()
@@ -193,7 +223,9 @@ def _worker(job, command):
                         progress = re.search(r"(\d+)/(\d+)", line)
                     if progress:
                         job["progress"] = {"done": int(progress[1]), "total": int(progress[2])}
-                    _save(job)
+                    if time.monotonic() - last_save >= 1:
+                        _save(job)
+                        last_save = time.monotonic()
         code = process.wait()
         with LOCK:
             job["returnCode"] = code
@@ -237,8 +269,8 @@ def _start_job(kind, data):
         job = {"id": jid, "kind": kind, "label": f"{kind} · {(item or {}).get('name', data.get('name', 'New corpus'))}",
                "status": "queued", "createdAt": time.time(), "logs": [], "request": request,
                "command": subprocess.list2cmdline(command), "fingerprint": fingerprint, "stage": "queued"}
+        _save(job, strict=True)
         JOBS[jid] = job
-        _save(job)
         threading.Thread(target=_worker, args=(job, command), daemon=True).start()
         return dict(job)
 
@@ -299,6 +331,9 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(_corpora())
             elif path == "/api/jobs":
                 with LOCK:
+                    for job in JOBS.values():
+                        if job.get("persistenceWarning"):
+                            _save(job)
                     self._send(sorted(JOBS.values(), key=lambda x: x["createdAt"], reverse=True))
             elif path.startswith("/api/jobs/") and "/files/" in path:
                 jid, filename = path[len("/api/jobs/"):].split("/files/", 1)

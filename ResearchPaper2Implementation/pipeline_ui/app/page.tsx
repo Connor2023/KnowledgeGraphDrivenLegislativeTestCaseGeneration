@@ -278,6 +278,12 @@ function Results({ job, cancel }: { job?: Job; cancel: () => void }) {
                 </p>
               </>
             )}
+            {job.persistenceWarning && (
+              <Alert>
+                <AlertTitle>Job history could not be saved</AlertTitle>
+                <AlertDescription>{job.persistenceWarning}</AlertDescription>
+              </Alert>
+            )}
             {(job.error || result?.error) && (
               <Alert variant="destructive">
                 <AlertTitle>Job needs attention</AlertTitle>
@@ -305,6 +311,29 @@ function Results({ job, cancel }: { job?: Job; cancel: () => void }) {
                   <RunOutput key={i} run={run} />
                 ))}
                 {result?.profile && <TextOutput value={result.profile} />}
+                {result?.verification && (
+                  <details>
+                    <summary className="cursor-pointer text-sm font-semibold">
+                      Exception verification · {result.verification.length}{' '}
+                      provisions
+                    </summary>
+                    <ul className="mt-3 space-y-3">
+                      {result.verification.map((entry) => (
+                        <li
+                          key={entry.provision}
+                          className="rounded-lg border p-3 text-sm"
+                        >
+                          <strong>
+                            {entry.provision} · {entry.status}
+                          </strong>
+                          <p className="mt-1 leading-6 text-muted-foreground">
+                            {entry.message}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
                 {!(
                   result?.runs?.length ||
                   result?.items?.length ||
@@ -627,8 +656,9 @@ export default function Home() {
                   <CardHeader>
                     <CardTitle>Provision and retrieval</CardTitle>
                     <CardDescription>
-                      Generates Gherkin assertions for a person reviewing privacy
-                      policies. Production uses SPIRES; evaluation arms are separate.
+                      Generates Gherkin assertions for a person reviewing
+                      privacy policies. Production uses SPIRES; evaluation arms
+                      are separate.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-5">
@@ -942,13 +972,13 @@ export default function Home() {
                     </Field>
                     <Toggle
                       label="Verify exceptions"
-                      help="Recommended. Runs the pipeline’s paid exception-recovery pass for provisions without verified files. Existing verified outputs are reused; the extraction estimate does not include this pass."
+                      help="Runs paid exception recovery where structured norms can be paired with raw sentences. Empty or unpairable items keep cleaned output with a review warning; other provisions continue. API failures block loading after the checks finish. Successful verified outputs are reused. The extraction estimate excludes this pass."
                       checked={verifyExceptions}
                       onChange={setVerifyExceptions}
                     />
                     <Toggle
                       label="Load into Neo4j after building"
-                      help="Off by default. Otherwise stop at downloadable graph CSVs. Loading changes the selected corpus graph and runs prefix and endpoint checks first."
+                      help="Required before preview or scenario generation: both read Neo4j, not local files. Off by default to stop at downloadable CSVs. Loading changes the selected corpus graph and runs prefix and endpoint checks first."
                       checked={loadGraph}
                       onChange={(v) => {
                         setLoadGraph(v);

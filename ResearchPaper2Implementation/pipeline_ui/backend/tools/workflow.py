@@ -78,7 +78,9 @@ def check_load(session, nodes, prefix, name, registry):
             raise ValueError("Load blocked: duplicate graph keys make relationship endpoints ambiguous.")
 
 
-def build(data):
+def build(data, result=None):
+    if result is None:
+        result = {}
     import corpus_config as corpus
     import build_corpus as official
     import prep_corpus
@@ -167,23 +169,13 @@ def build(data):
     def stage_run(stage, argv):
         if stage != "verify":
             return original_run(stage, argv)
-        for pid in clauses:
-            raw = Path(corpus.SPIRES_OUTPUT_DIR) / corpus.provision_filename(pid, ".yaml")
-            verified = Path(corpus.SPIRES_OUTPUT_DIR) / corpus.provision_filename(pid, ".verified.yaml")
-            if raw.exists() and not verified.exists():
-                emit("verify", f"Recovering exceptions for {pid}; existing verified files are reused")
-                command = [*argv, "--glob", str(raw)]
-                emit("command", subprocess.list2cmdline(command))
-                checked = subprocess.run(command, cwd=ROOT, env=dict(os.environ), capture_output=True,
-                                         text=True, encoding="utf-8", errors="replace")
-                report = checked.stdout + checked.stderr
-                print(report, flush=True)
-                if checked.returncode or "verify failed:" in report or "SKIPPED -" in report or not verified.exists():
-                    # The upstream verifier can write a partial result and exit 0.
-                    # Do not cache it as completed work on the next retry.
-                    verified.unlink(missing_ok=True)
-                    raise ValueError(f"Exception verification did not complete for {pid}. "
-                                     "Its raw and cleaned artifacts are preserved; retry verification after addressing the log.")
+        from spires.clean_extraction import norm_sentences
+        from verification import verify_missing
+        entries = verify_missing(clauses, corpus, argv, emit, norm_sentences)
+        result["verification"] = entries
+        result.setdefault("warnings", []).extend(
+            f"{entry['provision']}: {entry['message']}" for entry in entries
+            if entry["status"] in ("skipped", "failed"))
     official._run = stage_run
     sys.argv = [str(ROOT / "build_corpus.py"), "--model", model]
     if only:
@@ -192,9 +184,11 @@ def build(data):
         sys.argv += ["--skip-verify"]
     if official.main():
         raise RuntimeError("The official build stopped at a validation gate. See the log.")
-    result = {"summary": "Graph CSVs built", "loaded": False, "provisions": len(clauses),
-              "warnings": (["A pilot limits new extraction; the graph includes all available artifacts for this corpus."] if only else []) + artifact_warnings()}
+    result.update({"summary": "Graph CSVs built", "loaded": False, "provisions": len(clauses),
+              "warnings": result.get("warnings", []) + (["A pilot limits new extraction; the graph includes all available artifacts for this corpus."] if only else []) + artifact_warnings()})
     if data.get("loadGraph"):
+        if any(entry["status"] == "failed" for entry in result.get("verification", [])):
+            raise ValueError("CSV build completed, but loading is blocked by verification failures. See the per-provision report and retry after fixing the cause.")
         if artifact_warnings():
             raise ValueError("Loading blocked by artifact identifier mismatches. Run a free preflight for the file names and details. "
                              "CSV output is available; source artifacts have not been changed.")
@@ -326,7 +320,7 @@ def main():
             if kind == "build":
                 started = time.time()
                 try:
-                    result = build(data)
+                    result = build(data, result)
                 finally:
                     graph_dir = workspace(item["id"]) / "spires/graph"
                     for filename in ("nodes.csv", "edges.csv"):
@@ -336,6 +330,9 @@ def main():
                     errors = workspace(item["id"]) / "spires/output/errors.log"
                     if errors.exists():
                         shutil.copy2(errors, directory / "extraction-errors.log")
+                    verification_report = workspace(item["id"]) / "spires/output/verification-report.json"
+                    if verification_report.exists() and verification_report.stat().st_mtime >= started:
+                        shutil.copy2(verification_report, directory / "verification-report.json")
             elif kind == "provisions":
                 command = [sys.executable, "-m", "kg_testgen", "--corpus", str(config), "--list-provisions"]
                 value = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=60)
@@ -382,7 +379,12 @@ def main():
         Path(args.result).write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         return 1 if result.get("error") else 0
     except Exception as exc:
-        result.update(error=f"{type(exc).__name__}: {exc}")
+        message = f"{type(exc).__name__}: {exc}"
+        if "Configured node label" in message and "not present" in message:
+            message = ("The selected corpus graph is not loaded in Neo4j. Preview and generation read Neo4j, not local CSVs. "
+                       "Enable 'Load into Neo4j after building' in Build graph, complete the build and check Neo4j before retrying. "
+                       "Do not switch to another corpus's node label.\n\n" + message)
+        result.update(error=message)
         Path(args.result).write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         emit("error", result["error"])
         return 1
