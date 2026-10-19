@@ -1,0 +1,15 @@
+# EDC knowledge-graph construction, for the `kg` and `kg-text-only` comparison arms only.
+#
+# The vendored tree ships environment.yml (conda) and no requirements.txt, which is what
+# PIPELINE_RUNBOOK.md used to tell people to install from. These are the versions the
+# EDC arm was actually run with.
+#
+# torch is the CPU build on purpose: the OpenAI code path never calls into it, and the
+# CUDA wheels are several gigabytes.
+
+torch==2.13.0+cpu --index-url https://download.pytorch.org/whl/cpu
+transformers==5.15.1
+sentence-transformers==6.0.0
+numpy==2.5.2
+openai==3.3.1
+tqdm==4.70.0

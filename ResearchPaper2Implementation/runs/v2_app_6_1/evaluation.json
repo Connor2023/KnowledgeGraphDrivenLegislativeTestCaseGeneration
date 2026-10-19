@@ -1,0 +1,97 @@
+{
+  "timestamp": "2026-08-28T02:16:06.585049+10:00",
+  "feature_name": "Use or disclosure of personal information",
+  "feature_path": "runs\\v2_app_6_1\\generated.feature",
+  "counts": {
+    "green_tick": 0,
+    "orange_cross": 0,
+    "red_cross": 2
+  },
+  "classification_meaning": {
+    "green_tick": "Satisfied by the 2016 policy.",
+    "orange_cross": "Not satisfied in 2016 but satisfied in 2026 - a real gap that was later closed, which also corroborates the test case.",
+    "red_cross": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review."
+  },
+  "scenarios_evaluated": 2,
+  "fabricated_evidence_count": 0,
+  "evaluations": [
+    {
+      "scenario": {
+        "name": "Prohibition on using personal information for secondary purposes",
+        "tags": [
+          "@s6-1",
+          "@prohibit-secondary-use"
+        ],
+        "steps": [
+          "Given the APP entity holds personal information about an individual",
+          "When the personal information was collected for a particular purpose",
+          "Then the privacy policy states that the personal information will not be used for another purpose without the individual's consent"
+        ],
+        "derives_from": "the entity must not use or disclose the information for another purpose (the secondary purpose) unless the individual has consented",
+        "line_number": 4
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state that personal information will not be used for another purpose without the individual's consent. It discusses data usage but does not address the prohibition on secondary use without consent.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "verdict_2026": {
+        "policy_label": "2026",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state that personal information will not be used for another purpose without the individual's consent. It lacks a clear commitment regarding the prohibition of secondary use of personal information.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "classification": "red_cross",
+      "classification_meaning": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review.",
+      "needs_manual_review": true
+    },
+    {
+      "scenario": {
+        "name": "Requirement for consent to use personal information for secondary purposes",
+        "tags": [
+          "@s6-1",
+          "@consent-for-secondary-use"
+        ],
+        "steps": [
+          "Given the APP entity holds personal information about an individual",
+          "When the personal information was collected for a particular purpose",
+          "Then the privacy policy states that the entity will obtain the individual's consent before using the personal information for a secondary purpose"
+        ],
+        "derives_from": "the entity must not use or disclose the information for another purpose... unless the individual has consented",
+        "line_number": 11
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state that the entity will obtain the individual's consent before using personal information for a secondary purpose. It discusses data usage but does not address consent for secondary uses.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "verdict_2026": {
+        "policy_label": "2026",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state that the entity will obtain the individual's consent before using personal information for a secondary purpose.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "classification": "red_cross",
+      "classification_meaning": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review.",
+      "needs_manual_review": true
+    }
+  ]
+}

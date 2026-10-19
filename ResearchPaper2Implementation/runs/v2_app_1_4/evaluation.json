@@ -1,0 +1,316 @@
+{
+  "timestamp": "2026-08-28T02:13:01.091544+10:00",
+  "feature_name": "APP Privacy Policy Requirements",
+  "feature_path": "runs\\v2_app_1_4\\generated.feature",
+  "counts": {
+    "green_tick": 5,
+    "orange_cross": 0,
+    "red_cross": 4
+  },
+  "classification_meaning": {
+    "green_tick": "Satisfied by the 2016 policy.",
+    "orange_cross": "Not satisfied in 2016 but satisfied in 2026 - a real gap that was later closed, which also corroborates the test case.",
+    "red_cross": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review."
+  },
+  "scenarios_evaluated": 9,
+  "fabricated_evidence_count": 0,
+  "evaluations": [
+    {
+      "scenario": {
+        "name": "The privacy policy must disclose the kinds of personal information collected",
+        "tags": [
+          "@s1-4",
+          "@collect-personal-information"
+        ],
+        "steps": [
+          "Given the APP entity has a privacy policy",
+          "Then the privacy policy states the kinds of personal information that the entity collects and holds"
+        ],
+        "derives_from": "the kinds of personal information that the entity collects and holds",
+        "line_number": 4
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "satisfied",
+        "confidence": "high",
+        "evidence_quote": "The data we collect depends on the services and features you use, and includes the following. Name and contact data. We collect your first and last name, email address, postal address, phone number, and other similar contact data. Credentials. We collect passwords, password hints, and similar security information used for authentication and account access. Demographic data. We collect data about you such as your age, gender, country and preferred language. Interests and favorites. We collect data about your interests and favorites, such as the teams you follow in a sports app, the stocks you track in a finance app, or the favorite cities you add to a weather app. In addition to those you explicitly provide, your interests and favorites may also be inferred or derived from other data we collect. Payment data. We collect data necessary to process your payment if you make purchases, such as your payment instrument number (such as a credit card number), and the security code associated with your payment instrument. Usage data. We collect data about how you and your device interact with our services. This includes data, such as the features you use, the items you purchase, the web pages you visit, and the search terms you enter. This also includes data about your device and the network you use to connect to our services, including IP address, device identifiers (such as the IMEI number for phones), regional and language settings. It includes information about the operating systems and other software installed on your device, including product keys. And it includes data about the performance of the services and any problems you experience with them. Contacts and relationships. We collect data about your contacts and relationships if you use a Microsoft service to manage contacts, or to communicate or interact with other people or organizations. Location data. We collect data about your location, which can be either precise or imprecise. Precise location data can be Global Position System (GPS) data, as well as data identifying nearby cell towers and Wi-Fi hotspots, we collect when you enable location-based services or features. Imprecise location data includes, for example, a location derived from your IP address or data that indicates where you are located with less precision, such as at a city or postal code level. Content. We collect content of your files and communications when necessary to provide you with the services you use.",
+        "reasoning": "The policy explicitly lists various types of personal information collected, including name, contact data, credentials, demographic data, interests, payment data, usage data, contacts, location data, and content, thereby satisfying the requirement.",
+        "evidence_verified": true,
+        "evidence_status": "verified",
+        "parse_error": null
+      },
+      "verdict_2026": null,
+      "classification": "green_tick",
+      "classification_meaning": "Satisfied by the 2016 policy.",
+      "needs_manual_review": false
+    },
+    {
+      "scenario": {
+        "name": "The privacy policy must explain how personal information is collected and held",
+        "tags": [
+          "@s1-4",
+          "@collection-methods"
+        ],
+        "steps": [
+          "Given the APP entity has a privacy policy",
+          "Then the privacy policy explains how the entity collects and holds personal information"
+        ],
+        "derives_from": "how the entity collects and holds personal information",
+        "line_number": 10
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "satisfied",
+        "confidence": "high",
+        "evidence_quote": "Microsoft collects data to operate effectively and provide you the best experiences with our services. You provide some of this data directly, such as when you create a Microsoft account, submit a search query to Bing, speak a voice command to Cortana, upload a document to OneDrive, or contact us for support.",
+        "reasoning": "The policy explicitly explains how personal information is collected by detailing various methods, such as creating an account, submitting queries, and uploading documents.",
+        "evidence_verified": true,
+        "evidence_status": "verified",
+        "parse_error": null
+      },
+      "verdict_2026": null,
+      "classification": "green_tick",
+      "classification_meaning": "Satisfied by the 2016 policy.",
+      "needs_manual_review": false
+    },
+    {
+      "scenario": {
+        "name": "The privacy policy must specify the purposes for collecting personal information",
+        "tags": [
+          "@s1-4",
+          "@purposes-of-collection"
+        ],
+        "steps": [
+          "Given the APP entity has a privacy policy",
+          "Then the privacy policy states the purposes for which the entity collects, holds, uses, and discloses personal information"
+        ],
+        "derives_from": "the purposes for which the entity collects, holds, uses and discloses personal information",
+        "line_number": 16
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "satisfied",
+        "confidence": "high",
+        "evidence_quote": "Microsoft uses the data we collect for three basic purposes, described in more detail below: (1) to operate our business and provide (including improving and personalizing) the services we offer, (2) to send communications, including promotional communications, and (3) to display advertising.",
+        "reasoning": "The policy explicitly states the purposes for which Microsoft collects, holds, uses, and discloses personal information, thus satisfying the requirement.",
+        "evidence_verified": true,
+        "evidence_status": "verified",
+        "parse_error": null
+      },
+      "verdict_2026": null,
+      "classification": "green_tick",
+      "classification_meaning": "Satisfied by the 2016 policy.",
+      "needs_manual_review": false
+    },
+    {
+      "scenario": {
+        "name": "The privacy policy must outline how individuals can access their personal information",
+        "tags": [
+          "@s1-4",
+          "@access-to-personal-information"
+        ],
+        "steps": [
+          "Given the APP entity has a privacy policy",
+          "Then the privacy policy explains how an individual may access personal information about themselves that is held by the entity"
+        ],
+        "derives_from": "how an individual may access personal information about the individual that is held by the entity",
+        "line_number": 22
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "satisfied",
+        "confidence": "high",
+        "evidence_quote": "You can view or edit your personal data online for many Microsoft services.",
+        "reasoning": "The policy explicitly states that individuals can view or edit their personal data, which satisfies the requirement of explaining how they may access their personal information.",
+        "evidence_verified": true,
+        "evidence_status": "verified",
+        "parse_error": null
+      },
+      "verdict_2026": null,
+      "classification": "green_tick",
+      "classification_meaning": "Satisfied by the 2016 policy.",
+      "needs_manual_review": false
+    },
+    {
+      "scenario": {
+        "name": "The privacy policy must describe how individuals can seek correction of their personal information",
+        "tags": [
+          "@s1-4",
+          "@correction-of-personal-information"
+        ],
+        "steps": [
+          "Given the APP entity has a privacy policy",
+          "Then the privacy policy explains how an individual may seek the correction of their personal information"
+        ],
+        "derives_from": "how an individual may seek the correction of such information",
+        "line_number": 28
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state how individuals can seek correction of their personal information.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "verdict_2026": {
+        "policy_label": "2026",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state how individuals can seek correction of their personal information, making the requirement not satisfied.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "classification": "red_cross",
+      "classification_meaning": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review.",
+      "needs_manual_review": true
+    },
+    {
+      "scenario": {
+        "name": "The privacy policy must detail how individuals can complain about breaches",
+        "tags": [
+          "@s1-4",
+          "@complaints-process"
+        ],
+        "steps": [
+          "Given the APP entity has a privacy policy",
+          "Then the privacy policy states how an individual may complain about a breach of the Australian Privacy Principles"
+        ],
+        "derives_from": "how an individual may complain about a breach of the Australian Privacy Principles",
+        "line_number": 34
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not provide any information on how individuals may complain about a breach of the Australian Privacy Principles.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "verdict_2026": {
+        "policy_label": "2026",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not provide any information on how an individual may complain about a breach of the Australian Privacy Principles.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "classification": "red_cross",
+      "classification_meaning": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review.",
+      "needs_manual_review": true
+    },
+    {
+      "scenario": {
+        "name": "The privacy policy must explain how the entity will deal with complaints",
+        "tags": [
+          "@s1-4",
+          "@complaints-handling"
+        ],
+        "steps": [
+          "Given the APP entity has a privacy policy",
+          "Then the privacy policy explains how the entity will deal with complaints about breaches of the Australian Privacy Principles"
+        ],
+        "derives_from": "how the entity will deal with such a complaint",
+        "line_number": 40
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explain how Microsoft will deal with complaints about breaches of the Australian Privacy Principles, nor does it mention any specific process for handling such complaints.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "verdict_2026": {
+        "policy_label": "2026",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly explain how Microsoft will deal with complaints about breaches of the Australian Privacy Principles.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "classification": "red_cross",
+      "classification_meaning": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review.",
+      "needs_manual_review": true
+    },
+    {
+      "scenario": {
+        "name": "The privacy policy must indicate if personal information is likely to be disclosed to overseas recipients",
+        "tags": [
+          "@s1-4",
+          "@disclosure-to-overseas-recipients"
+        ],
+        "steps": [
+          "Given the APP entity has a privacy policy",
+          "Then the privacy policy states whether the entity is likely to disclose personal information to overseas recipients"
+        ],
+        "derives_from": "whether the entity is likely to disclose personal information to overseas recipients",
+        "line_number": 46
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "satisfied",
+        "confidence": "high",
+        "evidence_quote": "We may also disclose personal data as part of a corporate transaction such as a merger or sale of assets.",
+        "reasoning": "The policy explicitly states that personal data may be disclosed as part of corporate transactions, which implies that such disclosures could involve overseas recipients.",
+        "evidence_verified": true,
+        "evidence_status": "verified",
+        "parse_error": null
+      },
+      "verdict_2026": null,
+      "classification": "green_tick",
+      "classification_meaning": "Satisfied by the 2016 policy.",
+      "needs_manual_review": false
+    },
+    {
+      "scenario": {
+        "name": "The privacy policy must specify the countries of overseas recipients if practicable",
+        "tags": [
+          "@s1-4",
+          "@countries-of-overseas-recipients"
+        ],
+        "steps": [
+          "Given the APP entity has a privacy policy",
+          "Then the privacy policy specifies the countries in which overseas recipients are likely to be located, if practicable"
+        ],
+        "derives_from": "if the entity is likely to disclose personal information to overseas recipients - the countries in which such recipients are likely to be located if it is practicable to specify those countries in the policy",
+        "line_number": 52
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not specify the countries in which overseas recipients are likely to be located, nor does it indicate any practicability in doing so.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "verdict_2026": {
+        "policy_label": "2026",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not specify the countries in which overseas recipients are likely to be located, nor does it indicate that it is practicable to do so.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "classification": "red_cross",
+      "classification_meaning": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review.",
+      "needs_manual_review": true
+    }
+  ]
+}

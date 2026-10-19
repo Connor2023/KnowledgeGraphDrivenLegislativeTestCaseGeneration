@@ -1,0 +1,130 @@
+{
+  "timestamp": "2026-08-28T02:01:35.987656+10:00",
+  "feature_name": "Use or disclosure of personal information under Australian Privacy Principle 6",
+  "feature_path": "runs\\final_6_1\\generated.feature",
+  "counts": {
+    "green_tick": 0,
+    "orange_cross": 0,
+    "red_cross": 3
+  },
+  "classification_meaning": {
+    "green_tick": "Satisfied by the 2016 policy.",
+    "orange_cross": "Not satisfied in 2016 but satisfied in 2026 - a real gap that was later closed, which also corroborates the test case.",
+    "red_cross": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review."
+  },
+  "scenarios_evaluated": 3,
+  "unverified_evidence_count": 0,
+  "evaluations": [
+    {
+      "scenario": {
+        "name": "Prohibition on using or disclosing personal information for a secondary purpose",
+        "tags": [
+          "@s6-1",
+          "@prohibit-secondary-use"
+        ],
+        "steps": [
+          "Given an APP entity holds personal information about an individual",
+          "When the personal information was collected for a primary purpose",
+          "Then the privacy policy states that the entity must not use or disclose the information for a secondary purpose unless certain conditions are met"
+        ],
+        "derives_from": "the entity must not use or disclose the information for another purpose (the secondary purpose)",
+        "line_number": 4
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state that the entity must not use or disclose personal information for a secondary purpose unless certain conditions are met. It lacks the necessary language to satisfy the requirement.",
+        "evidence_verified": false,
+        "parse_error": null
+      },
+      "verdict_2026": {
+        "policy_label": "2026",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state that the entity must not use or disclose personal information for a secondary purpose unless certain conditions are met. It lacks the necessary language to satisfy the requirement.",
+        "evidence_verified": false,
+        "parse_error": null
+      },
+      "classification": "red_cross",
+      "classification_meaning": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review.",
+      "needs_manual_review": true
+    },
+    {
+      "scenario": {
+        "name": "Requirement for individual consent for secondary use or disclosure",
+        "tags": [
+          "@s6-1",
+          "@require-consent"
+        ],
+        "steps": [
+          "Given an APP entity holds personal information about an individual",
+          "When the entity intends to use or disclose the information for a secondary purpose",
+          "Then the privacy policy states that the entity requires the individual's consent for such use or disclosure"
+        ],
+        "derives_from": "unless the individual has consented to the use or disclosure of the information",
+        "line_number": 11
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state that the entity requires the individual's consent for secondary use or disclosure of personal information.",
+        "evidence_verified": false,
+        "parse_error": null
+      },
+      "verdict_2026": {
+        "policy_label": "2026",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state that the entity requires the individual's consent for secondary use or disclosure of personal information.",
+        "evidence_verified": false,
+        "parse_error": null
+      },
+      "classification": "red_cross",
+      "classification_meaning": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review.",
+      "needs_manual_review": true
+    },
+    {
+      "scenario": {
+        "name": "Application of subclauses for secondary use or disclosure",
+        "tags": [
+          "@s6-1",
+          "@apply-subclauses"
+        ],
+        "steps": [
+          "Given an APP entity holds personal information about an individual",
+          "When the entity considers using or disclosing the information for a secondary purpose",
+          "Then the privacy policy states the conditions under which subclauses 6.2 or 6.3 apply to the use or disclosure of the information"
+        ],
+        "derives_from": "unless subclause 6.2 or 6.3 applies in relation to the use or disclosure of the information",
+        "line_number": 18
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state the conditions under which subclauses 6.2 or 6.3 apply to the use or disclosure of personal information for secondary purposes.",
+        "evidence_verified": false,
+        "parse_error": null
+      },
+      "verdict_2026": {
+        "policy_label": "2026",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state the conditions under which subclauses 6.2 or 6.3 apply to the use or disclosure of personal information for secondary purposes.",
+        "evidence_verified": false,
+        "parse_error": null
+      },
+      "classification": "red_cross",
+      "classification_meaning": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review.",
+      "needs_manual_review": true
+    }
+  ]
+}

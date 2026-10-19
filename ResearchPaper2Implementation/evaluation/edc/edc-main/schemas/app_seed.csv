@@ -1,0 +1,45 @@
+belongs to principle,"The provision specified by the subject entity forms part of, and is enacted under, the higher-level principle or instrument specified by the object entity."
+has title,The provision or principle specified by the subject entity is formally named by the title specified by the object entity.
+set out in,The principle or provision specified by the subject entity is contained in the instrument specified by the object entity.
+applies to,The obligation or principle specified by the subject entity governs the class of party or information specified by the object entity.
+does not apply to,The obligation or principle specified by the subject entity does not govern the class of party or activity specified by the object entity.
+holds,The regulated party specified by the subject entity possesses or has in its control the information or asset specified by the object entity.
+collects,The regulated party specified by the subject entity gathers or acquires the information specified by the object entity.
+may collect,The regulated party specified by the subject entity is permitted to gather or acquire the information specified by the object entity.
+must not collect,The regulated party specified by the subject entity is prohibited from gathering or acquiring the information specified by the object entity.
+may use for,The regulated party specified by the subject entity is permitted to use information for the purpose specified by the object entity.
+must not use for,The regulated party specified by the subject entity is prohibited from using information for the purpose specified by the object entity.
+may disclose to,"The regulated party specified by the subject entity is permitted, subject to conditions, to release information to the recipient specified by the object entity."
+must not disclose to,The regulated party specified by the subject entity is prohibited from releasing information to the recipient specified by the object entity.
+must not disclose for,The regulated party specified by the subject entity is prohibited from releasing information for the purpose specified by the object entity.
+must notify individual of,The regulated party specified by the subject entity is under a legal obligation to make the individual aware of the matter specified by the object entity.
+must protect,The regulated party specified by the subject entity is under a legal obligation to safeguard the information or asset specified by the object entity.
+must protect against,"The regulated party specified by the subject entity is under a legal obligation to guard against the harm, risk or event specified by the object entity."
+must take reasonable steps to,The regulated party specified by the subject entity is under a legal obligation to take such steps as are reasonable in the circumstances to achieve the outcome specified by the object entity.
+must destroy or de-identify,The regulated party specified by the subject entity is under a legal obligation to destroy or de-identify the information specified by the object entity.
+must ensure accuracy of,"The regulated party specified by the subject entity is under a legal obligation to ensure the information specified by the object entity is accurate, up-to-date and complete."
+requires consent of,The act or handling activity specified by the subject entity is lawful only if the person specified by the object entity has agreed to it.
+must be necessary for,The act or handling activity specified by the subject entity is lawful only if it is reasonably necessary for the function or purpose specified by the object entity.
+has exception,The obligation or prohibition specified by the subject entity does not apply in the circumstance specified by the object entity.
+is subject to condition,The permission or act specified by the subject entity is available only where the condition specified by the object entity is satisfied.
+relates to,"The information specified by the subject entity concerns, or is about, the person or thing specified by the object entity."
+is a type of,The entity specified by the subject entity is a subclass or particular kind of the category specified by the object entity.
+located outside,The party specified by the subject entity is situated beyond the jurisdiction or territory specified by the object entity.
+must ensure compliance of,The regulated party specified by the subject entity is under a legal obligation to take steps so that the party specified by the object entity observes the applicable rules.
+must not breach,"The party specified by the subject entity is prohibited from contravening the rule, principle or instrument specified by the object entity."
+may request access to,The person specified by the subject entity has a right to ask to be given access to the information specified by the object entity.
+may request correction of,The person specified by the subject entity has a right to ask that the information specified by the object entity be corrected.
+must respond to,The regulated party specified by the subject entity is under a legal obligation to deal with and answer the request specified by the object entity.
+must respond within,The regulated party specified by the subject entity is under a legal obligation to act inside the time period specified by the object entity.
+must give access to,The regulated party specified by the subject entity is under a legal obligation to give a person access to the information specified by the object entity.
+must correct,The regulated party specified by the subject entity is under a legal obligation to correct the information specified by the object entity.
+must not charge for,The regulated party specified by the subject entity is prohibited from imposing a charge for the request or activity specified by the object entity.
+must give reasons for,The regulated party specified by the subject entity is under a legal obligation to give written reasons for the decision specified by the object entity.
+must not adopt,The regulated party specified by the subject entity is prohibited from taking on or using as its own the identifier specified by the object entity.
+must have policy about,The regulated party specified by the subject entity is under a legal obligation to maintain a clearly expressed and up-to-date policy about the matter specified by the object entity.
+must make available,The regulated party specified by the subject entity is under a legal obligation to make the document specified by the object entity available to others.
+must provide option of,The regulated party specified by the subject entity is under a legal obligation to offer individuals the option specified by the object entity.
+may use,The regulated party specified by the subject entity is permitted to use the information specified by the object entity.
+may disclose,The regulated party specified by the subject entity is permitted to release the information specified by the object entity.
+sets out,The Part or instrument specified by the subject entity contains and establishes the principles or matters specified by the object entity.
+available on,The document specified by the subject entity is published at or accessible from the location specified by the object entity.

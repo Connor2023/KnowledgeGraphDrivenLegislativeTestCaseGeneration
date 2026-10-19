@@ -1,0 +1,45 @@
+# Paths the measurement code needs and the pipeline does not.
+#
+# These used to be scattered as string constants across four scripts, and one of them --
+# the element decomposition -- was declared in corpus.yaml, where it did not belong: the
+# pipeline never read it, so a pipeline config file was advertising an evaluation
+# artefact. Everything evaluation-only lives here now, and corpus.yaml describes the
+# corpus alone.
+#
+# Paths are relative to the repository root, which is where the evaluation modules are
+# meant to be run from:
+#
+#     python -m evaluation.score_elements --dry-run
+
+name: app_schedule1_experiment
+description: Measurement inputs for the 7-arm comparison on APP 2.2, 4.4 and 6.1
+
+# The hand-written legal element decomposition scored for coverage. Derived from the
+# statute rather than from the manual test cases, so that scoring the manual set is not
+# circular; every element is tiered `core` or `cross-referenced`.
+elements: evaluation/ground_truth/elements/legal_elements.yaml
+
+# Verbatim statute, quoted to the soundness judge so it can check entailment.
+statute: pipeline/corpora/APPschedule1.txt
+
+# The human-written test cases the generated ones are compared against.
+manual_cases: evaluation/ground_truth/testcasecomparison/Test cases FYP.docx
+
+# Ground truth for the policy check. 2016 is the document under test; 2026 acts as
+# ground truth for whether a 2016 failure was a real gap that was later closed.
+policies:
+  "2016": ../MicrosoftPrivacyPolicy/2016.txt
+  "2026": ../MicrosoftPrivacyPolicy/2026.txt
+
+# The vendored EDC tree, for the `kg` and `kg-text-only` arms. These two used to sit in
+# the pipeline's corpus.yaml, which meant the proposed artefact's configuration named a
+# comparison arm's data. Paths are relative to the repository root, as everything here is.
+edc:
+  corpus: evaluation/edc/edc-main/datasets/app_schedule1.txt
+  graph_dir: evaluation/edc/edc-main/output/app_full/graph
+
+# Where judgements, worksheets and reports are written. Under runs/, which is gitignored.
+output:
+  elements: runs/elements
+  soundness: runs/soundness
+  experiment: runs/experiment

@@ -1,0 +1,85 @@
+Example 1:
+Text: Under Australian Privacy Principle 11 (security of personal information), subclause 11.1 of Schedule 1 of the Privacy Act provides that if an APP entity holds personal information, the entity must take such steps as are reasonable in the circumstances to protect the information from misuse, interference and loss.
+Triples: [['subclause 11.1', 'belongs to principle', 'Australian Privacy Principle 11'], ['APP entity', 'holds', 'personal information'], ['APP entity', 'must protect', 'personal information'], ['APP entity', 'must protect against', 'misuse, interference and loss']]
+Relations: ['belongs to principle', 'holds', 'must protect', 'must protect against']
+Answer:
+belongs to principle: The provision specified by the subject entity forms part of, and is enacted under, the higher-level principle or instrument specified by the object entity.
+holds: The regulated party specified by the subject entity possesses or has in its control the information or asset specified by the object entity.
+must protect: The regulated party specified by the subject entity is under a legal obligation to safeguard the information or asset specified by the object entity.
+must protect against: The regulated party specified by the subject entity is under a legal obligation to guard against the harm, risk or event specified by the object entity.
+
+Example 2:
+Text: Under Australian Privacy Principle 3 (collection of solicited personal information), subclause 3.3 of Schedule 1 of the Privacy Act provides that an APP entity must not collect sensitive information about an individual unless the individual consents to the collection of the information.
+Triples: [['APP entity', 'must not collect', 'sensitive information'], ['sensitive information', 'relates to', 'individual'], ['collection of sensitive information', 'requires consent of', 'individual']]
+Relations: ['must not collect', 'relates to', 'requires consent of']
+Answer:
+must not collect: The regulated party specified by the subject entity is prohibited from gathering or acquiring the information specified by the object entity.
+relates to: The information specified by the subject entity concerns, or is about, the person or thing specified by the object entity.
+requires consent of: The act or handling activity specified by the subject entity is lawful only if the person specified by the object entity has agreed to it.
+
+Example 3:
+Text: Under Australian Privacy Principle 8 (cross-border disclosure of personal information), subclause 8.1 of Schedule 1 of the Privacy Act provides that before an APP entity discloses personal information to a person who is not in Australia, the entity must take such steps as are reasonable to ensure that the overseas recipient does not breach the Australian Privacy Principles.
+Triples: [['APP entity', 'may disclose to', 'overseas recipient'], ['overseas recipient', 'located outside', 'Australia'], ['APP entity', 'must ensure compliance of', 'overseas recipient'], ['overseas recipient', 'must not breach', 'Australian Privacy Principles']]
+Relations: ['may disclose to', 'located outside', 'must ensure compliance of', 'must not breach']
+Answer:
+may disclose to: The regulated party specified by the subject entity is permitted, subject to conditions, to release information to the recipient specified by the object entity.
+located outside: The party specified by the subject entity is situated beyond the jurisdiction or territory specified by the object entity.
+must ensure compliance of: The regulated party specified by the subject entity is under a legal obligation to take steps so that the party specified by the object entity observes the applicable rules.
+must not breach: The party specified by the subject entity is prohibited from contravening the rule, principle or instrument specified by the object entity.
+
+Example 4:
+Text: Under Australian Privacy Principle 12 (access to personal information), subclause 12.4 of Schedule 1 of the Privacy Act provides that an APP entity that is an agency must respond to a request for access to personal information within 30 days after the request is made.
+Triples: [['individual', 'may request access to', 'personal information'], ['agency', 'must respond to', 'request for access to personal information'], ['agency', 'must respond within', '30 days']]
+Relations: ['may request access to', 'must respond to', 'must respond within']
+Answer:
+may request access to: The person specified by the subject entity has a right to ask to be given access to the information specified by the object entity.
+must respond to: The regulated party specified by the subject entity is under a legal obligation to deal with and answer the request specified by the object entity.
+must respond within: The regulated party specified by the subject entity is under a legal obligation to act inside the time period specified by the object entity.
+
+Example 5:
+Text: Under Australian Privacy Principle 9 (adoption, use or disclosure of government related identifiers), subclause 9.1 of Schedule 1 of the Privacy Act provides that an organisation must not adopt a government related identifier of an individual as its own identifier unless the adoption is required or authorised by or under an Australian law.
+Triples: [['organisation', 'must not adopt', 'government related identifier'], ['adoption of government related identifier', 'has exception', 'required or authorised by or under an Australian law'], ['Australian Privacy Principle 9', 'has title', 'adoption, use or disclosure of government related identifiers']]
+Relations: ['must not adopt', 'has exception', 'has title']
+Answer:
+must not adopt: The regulated party specified by the subject entity is prohibited from taking on or using as its own the identifier specified by the object entity.
+has exception: The obligation or prohibition specified by the subject entity does not apply in the circumstance specified by the object entity.
+has title: The provision or principle specified by the subject entity is formally named by the title specified by the object entity.
+
+Example 6:
+Text: Under Australian Privacy Principle 5 (notification of the collection of personal information), subclause 5.2 of Schedule 1 of the Privacy Act provides that the matters for the purposes of subclause 5.1 are as follows (d) the purposes for which the APP entity collects the personal information.
+Triples: [['Australian Privacy Principle 5', 'set out in', 'Schedule 1 of the Privacy Act'], ['APP entity', 'collects', 'personal information'], ['APP entity', 'must notify individual of', 'the purposes for which the APP entity collects the personal information']]
+Relations: ['set out in', 'collects', 'must notify individual of']
+Answer:
+set out in: The principle or provision specified by the subject entity is contained in the instrument specified by the object entity.
+collects: The regulated party specified by the subject entity gathers or acquires the information specified by the object entity.
+must notify individual of: The regulated party specified by the subject entity is under a legal obligation to make the individual aware of the matter specified by the object entity.
+
+Example 7:
+Text: Under Australian Privacy Principle 7 (direct marketing), subclause 7.1 of Schedule 1 of the Privacy Act provides that an organisation must not use or disclose personal information for the purpose of direct marketing, unless the use is reasonably necessary for the organisation's functions or activities.
+Triples: [['organisation', 'must not use for', 'direct marketing'], ['organisation', 'must not disclose for', 'direct marketing'], ['use of personal information', 'must be necessary for', "the organisation's functions or activities"]]
+Relations: ['must not use for', 'must not disclose for', 'must be necessary for']
+Answer:
+must not use for: The regulated party specified by the subject entity is prohibited from using information for the purpose specified by the object entity.
+must not disclose for: The regulated party specified by the subject entity is prohibited from releasing information for the purpose specified by the object entity.
+must be necessary for: The act or handling activity specified by the subject entity is lawful only if it is reasonably necessary for the function or purpose specified by the object entity.
+
+Example 8:
+Text: Under Australian Privacy Principle 4 (dealing with unsolicited personal information), subclause 4.2 of Schedule 1 of the Privacy Act provides that the APP entity may use or disclose the personal information for the purposes of making the determination required by subclause 4.1.
+Triples: [['APP entity', 'may use', 'personal information'], ['APP entity', 'may disclose', 'personal information'], ['APP entity', 'may use for', 'making the determination required by subclause 4.1'], ['APP entity', 'must destroy or de-identify', 'personal information'], ['APP entity', 'must take reasonable steps to', 'destroy or de-identify the personal information']]
+Relations: ['may use', 'may disclose', 'may use for', 'must destroy or de-identify', 'must take reasonable steps to']
+Answer:
+may use: The regulated party specified by the subject entity is permitted to use the information specified by the object entity.
+may disclose: The regulated party specified by the subject entity is permitted to release the information specified by the object entity.
+may use for: The regulated party specified by the subject entity is permitted to use information for the purpose specified by the object entity.
+must destroy or de-identify: The regulated party specified by the subject entity is under a legal obligation to destroy or de-identify the information specified by the object entity.
+must take reasonable steps to: The regulated party specified by the subject entity is under a legal obligation to take such steps as are reasonable in the circumstances to achieve the outcome specified by the object entity.
+
+Example 9:
+Text: In Schedule 1 of the Privacy Act, part 5 sets out principles that deal with requests for access to personal information, and an APP entity must make its APP privacy policy available on its website free of charge.
+Triples: [['Part 5', 'sets out', 'principles about access to and correction of personal information'], ['APP entity', 'must make available', 'APP privacy policy'], ['APP privacy policy', 'available on', "the entity's website"], ['Australian Privacy Principle 7', 'does not apply to', 'the Spam Act 2003']]
+Relations: ['sets out', 'must make available', 'available on', 'does not apply to']
+Answer:
+sets out: The Part or instrument specified by the subject entity contains and establishes the principles or matters specified by the object entity.
+must make available: The regulated party specified by the subject entity is under a legal obligation to make the document specified by the object entity available to others.
+available on: The document specified by the subject entity is published at or accessible from the location specified by the object entity.
+does not apply to: The obligation or principle specified by the subject entity does not govern the class of party, activity or instrument specified by the object entity.

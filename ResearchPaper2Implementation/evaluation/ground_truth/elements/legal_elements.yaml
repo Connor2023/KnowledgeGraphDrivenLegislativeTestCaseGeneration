@@ -1,0 +1,361 @@
+# Legal element decomposition for the three experiment subclauses.
+#
+# An "element" is one atomic legal proposition that a test case could target. The set of
+# elements for a subclause is the denominator for coverage: what a complete test suite
+# would have to address. This is the Tier 2 metric -- it replaces scenario counting,
+# which cannot distinguish four scenarios covering four exception limbs from four
+# scenarios restating one.
+#
+# TWO DESIGN DECISIONS THAT MATTER
+#
+# 1. Elements are derived from the statute, NOT from the manual test cases. Deriving
+#    them from the manual set would make "manual coverage = 100%" true by construction
+#    and the metric circular. The `manual_cases` field records which hand-written cases
+#    happen to hit each element, which is evidence about the manual set, not its
+#    definition -- and several elements below have no manual case at all.
+#
+# 2. Every element is tiered `core` or `cross-referenced`:
+#      core             derivable from the target section's own text
+#      cross-referenced requires the text of a provision the section points at
+#    This split IS the experiment. An arm that cannot see cross-references should score
+#    on `core` and fail on `cross-referenced`; if the knowledge graph contributes
+#    anything, it contributes there specifically. Reporting one undifferentiated coverage
+#    number would hide the only effect under test.
+#
+# STATUS: DRAFT FOR REVIEW. The element lists are a legal judgement call about
+# granularity -- too fine and every arm looks bad, too coarse and nothing separates.
+# Correct these before scoring anything; the numbers inherit every error here.
+
+meta:
+  source: APPschedule1.txt (Privacy Act 1988 (Cth), Schedule 1)
+  granularity: >
+    One element per independently testable proposition. A disjunctive limb with
+    materially different trigger conditions is split (an Australian law and a court order
+    are separate elements because an entity can satisfy one without the other); a mere
+    rewording is not.
+  scoring: >
+    An element is covered if at least one scenario in the set addresses that proposition,
+    whether it asserts the rule holds or that it is correctly not applied. Partial
+    credit is not used -- half-covering a legal element is not a meaningful state.
+
+sections:
+
+  # ---------------------------------------------------------------------------------
+  "2.2":
+    file: sections/line34_app_2_2.txt
+    text: >
+      Subclause 2.1 does not apply if, in relation to that matter: (a) the APP entity is
+      required or authorised by or under an Australian law, or a court/tribunal order, to
+      deal with individuals who have identified themselves; or (b) it is impracticable
+      for the APP entity to deal with individuals who have not identified themselves or
+      who have used a pseudonym.
+    cross_references: ["2.1"]
+    elements:
+
+      - id: 2.2-E01
+        tier: cross-referenced
+        proposition: >
+          The right being disapplied is the 2.1 right to deal anonymously. Where no
+          exception applies, the individual must be offered the option of not
+          identifying themselves.
+        note: >
+          2.2 never states what 2.1 says. An arm that cannot see 2.1 can know an
+          exception exists without knowing what it is an exception TO. This is the single
+          most diagnostic element in the whole set.
+        manual_cases: ["APP2.2-TC01"]
+
+      - id: 2.2-E02
+        tier: cross-referenced
+        proposition: >
+          The 2.1 right includes a distinct pseudonym option, not only anonymity.
+        manual_cases: ["APP2.2-TC02"]
+
+      - id: 2.2-E03
+        tier: core
+        proposition: >
+          Limb (a): an Australian law that REQUIRES the entity to deal with identified
+          individuals disapplies 2.1.
+        manual_cases: ["APP2.2-TC03"]
+
+      - id: 2.2-E04
+        tier: core
+        proposition: >
+          Limb (a): an Australian law that merely AUTHORISES dealing with identified
+          individuals also disapplies 2.1. Authorisation is a lower bar than requirement
+          and is independently sufficient.
+        manual_cases: ["APP2.2-TC04"]
+
+      - id: 2.2-E05
+        tier: core
+        proposition: >
+          Limb (a): a court order requiring or authorising dealing with identified
+          individuals disapplies 2.1.
+        manual_cases: ["APP2.2-TC05", "APP2.2-TC06"]
+
+      - id: 2.2-E06
+        tier: core
+        proposition: >
+          Limb (a): a tribunal order requiring or authorising dealing with identified
+          individuals disapplies 2.1.
+        manual_cases: ["APP2.2-TC07", "APP2.2-TC08"]
+
+      - id: 2.2-E07
+        tier: core
+        proposition: >
+          Limb (a) is specifically about dealing with individuals WHO HAVE IDENTIFIED
+          THEMSELVES. A legal obligation that does not bear on identification does not
+          engage the exception.
+        manual_cases: []
+        note: No manual case covers this. A gap in the reference set, not in the statute.
+
+      - id: 2.2-E08
+        tier: core
+        proposition: >
+          Limb (b): impracticability of dealing with individuals who have NOT IDENTIFIED
+          themselves disapplies 2.1.
+        manual_cases: ["APP2.2-TC09"]
+
+      - id: 2.2-E09
+        tier: core
+        proposition: >
+          Limb (b): impracticability of dealing with individuals who have USED A
+          PSEUDONYM disapplies 2.1.
+        manual_cases: ["APP2.2-TC10"]
+
+      - id: 2.2-E10
+        tier: core
+        proposition: >
+          The two limbs are disjunctive: either (a) or (b) alone is sufficient. Neither
+          is a precondition of the other.
+        manual_cases: []
+        note: No manual case covers this.
+
+      - id: 2.2-E11
+        tier: core
+        proposition: >
+          The disapplication is scoped by "in relation to that matter" -- it is
+          matter-specific, not a blanket exemption for the entity or for all dealings
+          with that individual.
+        manual_cases: ["APP2.2-TC15"]
+
+      - id: 2.2-E12
+        tier: core
+        proposition: >
+          The anonymity and pseudonymity options are severable: one can be impracticable
+          while the other remains practicable, and the practicable one must still be
+          offered.
+        manual_cases: ["APP2.2-TC11", "APP2.2-TC12", "APP2.2-TC13"]
+
+      - id: 2.2-E13
+        tier: core
+        proposition: >
+          The two limbs are exhaustive. Nothing else disapplies 2.1 -- internal policy,
+          commercial convenience or an unverified impracticability claim do not.
+        manual_cases: ["APP2.2-TC14", "APP2.2-TC16"]
+
+  # ---------------------------------------------------------------------------------
+  "4.4":
+    file: sections/line49_app_4_4.txt
+    text: >
+      If subclause 4.3 does not apply in relation to the personal information, Australian
+      Privacy Principles 5 to 13 apply in relation to the information as if the entity
+      had collected the information under Australian Privacy Principle 3.
+    cross_references: ["4.3", "APP 3", "APP 5", "APP 6", "APP 7", "APP 8", "APP 9",
+                       "APP 10", "APP 11", "APP 12", "APP 13"]
+    elements:
+
+      - id: 4.4-E01
+        tier: cross-referenced
+        proposition: >
+          The trigger is the NON-application of 4.3, which itself requires two conditions
+          (the entity determined it could not have collected the information, and the
+          information is not in a Commonwealth record). 4.4 therefore engages whenever
+          either of those fails.
+        note: >
+          4.4 is almost pure cross-reference. Without 4.3 an arm knows a condition exists
+          but not what it is -- which is why every arm produces only 1-2 scenarios here.
+        manual_cases: []
+
+      - id: 4.4-E02
+        tier: core
+        proposition: >
+          Consequence: APPs 5 to 13 apply to the information.
+        manual_cases: ["APP4.4-TC01", "APP4.4-TC03"]
+
+      - id: 4.4-E03
+        tier: core
+        proposition: >
+          The deeming device: the information is treated AS IF collected under APP 3.
+          It is a legal fiction about the manner of collection, not a finding that
+          collection actually occurred that way.
+        manual_cases: ["APP4.4-TC02"]
+
+      - id: 4.4-E04
+        tier: core
+        proposition: >
+          The range 5 to 13 is inclusive and complete. Applying only some of APPs 5-13 is
+          non-compliance.
+        manual_cases: ["APP4.4-TC13"]
+
+      - id: 4.4-E05
+        tier: cross-referenced
+        proposition: >
+          Negative boundary: where 4.3 DOES apply, the operative obligation is 4.3's
+          destruction-or-de-identification path, and 4.4 is not the basis for applying
+          APPs 5-13.
+        manual_cases: ["APP4.4-TC14"]
+
+      - id: 4.4-E06
+        tier: cross-referenced
+        proposition: >
+          Each of APPs 5-13 continues to apply subject to its own internal conditions.
+          4.4 switches them on; it does not override or unconditionally satisfy them.
+        manual_cases: ["APP4.4-TC03"]
+
+      - id: 4.4-E07
+        tier: core
+        proposition: >
+          Unsolicited receipt is not itself a ground of exemption. The entity cannot
+          exclude the information from APPs 5-13 merely because it did not request it.
+        manual_cases: ["APP4.4-TC12"]
+
+  # ---------------------------------------------------------------------------------
+  "6.1":
+    file: sections/line60_app_6_1.txt
+    text: >
+      If an APP entity holds personal information about an individual that was collected
+      for a particular purpose (the primary purpose), the entity must not use or disclose
+      the information for another purpose (the secondary purpose) unless: (a) the
+      individual has consented to the use or disclosure of the information; or (b)
+      subclause 6.2 or 6.3 applies in relation to the use or disclosure of the
+      information.
+    cross_references: ["6.2", "6.3"]
+    elements:
+
+      - id: 6.1-E01
+        tier: core
+        proposition: >
+          Precondition: the entity HOLDS the personal information.
+        manual_cases: []
+
+      - id: 6.1-E02
+        tier: core
+        proposition: >
+          Precondition: the information was collected for a particular purpose, which
+          establishes the primary purpose against which any other purpose is secondary.
+        manual_cases: ["APP6.1-TC01"]
+
+      - id: 6.1-E03
+        tier: core
+        proposition: >
+          Core prohibition on USE for a secondary purpose absent an exception.
+        manual_cases: ["APP6.1-TC05"]
+
+      - id: 6.1-E04
+        tier: core
+        proposition: >
+          Core prohibition on DISCLOSURE for a secondary purpose absent an exception.
+          Use and disclosure are distinct acts and must be tested separately.
+        manual_cases: ["APP6.1-TC06"]
+
+      - id: 6.1-E05
+        tier: core
+        proposition: >
+          Out of scope: use or disclosure for the primary purpose is not caught by 6.1
+          at all, and needs no exception.
+        manual_cases: ["APP6.1-TC01"]
+
+      - id: 6.1-E06
+        tier: core
+        proposition: >
+          Exception (a): the individual has consented to the use or disclosure.
+        manual_cases: ["APP6.1-TC02"]
+
+      - id: 6.1-E07
+        tier: core
+        proposition: >
+          Consent is specific to the use or disclosure consented to. Consent to one
+          secondary purpose does not license a different secondary purpose.
+        manual_cases: ["APP6.1-TC07"]
+
+      - id: 6.1-E08
+        tier: core
+        proposition: >
+          Exception (b): subclause 6.2 applies to the use or disclosure.
+        manual_cases: ["APP6.1-TC03"]
+
+      - id: 6.1-E09
+        tier: core
+        proposition: >
+          Exception (b): subclause 6.3 applies to the disclosure.
+        manual_cases: ["APP6.1-TC04"]
+
+      - id: 6.1-E10
+        tier: core
+        proposition: >
+          The exceptions are disjunctive and non-exclusive: any one suffices, and more
+          than one may apply to the same act.
+        manual_cases: ["APP6.1-TC08"]
+
+      - id: 6.1-E11
+        tier: core
+        proposition: >
+          Where no exception applies, the use or disclosure must not occur. The
+          prohibition is the default, not the exception.
+        manual_cases: ["APP6.1-TC05", "APP6.1-TC06"]
+
+      - id: 6.1-E12
+        tier: core
+        proposition: >
+          Consent, 6.2 and 6.3 are the only gateways in 6.1. No other justification
+          (business need, industry practice) opens secondary use.
+        manual_cases: []
+
+      - id: 6.1-E13
+        tier: cross-referenced
+        proposition: >
+          6.2(a): the individual would reasonably expect the use or disclosure, AND the
+          secondary purpose is directly related to the primary purpose for sensitive
+          information, or merely related for non-sensitive information.
+        note: The sensitive/non-sensitive split is a real two-branch test, not one rule.
+        manual_cases: []
+
+      - id: 6.1-E14
+        tier: cross-referenced
+        proposition: >
+          6.2(b): the use or disclosure is required or authorised by or under an
+          Australian law or a court/tribunal order.
+        manual_cases: []
+
+      - id: 6.1-E15
+        tier: cross-referenced
+        proposition: >
+          6.2(c): a permitted general situation exists.
+        manual_cases: []
+
+      - id: 6.1-E16
+        tier: cross-referenced
+        proposition: >
+          6.2(d): the entity is an organisation and a permitted health situation exists.
+        manual_cases: []
+
+      - id: 6.1-E17
+        tier: cross-referenced
+        proposition: >
+          6.2(e): the entity reasonably believes the use or disclosure is reasonably
+          necessary for one or more enforcement related activities conducted by or on
+          behalf of an enforcement body.
+        manual_cases: []
+
+      - id: 6.1-E18
+        tier: cross-referenced
+        proposition: >
+          6.3 is narrower than 6.2 on three axes: it covers DISCLOSURE only (not use),
+          applies only where the entity is an agency that is not an enforcement body, and
+          only to biometric information or biometric templates disclosed to an
+          enforcement body under Commissioner guidelines.
+        note: >
+          An arm that cannot see 6.3 will tend to treat it as interchangeable with 6.2.
+          Asserting that 6.3 can license a secondary USE is a substantive legal error and
+          should be scored as such, not merely as a miss.
+        manual_cases: ["APP6.1-TC04"]
