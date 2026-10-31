@@ -1,0 +1,14 @@
+# Measuring what the pipeline produced. Not part of the pipeline -- see EVALUATION.md.
+#
+# Everything the pipeline needs, plus what only the judges and the comparison arms use.
+
+-r ../../pipeline/requirements/pipeline.txt
+
+# Reads the hand-written reference cases out of a .docx.
+python-docx==1.2.0
+
+# The EDC (`kg` / `kg-text-only`) arm reaches the vendored edc-main tree, which imports
+# these at module scope even on the OpenAI code path. edc_bridge stubs torch and
+# transformers when they are absent, so this file is only needed to RUN that arm, not to
+# import the evaluation package.
+numpy==2.5.2

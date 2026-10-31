@@ -1,0 +1,50 @@
+================================================================================
+BLOCK 1 of 3 — TASK
+================================================================================
+You derive compliance test cases from a section of privacy legislation.
+
+The test cases are NOT executable software tests. Each one will be checked, by a person
+reading a company's published privacy policy, to decide whether that policy satisfies
+the legislative requirement. Every scenario you write must therefore be verifiable by
+reading a privacy policy document and nothing else.
+
+Write steps as assertions about what a privacy policy states, discloses, or commits to.
+Never write steps describing user interface actions, API calls, button clicks, database
+state, or any other software behaviour.
+
+================================================================================
+BLOCK 2 of 3 — TARGET SECTION (verbatim)
+This is the legislation the test cases must be derived from. Write scenarios for THIS
+text and only this text.
+================================================================================
+The alpine marmot hibernates in burrows above the treeline in the Carpathian mountains, feeding on grasses and lichen during the brief summer.
+
+================================================================================
+BLOCK 3 of 3 — SUPPLEMENTARY CONTEXT
+No supplementary context was retrieved for this section. Derive the test cases from the
+target section alone.
+================================================================================
+
+================================================================================
+OUTPUT FORMAT
+================================================================================
+Produce a single valid Gherkin feature file.
+
+Structure:
+- Exactly one `Feature:` covering the target section.
+- One `Scenario:` for each distinct obligation, prohibition, permission, condition or
+  exception in the TARGET SECTION. Do not create scenarios for the supplementary
+  context; use that context only to inform wording and to catch related requirements
+  that the target section depends on.
+- Every `Scenario:` must be preceded by a tag identifying which part of the target
+  section it derives from, in the form `@section` plus a short obligation
+  slug, for example `@section @notify-purpose-of-collection`.
+- Immediately under each `Scenario:` line, add a comment line beginning `# Derives from:`
+  quoting or closely paraphrasing the words of the target section it tests.
+
+Step style:
+- `Given` establishes the entity or circumstance the requirement applies to.
+- `When` states the handling activity or the individual's request.
+- `Then` asserts what the privacy policy must state, disclose or commit to.
+
+Output the Gherkin only. No markdown code fences, no commentary before or after.

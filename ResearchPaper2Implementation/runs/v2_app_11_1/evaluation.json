@@ -1,0 +1,208 @@
+{
+  "timestamp": "2026-08-28T02:17:01.729262+10:00",
+  "feature_name": "Security of Personal Information",
+  "feature_path": "runs\\v2_app_11_1\\generated.feature",
+  "counts": {
+    "green_tick": 5,
+    "orange_cross": 0,
+    "red_cross": 1
+  },
+  "classification_meaning": {
+    "green_tick": "Satisfied by the 2016 policy.",
+    "orange_cross": "Not satisfied in 2016 but satisfied in 2026 - a real gap that was later closed, which also corroborates the test case.",
+    "red_cross": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review."
+  },
+  "scenarios_evaluated": 6,
+  "fabricated_evidence_count": 0,
+  "evaluations": [
+    {
+      "scenario": {
+        "name": "Protecting personal information from misuse",
+        "tags": [
+          "@s11-1",
+          "@protect-personal-information"
+        ],
+        "steps": [
+          "Given the entity holds personal information",
+          "When the entity processes this information",
+          "Then the privacy policy states that the entity takes reasonable steps to protect personal information from misuse."
+        ],
+        "derives_from": "the entity must take such steps as are reasonable in the circumstances to protect the information from misuse",
+        "line_number": 4
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "satisfied",
+        "confidence": "high",
+        "evidence_quote": "Microsoft is committed to protecting the security of your personal data. We use a variety of security technologies and procedures to help protect your personal data from unauthorized access, use or disclosure.",
+        "reasoning": "The policy explicitly states that Microsoft takes steps to protect personal data from unauthorized access, use, or disclosure, which aligns with the requirement to take reasonable steps to protect personal information from misuse.",
+        "evidence_verified": true,
+        "evidence_status": "verified",
+        "parse_error": null
+      },
+      "verdict_2026": null,
+      "classification": "green_tick",
+      "classification_meaning": "Satisfied by the 2016 policy.",
+      "needs_manual_review": false
+    },
+    {
+      "scenario": {
+        "name": "Protecting personal information from interference",
+        "tags": [
+          "@s11-1",
+          "@protect-personal-information"
+        ],
+        "steps": [
+          "Given the entity holds personal information",
+          "When the entity processes this information",
+          "Then the privacy policy states that the entity takes reasonable steps to protect personal information from interference."
+        ],
+        "derives_from": "the entity must take such steps as are reasonable in the circumstances to protect the information from interference",
+        "line_number": 11
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "satisfied",
+        "confidence": "high",
+        "evidence_quote": "Microsoft is committed to protecting the security of your personal data. We use a variety of security technologies and procedures to help protect your personal data from unauthorized access, use or disclosure.",
+        "reasoning": "The policy explicitly states that Microsoft takes steps to protect personal data from unauthorized access, which aligns with the requirement to protect personal information from interference.",
+        "evidence_verified": true,
+        "evidence_status": "verified",
+        "parse_error": null
+      },
+      "verdict_2026": null,
+      "classification": "green_tick",
+      "classification_meaning": "Satisfied by the 2016 policy.",
+      "needs_manual_review": false
+    },
+    {
+      "scenario": {
+        "name": "Protecting personal information from loss",
+        "tags": [
+          "@s11-1",
+          "@protect-personal-information"
+        ],
+        "steps": [
+          "Given the entity holds personal information",
+          "When the entity processes this information",
+          "Then the privacy policy states that the entity takes reasonable steps to protect personal information from loss."
+        ],
+        "derives_from": "the entity must take such steps as are reasonable in the circumstances to protect the information from loss",
+        "line_number": 18
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "satisfied",
+        "confidence": "high",
+        "evidence_quote": "Microsoft is committed to protecting the security of your personal data. We use a variety of security technologies and procedures to help protect your personal data from unauthorized access, use or disclosure.",
+        "reasoning": "The policy explicitly states that Microsoft takes steps to protect personal data, which aligns with the requirement to take reasonable steps to protect personal information from loss.",
+        "evidence_verified": true,
+        "evidence_status": "verified",
+        "parse_error": null
+      },
+      "verdict_2026": null,
+      "classification": "green_tick",
+      "classification_meaning": "Satisfied by the 2016 policy.",
+      "needs_manual_review": false
+    },
+    {
+      "scenario": {
+        "name": "Protecting personal information from unauthorized access",
+        "tags": [
+          "@s11-1",
+          "@protect-personal-information"
+        ],
+        "steps": [
+          "Given the entity holds personal information",
+          "When the entity processes this information",
+          "Then the privacy policy states that the entity takes reasonable steps to protect personal information from unauthorized access."
+        ],
+        "derives_from": "the entity must take such steps as are reasonable in the circumstances to protect the information from unauthorised access",
+        "line_number": 25
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "satisfied",
+        "confidence": "high",
+        "evidence_quote": "Microsoft is committed to protecting the security of your personal data. We use a variety of security technologies and procedures to help protect your personal data from unauthorized access, use or disclosure.",
+        "reasoning": "The policy explicitly states that Microsoft takes steps to protect personal data from unauthorized access, which satisfies the requirement of the test case.",
+        "evidence_verified": true,
+        "evidence_status": "verified",
+        "parse_error": null
+      },
+      "verdict_2026": null,
+      "classification": "green_tick",
+      "classification_meaning": "Satisfied by the 2016 policy.",
+      "needs_manual_review": false
+    },
+    {
+      "scenario": {
+        "name": "Protecting personal information from modification",
+        "tags": [
+          "@s11-1",
+          "@protect-personal-information"
+        ],
+        "steps": [
+          "Given the entity holds personal information",
+          "When the entity processes this information",
+          "Then the privacy policy states that the entity takes reasonable steps to protect personal information from modification."
+        ],
+        "derives_from": "the entity must take such steps as are reasonable in the circumstances to protect the information from modification",
+        "line_number": 32
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state that Microsoft takes reasonable steps to protect personal information from modification. It lacks any mention of measures specifically aimed at preventing modification of personal data.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "verdict_2026": {
+        "policy_label": "2026",
+        "verdict": "not_satisfied",
+        "confidence": "high",
+        "evidence_quote": "",
+        "reasoning": "The privacy policy does not explicitly state that Microsoft takes reasonable steps to protect personal information from modification.",
+        "evidence_verified": false,
+        "evidence_status": "no_quote",
+        "parse_error": null
+      },
+      "classification": "red_cross",
+      "classification_meaning": "Not satisfied by either policy. AMBIGUOUS: either a persistent gap or a spurious test case. Needs manual review.",
+      "needs_manual_review": true
+    },
+    {
+      "scenario": {
+        "name": "Protecting personal information from disclosure",
+        "tags": [
+          "@s11-1",
+          "@protect-personal-information"
+        ],
+        "steps": [
+          "Given the entity holds personal information",
+          "When the entity processes this information",
+          "Then the privacy policy states that the entity takes reasonable steps to protect personal information from disclosure."
+        ],
+        "derives_from": "the entity must take such steps as are reasonable in the circumstances to protect the information from disclosure",
+        "line_number": 39
+      },
+      "verdict_2016": {
+        "policy_label": "2016",
+        "verdict": "satisfied",
+        "confidence": "high",
+        "evidence_quote": "Microsoft is committed to protecting the security of your personal data. We use a variety of security technologies and procedures to help protect your personal data from unauthorized access, use or disclosure.",
+        "reasoning": "The policy explicitly states that Microsoft takes steps to protect personal data from unauthorized access, use, or disclosure, which satisfies the requirement.",
+        "evidence_verified": true,
+        "evidence_status": "verified",
+        "parse_error": null
+      },
+      "verdict_2026": null,
+      "classification": "green_tick",
+      "classification_meaning": "Satisfied by the 2016 policy.",
+      "needs_manual_review": false
+    }
+  ]
+}

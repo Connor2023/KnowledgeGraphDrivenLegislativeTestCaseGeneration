@@ -1,0 +1,422 @@
+{
+  "entities": [
+    {
+      "label": "Australian Privacy Principles",
+      "description": "A set of principles established to guide the management and protection of personal information in Australia.",
+      "types": [
+        "legal framework",
+        "privacy regulation"
+      ]
+    },
+    {
+      "label": "APP entities",
+      "description": "Organizations or agencies that are required to comply with the Australian Privacy Principles.",
+      "types": [
+        "organization",
+        "entity"
+      ]
+    },
+    {
+      "label": "personal information",
+      "description": "Any information that relates to an identified or identifiable individual, including sensitive information.",
+      "types": [
+        "data",
+        "information"
+      ]
+    },
+    {
+      "label": "unsolicited personal information",
+      "description": "Personal information received by an APP entity that was not actively sought or requested.",
+      "types": [
+        "data type",
+        "information"
+      ]
+    },
+    {
+      "label": "government related identifiers",
+      "description": "Identifiers assigned by government agencies to individuals, such as tax file numbers or driver's license numbers.",
+      "types": [
+        "identifier",
+        "data type"
+      ]
+    },
+    {
+      "label": "APP privacy policy",
+      "description": "A document that outlines how an APP entity manages personal information, including collection, use, and disclosure practices.",
+      "types": [
+        "policy",
+        "document"
+      ]
+    },
+    {
+      "label": "direct marketing",
+      "description": "A form of communication aimed at promoting products or services directly to individuals using their personal information.",
+      "types": [
+        "marketing",
+        "communication"
+      ]
+    },
+    {
+      "label": "cross-border disclosure",
+      "description": "The transfer of personal information from one country to another, particularly to entities not subject to the same privacy laws.",
+      "types": [
+        "data transfer",
+        "legal concept"
+      ]
+    },
+    {
+      "label": "sensitive information",
+      "description": "A subset of personal information that includes details such as health, racial or ethnic origin, and political opinions, which require higher protection.",
+      "types": [
+        "data type",
+        "information"
+      ]
+    },
+    {
+      "label": "access to personal information",
+      "description": "The right of individuals to request and obtain their personal information held by APP entities.",
+      "types": [
+        "legal right",
+        "data access"
+      ]
+    },
+    {
+      "label": "correction of personal information",
+      "description": "The process by which individuals can request changes to their personal information to ensure its accuracy and relevance.",
+      "types": [
+        "legal right",
+        "data management"
+      ]
+    },
+    {
+      "label": "compliance",
+      "description": "The act of adhering to laws, regulations, and guidelines, particularly in relation to privacy principles.",
+      "types": [
+        "legal obligation",
+        "regulation"
+      ]
+    },
+    {
+      "label": "notification",
+      "description": "The process of informing individuals about the collection and use of their personal information.",
+      "types": [
+        "communication",
+        "legal requirement"
+      ]
+    },
+    {
+      "label": "de-identification",
+      "description": "The process of removing or altering personal information so that individuals cannot be readily identified.",
+      "types": [
+        "data protection",
+        "privacy measure"
+      ]
+    },
+    {
+      "label": "inquiry or complaint",
+      "description": "A request for information or a report of dissatisfaction regarding the handling of personal information by an APP entity.",
+      "types": [
+        "legal process",
+        "feedback"
+      ]
+    },
+    {
+      "label": "overseas recipients",
+      "description": "Entities or individuals located outside of Australia that may receive personal information from APP entities.",
+      "types": [
+        "entity",
+        "data recipient"
+      ]
+    },
+    {
+      "label": "enforcement body",
+      "description": "An organization or agency that has the authority to enforce laws and regulations, particularly in relation to privacy and data protection.",
+      "types": [
+        "organization",
+        "legal authority"
+      ]
+    },
+    {
+      "label": "permitted general situation",
+      "description": "Circumstances under which the collection, use, or disclosure of personal information is allowed without consent under the Australian Privacy Principles.",
+      "types": [
+        "legal exception",
+        "privacy regulation"
+      ]
+    },
+    {
+      "label": "permitted health situation",
+      "description": "Specific conditions under which sensitive health information can be collected, used, or disclosed without consent.",
+      "types": [
+        "legal exception",
+        "privacy regulation"
+      ]
+    },
+    {
+      "label": "technical and organisational measures",
+      "description": "Strategies and actions taken by APP entities to protect personal information from unauthorized access and breaches.",
+      "types": [
+        "security measure",
+        "data protection"
+      ]
+    },
+    {
+      "label": "written notice",
+      "description": "A formal document provided to individuals explaining the reasons for refusal of access or correction of personal information.",
+      "types": [
+        "communication",
+        "legal document"
+      ]
+    }
+  ],
+  "triples": [
+    {
+      "subj_label": "<Australian Privacy Principles>",
+      "subj_id": 0,
+      "pred_label": "guides",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "This predicate indicates a directional relationship where one entity provides direction, advice, or a framework for the management, handling, or understanding of another entity. It suggests an authoritative or advisory role in shaping behaviors, practices, or policies related to the object."
+    },
+    {
+      "subj_label": "<Australian Privacy Principles>",
+      "subj_id": 0,
+      "pred_label": "requires compliance from",
+      "obj_label": "<APP entities>",
+      "obj_id": 1,
+      "pred_description": "This predicate indicates a requirement or obligation imposed on a certain entity, suggesting that the subject has the authority or necessity to enforce adherence to specific standards or principles by the object."
+    },
+    {
+      "subj_label": "<APP entities>",
+      "subj_id": 1,
+      "pred_label": "must comply with",
+      "obj_label": "<Australian Privacy Principles>",
+      "obj_id": 0,
+      "pred_description": "This predicate expresses a necessity or obligation for the object to adhere to certain rules, regulations, or standards set forth by the subject, indicating a formal requirement for conformity."
+    },
+    {
+      "subj_label": "<APP entities>",
+      "subj_id": 1,
+      "pred_label": "are subject to",
+      "obj_label": "<compliance>",
+      "obj_id": 11,
+      "pred_description": "This predicate denotes a condition of being governed or regulated by certain rules, standards, or principles, indicating that the object is under the influence or authority of the subject's requirements."
+    },
+    {
+      "subj_label": "<personal information>",
+      "subj_id": 2,
+      "pred_label": "includes",
+      "obj_label": "<sensitive information>",
+      "obj_id": 8,
+      "pred_description": "This predicate indicates that the subject encompasses or contains the object as part of a broader category or set. It suggests a relationship where the object is a subset or specific instance that falls under the general definition or scope of the subject."
+    },
+    {
+      "subj_label": "<unsolicited personal information>",
+      "subj_id": 3,
+      "pred_label": "is a type of",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "This predicate indicates a classification or categorization relationship, where the subject is identified as a specific instance or variant of a broader category represented by the object. It signifies that the subject shares characteristics or properties with the object, establishing a hierarchical or associative link between them."
+    },
+    {
+      "subj_label": "<unsolicited personal information>",
+      "subj_id": 3,
+      "pred_label": "is received by",
+      "obj_label": "<APP entities>",
+      "obj_id": 1,
+      "pred_description": "This predicate denotes a relationship of reception or acquisition, where the subject is the entity that is obtained or accepted by the object. It implies a directional flow of information or material, indicating that the subject is acted upon or influenced by the object in the context of receiving."
+    },
+    {
+      "subj_label": "<APP privacy policy>",
+      "subj_id": 5,
+      "pred_label": "manages",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "This predicate indicates a relationship where one entity is responsible for overseeing, controlling, or handling another entity or concept. It often implies a level of authority or governance over the subject matter, suggesting that the managing entity has the capability to influence or direct the actions or characteristics of the managed entity."
+    },
+    {
+      "subj_label": "<APP privacy policy>",
+      "subj_id": 5,
+      "pred_label": "describes",
+      "obj_label": "<APP entities>",
+      "obj_id": 1,
+      "pred_description": "This predicate signifies a relationship where one entity provides information or details about another entity. It often involves outlining characteristics, features, or attributes, thereby enhancing understanding or clarity regarding the subject being described."
+    },
+    {
+      "subj_label": "<direct marketing>",
+      "subj_id": 6,
+      "pred_label": "uses",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "This predicate indicates a relationship where one entity employs or utilizes another entity as a means to achieve a specific purpose or function. It often implies an active engagement or application of resources, tools, or information to facilitate an action or process."
+    },
+    {
+      "subj_label": "<crossborder disclosure>",
+      "subj_id": 7,
+      "pred_label": "involves",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "This predicate indicates a relationship where one entity is engaged in an action or process that includes or requires the participation of another entity. It often signifies a connection or interaction between the two, highlighting the significance of the first entity in relation to the second."
+    },
+    {
+      "subj_label": "<sensitive information>",
+      "subj_id": 8,
+      "pred_label": "is a subset of",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "This predicate indicates a hierarchical relationship where one entity is part of a larger category or class. It signifies that the subject shares characteristics or properties with the broader category, while also possessing unique attributes that distinguish it from other members of that category."
+    },
+    {
+      "subj_label": "<access to personal information>",
+      "subj_id": 9,
+      "pred_label": "has right to",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "Indicates a legal or moral entitlement that allows individuals to claim or receive something, often associated with personal freedoms or privileges."
+    },
+    {
+      "subj_label": "<access to personal information>",
+      "subj_id": 9,
+      "pred_label": "pertains to",
+      "obj_label": "<APP entities>",
+      "obj_id": 1,
+      "pred_description": "Denotes a relationship of relevance or connection, indicating that one entity is related to or associated with another in a specific context or domain."
+    },
+    {
+      "subj_label": "<correction of personal information>",
+      "subj_id": 10,
+      "pred_label": "involves",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "This predicate indicates a relationship where a specific action or process encompasses or requires the participation of a particular entity or concept. It suggests that the subject is an integral part of the process, highlighting the interconnectedness between actions and the elements they engage with."
+    },
+    {
+      "subj_label": "<notification>",
+      "subj_id": 12,
+      "pred_label": "informs",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "This predicate indicates a communicative action where one entity conveys information or knowledge to another. It often implies a transfer of awareness or understanding regarding a specific subject or matter."
+    },
+    {
+      "subj_label": "<deidentification>",
+      "subj_id": 13,
+      "pred_label": "removes or alters",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "This predicate indicates an action that involves changing the state or form of an entity, typically to make it less recognizable or to obscure its original characteristics. It suggests a transformation process that can involve either the complete elimination or modification of specific attributes to achieve a desired outcome."
+    },
+    {
+      "subj_label": "<inquiry or complaint>",
+      "subj_id": 14,
+      "pred_label": "related to",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "Indicates a connection or association between two concepts, suggesting that one concept has relevance or significance to the other."
+    },
+    {
+      "subj_label": "<inquiry or complaint>",
+      "subj_id": 14,
+      "pred_label": "about",
+      "obj_label": "<APP entities>",
+      "obj_id": 1,
+      "pred_description": "Denotes the subject matter or focus of a discussion, inquiry, or report, indicating what the information pertains to or concerns."
+    },
+    {
+      "subj_label": "<personal information>",
+      "subj_id": 2,
+      "pred_label": "handled by",
+      "obj_label": "<APP entities>",
+      "obj_id": 1,
+      "pred_description": "Describes the action of managing, processing, or taking care of something, often implying responsibility or oversight by a specific entity or individual."
+    },
+    {
+      "subj_label": "<overseas recipients>",
+      "subj_id": 15,
+      "pred_label": "may receive",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "Indicates the potential for an entity or individual to obtain or be granted access to a certain type of information or resource, suggesting a relationship of possibility or permission."
+    },
+    {
+      "subj_label": "<overseas recipients>",
+      "subj_id": 15,
+      "pred_label": "are located outside of",
+      "obj_label": "<APP entities>",
+      "obj_id": 1,
+      "pred_description": "Describes the physical or geographical positioning of an entity or individual in relation to a specified area, indicating that they exist beyond the defined boundaries of that area."
+    },
+    {
+      "subj_label": "<Australian Privacy Principles>",
+      "subj_id": 0,
+      "pred_label": "allows",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "This predicate indicates the capacity or permission granted for a certain action or state to occur, often implying that specific conditions or rules are met for the action to be valid or acceptable."
+    },
+    {
+      "subj_label": "<permitted general situation>",
+      "subj_id": 17,
+      "pred_label": "describes",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "This predicate signifies the act of providing details or characteristics about a particular subject, often clarifying its nature, function, or context."
+    },
+    {
+      "subj_label": "<permitted general situation>",
+      "subj_id": 17,
+      "pred_label": "is governed by",
+      "obj_label": "<Australian Privacy Principles>",
+      "obj_id": 0,
+      "pred_description": "This predicate denotes a relationship where one entity is subject to the rules, regulations, or principles established by another entity, indicating a hierarchical or regulatory connection."
+    },
+    {
+      "subj_label": "<permitted health situation>",
+      "subj_id": 18,
+      "pred_label": "defines",
+      "obj_label": "<sensitive information>",
+      "obj_id": 8,
+      "pred_description": "This predicate indicates a relationship where a specific concept or term is being clarified or explained in terms of its meaning or scope. It establishes a definition that outlines the characteristics, boundaries, or criteria associated with the subject being defined."
+    },
+    {
+      "subj_label": "<technical and organisational measures>",
+      "subj_id": 19,
+      "pred_label": "protects",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "Indicates a relationship where one entity provides a safeguard or defense for another entity, ensuring its security or integrity against potential threats or unauthorized access."
+    },
+    {
+      "subj_label": "<technical and organisational measures>",
+      "subj_id": 19,
+      "pred_label": "implemented by",
+      "obj_label": "<APP entities>",
+      "obj_id": 1,
+      "pred_description": "Denotes a relationship where a particular action, strategy, or measure is executed or carried out by a specific entity, highlighting the responsibility or agency of that entity in the process."
+    },
+    {
+      "subj_label": "<APP entities>",
+      "subj_id": 1,
+      "pred_label": "protects",
+      "obj_label": "<personal information>",
+      "obj_id": 2,
+      "pred_description": "Indicates a relationship where one entity provides a safeguard or defense for another entity, ensuring its security or integrity against potential threats or unauthorized access."
+    },
+    {
+      "subj_label": "<written notice>",
+      "subj_id": 20,
+      "pred_label": "provides explanation for",
+      "obj_label": "<access to personal information>",
+      "obj_id": 9,
+      "pred_description": "This predicate indicates a relationship where a formal document or communication serves to clarify or elucidate the reasons behind a specific decision or action, often related to rights or entitlements. It implies a duty to inform and ensure understanding regarding the context or rationale of a situation."
+    },
+    {
+      "subj_label": "<written notice>",
+      "subj_id": 20,
+      "pred_label": "provides explanation for",
+      "obj_label": "<correction of personal information>",
+      "obj_id": 10,
+      "pred_description": "This predicate indicates a relationship where a formal document or communication serves to clarify or elucidate the reasons behind a specific decision or action, often related to rights or entitlements. It implies a duty to inform and ensure understanding regarding the context or rationale of a situation."
+    }
+  ]
+}

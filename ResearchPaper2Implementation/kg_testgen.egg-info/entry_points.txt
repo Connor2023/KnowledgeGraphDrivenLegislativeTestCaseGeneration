@@ -1,0 +1,2 @@
+[console_scripts]
+kg-testgen = kg_testgen.cli:main

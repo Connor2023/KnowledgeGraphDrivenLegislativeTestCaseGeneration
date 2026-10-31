@@ -1,0 +1,27 @@
+Example 1:
+Text: Under Australian Privacy Principle 11 (security of personal information), subclause 11.1 of Schedule 1 of the Privacy Act provides that if an APP entity holds personal information, the entity must take such steps as are reasonable in the circumstances to protect the information from misuse, interference and loss.
+Entities: ['APP entity', 'personal information', 'Australian Privacy Principle 11', 'subclause 11.1', 'Schedule 1 of the Privacy Act', 'misuse, interference and loss']
+
+Example 2:
+Text: Under Australian Privacy Principle 3 (collection of solicited personal information), subclause 3.3 of Schedule 1 of the Privacy Act provides that an APP entity must not collect sensitive information about an individual unless the individual consents to the collection of the information.
+Entities: ['APP entity', 'sensitive information', 'individual', 'collection of sensitive information', 'Australian Privacy Principle 3', 'subclause 3.3']
+
+Example 3:
+Text: Under Australian Privacy Principle 8 (cross-border disclosure of personal information), subclause 8.1 of Schedule 1 of the Privacy Act provides that before an APP entity discloses personal information about an individual to a person who is not in Australia or an external Territory, the entity must take such steps as are reasonable in the circumstances to ensure that the overseas recipient does not breach the Australian Privacy Principles.
+Entities: ['APP entity', 'personal information', 'individual', 'overseas recipient', 'Australia', 'Australian Privacy Principles', 'Australian Privacy Principle 8', 'subclause 8.1']
+
+Example 4:
+Text: Under Australian Privacy Principle 7 (direct marketing), subclause 7.1 of Schedule 1 of the Privacy Act provides that if an organisation holds personal information about an individual, the organisation must not use or disclose the information for the purpose of direct marketing.
+Entities: ['organisation', 'personal information', 'individual', 'direct marketing', 'Australian Privacy Principle 7', 'subclause 7.1']
+
+Example 5:
+Text: Under Australian Privacy Principle 12 (access to personal information), subclause 12.4 of Schedule 1 of the Privacy Act provides that an APP entity that is an agency must respond to a request for access to personal information within 30 days after the request is made.
+Entities: ['APP entity', 'agency', 'personal information', 'request for access to personal information', '30 days', 'Australian Privacy Principle 12', 'subclause 12.4']
+
+Example 6:
+Text: Under Australian Privacy Principle 1 (open and transparent management of personal information), subclause 1.3 of Schedule 1 of the Privacy Act provides that an APP entity must have a clearly expressed and up-to-date policy about the management of personal information by the entity.
+Entities: ['APP entity', 'APP privacy policy', 'personal information', 'Australian Privacy Principle 1', 'subclause 1.3']
+
+Example 7:
+Text: Under Australian Privacy Principle 9 (adoption, use or disclosure of government related identifiers), subclause 9.1 of Schedule 1 of the Privacy Act provides that an organisation must not adopt a government related identifier of an individual as its own identifier of the individual unless the adoption is required or authorised by or under an Australian law.
+Entities: ['organisation', 'government related identifier', 'individual', 'Australian law', 'Australian Privacy Principle 9', 'subclause 9.1']
