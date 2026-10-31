@@ -1,0 +1,35 @@
+schema_version: 1
+sources:
+  - id: gdpr_official
+    title: "Regulation (EU) 2016/679 (GDPR), official consolidated HTML"
+    url: "https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng/"
+    provisions: ["Article 3", "Article 5", "Article 6", "Article 12", "Article 13"]
+  - id: github_release_history
+    title: "GitHub site-policy releases"
+    url: "https://github.com/github/site-policy/releases"
+    relevant_tags: ["2017-10-11", "2018-05-25"]
+  - id: github_gdpr_release
+    title: "Policies Effective as of May 25, 2018"
+    url: "https://github.com/github/site-policy/releases/tag/2018-05-25"
+    relevance: "GitHub says this release focused on aligning its policies with GDPR."
+  - id: github_policy_gdpr_aligned
+    title: "GitHub Privacy Statement, effective May 25, 2018"
+    url: "https://github.com/github/site-policy/blob/2018-05-25/Policies/github-privacy-statement.md"
+    git_ref: "abb0b833124f4a560a2bdd574f8f879c5f301225"
+  - id: github_policy_old
+    title: "GitHub Privacy Statement, effective October 11, 2017"
+    url: "https://github.com/github/site-policy/blob/2017-10-11/Policies/github-privacy-statement.md"
+    git_ref: "f5b19e2a9caff2a9889f6a94e86ab70d283e340c"
+    git_blob: "3cb2ac8621dae4bd9611053187ea9bb0f1f8f842"
+  - id: github_policy_current
+    title: "GitHub General Privacy Statement, effective April 27, 2026"
+    url: "https://github.com/github/site-policy/blob/b9578b546d2506febda1da2cd7431644d58e512c/Policies/privacy-policies/github-general-privacy-statement.md"
+    git_ref: "b9578b546d2506febda1da2cd7431644d58e512c"
+    git_blob: "b845c1d819e4a661873a8ac0d60b25c577e3aa9a"
+  - id: github_policy_live
+    title: "GitHub General Privacy Statement"
+    url: "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement"
+  - id: edpb_transparency_guidelines
+    title: "Guidelines on transparency under Regulation 2016/679, WP260 rev.01"
+    url: "https://www.edpb.europa.eu/system/files/2023-09/wp260rev01_en.pdf"
+    status: "Interpretive guidance only; do not treat as legislation or merge into the target text."

@@ -1,0 +1,47 @@
+schema_version: 1
+scope: "A policy-testable sample of GDPR Article 13 transparency disclosures"
+interpretation_rules:
+  - "A verdict concerns disclosure in the policy, not whether GitHub's underlying processing is compliant."
+  - "Conditional requirements are tested only where the stated Given condition is assumed true."
+  - "The October 2017 policy predates GDPR applicability and is a counterfactual negative-control artifact."
+requirements:
+  - id: GDPR-13-1-A
+    authority: "GDPR Article 13(1)(a)"
+    portability: general_privacy_concept
+    assertion: "State the controller's legal identity and contact details."
+  - id: GDPR-13-1-B
+    authority: "GDPR Article 13(1)(b)"
+    portability: eu_specific_legal_role
+    assertion: "Where applicable, state DPO contact details."
+  - id: GDPR-13-1-C
+    authority: "GDPR Article 13(1)(c)"
+    portability: general_concept_with_gdpr_taxonomy
+    assertion: "State purposes and legal bases for processing."
+  - id: GDPR-13-1-D
+    authority: "GDPR Article 13(1)(d)"
+    portability: general_concept_with_gdpr_taxonomy
+    assertion: "When relying on legitimate interests, identify the interests pursued."
+  - id: GDPR-13-1-E
+    authority: "GDPR Article 13(1)(e)"
+    portability: general_privacy_concept
+    assertion: "Identify recipients or categories of recipients."
+  - id: GDPR-13-1-F
+    authority: "GDPR Article 13(1)(f)"
+    portability: eu_specific_transfer_mechanism
+    assertion: "Explain third-country transfers and relevant adequacy decision or safeguards."
+  - id: GDPR-13-2-A
+    authority: "GDPR Article 13(2)(a)"
+    portability: general_privacy_concept
+    assertion: "State a retention period or the criteria used to determine it."
+  - id: GDPR-13-2-B
+    authority: "GDPR Article 13(2)(b)"
+    portability: general_rights_with_gdpr_scope
+    assertion: "State access, rectification, erasure, restriction, objection and portability rights."
+  - id: GDPR-13-2-C
+    authority: "GDPR Article 13(2)(c)"
+    portability: general_privacy_concept
+    assertion: "Explain withdrawal at any time and its non-retroactive legal effect."
+  - id: GDPR-13-2-D
+    authority: "GDPR Article 13(2)(d)"
+    portability: eu_specific_enforcement_structure
+    assertion: "State the right to complain to a supervisory authority."
